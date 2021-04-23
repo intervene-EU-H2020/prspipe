@@ -10,10 +10,16 @@
 ##################
 
 plink1: "bin/plink"
-
 plink2: "bin/plink2"
-
 gcta: "bin/gcta/gcta64"
-
 gctb: "bin/gctb/gctb"
+
+
+##################
+# Resource paths #
+##################
+
+Impute2_1KG_dir: "resources/Impute2_1KG"
+HapMap3_snplist_dir: "resources/HapMap3_snplist"
+Geno_1KG_dir: "resources/Geno_1KG"
 
