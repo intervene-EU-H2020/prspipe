@@ -6,9 +6,17 @@ type: object
 
 # possible entries of the config file and which type they should be
 properties:
-  samples:
+  plink1:
+    type: string
+  plink2:
+    type: string
+  gcta:
+    type: string
+  gctb:
     type: string
 
 # entries that have to be in the config file for successful validation
 required:
-  - samples
+  - plink1
+  - plink2
+# - samples
