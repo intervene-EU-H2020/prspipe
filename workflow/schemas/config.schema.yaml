@@ -6,7 +6,7 @@ type: object
 
 # possible entries of the config file and which type they should be
 properties:
-  plink1:
+  plink1_9:
     type: string
   plink2:
     type: string
@@ -17,6 +17,6 @@ properties:
 
 # entries that have to be in the config file for successful validation
 required:
-  - plink1
+  - plink1_9
   - plink2
 # - samples

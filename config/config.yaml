@@ -9,7 +9,7 @@
 # Software paths #
 ##################
 
-plink1: "bin/plink"
+plink1_9: "bin/plink"
 plink2: "bin/plink2"
 gcta: "bin/gcta/gcta64"
 gctb: "bin/gctb/gctb"
@@ -22,4 +22,6 @@ gctb: "bin/gctb/gctb"
 Impute2_1KG_dir: "resources/Impute2_1KG"
 HapMap3_snplist_dir: "resources/HapMap3_snplist"
 Geno_1KG_dir: "resources/Geno_1KG"
+
+gwas_rep: "resources/ss/munged"
 
