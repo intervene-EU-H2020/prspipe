@@ -1,3 +1,5 @@
 .snakemake
 bin/
 resources/*
+.ipynb_checkpoints
+workflow/scripts/GenoPred

@@ -2,7 +2,9 @@
 
 # Date:         24.03.2021
 # Author:       Remo Monti & Sophie Wharrie
-# Description:  Download binaries, move them to bin
+# Description:  Download binaries, move them to bin, clone GenoPred repo
+
+GENOPRED_VERION="4a0eaec89acb336c532a59dd005e914704184d32"
 
 if [ ! -f README.md ]; then
     echo "Error: Are you in the project base directory? Abort."
@@ -65,3 +67,15 @@ if [ ! -f ./bin/gctb/gctb ]; then
     fi
     )
 fi
+
+# "Install" GenoPred
+if [ ! -d ./workflow/scripts/GenoPred ]; then
+    >&2 echo "Downloading GenoPred"
+    (
+    cd workflow/scripts
+    git clone https://github.com/opain/GenoPred.git && cd GenoPred  && git checkout ${GENOPRED_VERSION}
+    )
+else
+   cd ./workflow/scripts/GenoPred && git checkout ${GENOPRED_VERSION}
+fi 
+

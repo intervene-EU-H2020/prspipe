@@ -4,6 +4,12 @@
 # one row per sample. It can be parsed easily via pandas.
 # samples: "config/samples.tsv"
 
+GenoPred_dir: "workflow/scripts/GenoPred"
+
+# 1000 genomes superpopulations:
+1kg_superpop: ["EUR", "EAS", "AMR", "SAS", "AFR"]
+1kg_pop: ["GBR", "FIN", "CHS", "PUR", "CDX", "CLM", "IBS", "PEL", "PJL", "KHV", "ACB", "GWD", "ESN", "BEB", "MSL", "STU", "ITU", "CEU", "YRI", "CHB", "JPT", "LWK", "ASW", "MXL", "TSI", "GIH"]
+
 
 ##################
 # Software paths #
