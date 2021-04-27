@@ -3,12 +3,12 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥5.7.0-brightgreen.svg)](https://snakemake.bitbucket.io)
 [![Build Status](https://travis-ci.org/snakemake-workflows/prspipe.svg?branch=master)](https://travis-ci.org/snakemake-workflows/prspipe)
 
-This is the template for a new Snakemake workflow. Replace this text with a comprehensive description covering the purpose and domain.
-Insert your code into the respective folders, i.e. `scripts`, `rules`, and `envs`. Define the entry point of the workflow in the `Snakefile` and the main configuration in the `config.yaml` file.
+Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods.
 
 ## Authors
 
 * Remo Monti & Sophie Wharrie
+* [GenoPred](https://github.com/opain/GenoPred): Oliver Pain 
 
 ## Usage
 
@@ -23,42 +23,34 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 Configure the workflow according to your needs via editing the files in the `config/` folder. Adjust `config.yaml` to configure the workflow execution, and `samples.tsv` to specify your sample setup.
 
-### Step 3: Install Snakemake
+### Step 3: Install Snakemake and other dependencies
 
 Install Snakemake using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
 
-    conda create -c bioconda -c conda-forge -n snakemake snakemake
+     conda create -c bioconda -c conda-forge -n snakemake snakemake
+> Note: make sure to update conda, or use mamba to get the latest version of snakemake i.e. `6.2.1`
 
 For installation details, see the [instructions in the Snakemake documentation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
 
+Run `download_resources.sh` and `install_software.sh` to set up software.
+
+    bash ./download_resources.sh
+    bash ./install_software.sh
+
+Currently dependency management is left to the user (will change in the future). To run the setup scripts below, the user needs to have R available, and install the following dependencies:
+
+    R
+    install.packages('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr')
+
 ### Step 4: Execute workflow
 
-Activate the conda environment:
+Activate the conda environment, and use `./run.sh` to launch snakemake with default parameters:
 
     conda activate snakemake
+    # run all the setup rules (steps 1-3 of GenoPred)
+    ./run.sh all_setup
 
-Test your configuration by performing a dry-run via
-
-    snakemake --use-conda -n
-
-Execute the workflow locally via
-
-    snakemake --use-conda --cores $N
-
-using `$N` cores or run it in a cluster environment via
-
-    snakemake --use-conda --cluster qsub --jobs 100
-
-or
-
-    snakemake --use-conda --drmaa --jobs 100
-
-If you not only want to fix the software stack but also the underlying OS, use
-
-    snakemake --use-conda --use-singularity
-
-in combination with any of the modes above.
-See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details.
+See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
 ### Step 5: Investigate results
 
