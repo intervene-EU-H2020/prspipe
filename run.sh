@@ -1,3 +1,3 @@
 #!/bin/bash
 
-snakemake --cores 1 --snakefile workflow/Snakefile "${@}"
+snakemake --cores 4 --snakefile workflow/Snakefile "${@}"
