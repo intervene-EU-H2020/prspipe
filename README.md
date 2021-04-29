@@ -42,7 +42,7 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
 Currently dependency management is left to the user (will change in the future). To run the setup scripts below, the user needs to have R available, and install the following dependencies:
 
     R
-    install.packages('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr')
+    install.packages('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification')
 
 ### Step 4: Execute workflow
 
