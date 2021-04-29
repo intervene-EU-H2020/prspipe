@@ -5,10 +5,14 @@
 # samples: "config/samples.tsv"
 
 GenoPred_dir: "workflow/scripts/GenoPred"
+Python_scr_dir: "workflow/scripts/Python"
 
 # 1000 genomes superpopulations:
 1kg_superpop: ["EUR", "EAS", "AMR", "SAS", "AFR"]
 1kg_pop: ["GBR", "FIN", "CHS", "PUR", "CDX", "CLM", "IBS", "PEL", "PJL", "KHV", "ACB", "GWD", "ESN", "BEB", "MSL", "STU", "ITU", "CEU", "YRI", "CHB", "JPT", "LWK", "ASW", "MXL", "TSI", "GIH"]
+
+# GWAS catalog summary statistic studies
+studies: ["GCST005413"]
 
 
 ##################
@@ -28,6 +32,8 @@ gctb: "bin/gctb/gctb"
 Impute2_1KG_dir: "resources/Impute2_1KG"
 HapMap3_snplist_dir: "resources/HapMap3_snplist"
 Geno_1KG_dir: "resources/Geno_1KG"
+
+Base_sumstats_dir: "resources/Base_sumstats"
 
 gwas_rep: "resources/ss/munged"
 

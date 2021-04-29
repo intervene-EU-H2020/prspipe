@@ -247,5 +247,5 @@ rule all_setup:
     # the Polygenic scoring steps (>=4) that follow are implemented in a different module
     input:
         '{}/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var'.format(config['Geno_1KG_dir']),
-        '{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var'.format(config['Geno_1KG_dir'])
-
+        '{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var'.format(config['Geno_1KG_dir']),
+        rules.run_allele_freq_all.output

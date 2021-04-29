@@ -19,4 +19,4 @@ rule test_R:
 
 include: "rules/common.smk"
 include: "rules/setup.smk"
-
+include: "rules/base_sumstats.smk"
