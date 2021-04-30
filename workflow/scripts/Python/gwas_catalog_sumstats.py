@@ -21,6 +21,7 @@ given study id supports API access (you can check this at the GWAS catalog websi
 import requests
 import argparse
 import pandas as pd
+import time
 
 
 parser = argparse.ArgumentParser()
@@ -102,13 +103,17 @@ def get_summary_statistics(study_id, study_details):
 
     df = pd.DataFrame()
 
-    for _ in range(0,n_snps,size):
+    pages = list(range(0,n_snps,size))
+    n_pages = len(pages)
+    start_time = time.time()
+    for _ in pages:
         counter = int(_/size)+1
-        print(f'>> downloading page {counter}')
+        checkpoint = time.time() - start_time
+        print(f'>> {checkpoint}: downloading page {counter}/{n_pages}')
         data = get_request(url)
         url = data['_links']['next']['href'] # get url for next page
         df = pd.concat([df, pd.DataFrame(data['_embedded']['associations'].values())])
-        if _==1000: break # TODO remove this later - this is here now to speed up execution for testing purposes
+        if _==2000: break # TODO remove this later - this is here now to speed up execution for testing purposes
 
     return df
 

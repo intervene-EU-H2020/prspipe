@@ -36,6 +36,9 @@ rule QC_sumstats:
         "--output {output}"
         ") &> {log}"
 
+# TODO the above rules implement step 4.1 of GenoPred - 
+# the next steps from here are to create rules for the scripts
+# implementing pre-processing steps for each polygenic score method
 
 rule all_QC:
     # download summary statistics and run all QC
