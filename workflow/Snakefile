@@ -27,4 +27,5 @@ rule test_R:
 include: "rules/common.smk"
 include: "rules/setup.smk"
 include: "rules/base_sumstats.smk"
+include: "rules/prs_ptclump.smk"
 include: "rules/prs_lassosum.smk"
