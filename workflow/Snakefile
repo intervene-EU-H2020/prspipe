@@ -1,6 +1,13 @@
 # The main entry point of your workflow.
 # After configuring, running snakemake -n in a clone of this repository should successfully execute a dry-run of the workflow.
 
+import pandas as pd
+from snakemake.utils import validate
+
+configfile: "config/config.yaml"
+
+studies = pd.read_csv(config["studies"], dtype=str, sep='\t').set_index(["study_id", "ancestry"], drop=False)
+
 report: "report/workflow.rst"
 
 # Allow users to fix the underlying OS via singularity.
@@ -20,3 +27,4 @@ rule test_R:
 include: "rules/common.smk"
 include: "rules/setup.smk"
 include: "rules/base_sumstats.smk"
+include: "rules/prs_lassosum.smk"

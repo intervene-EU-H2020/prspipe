@@ -2,17 +2,15 @@
 
 # In case of sample based data, it should be complemented by a samples.tsv file that contains
 # one row per sample. It can be parsed easily via pandas.
-# samples: "config/samples.tsv"
+studies: "config/studies.tsv"
 
 GenoPred_dir: "workflow/scripts/GenoPred"
 Python_scr_dir: "workflow/scripts/Python"
+R_scr_dir: "workflow/scripts/R"
 
 # 1000 genomes superpopulations:
 1kg_superpop: ["EUR", "EAS", "AMR", "SAS", "AFR"]
 1kg_pop: ["GBR", "FIN", "CHS", "PUR", "CDX", "CLM", "IBS", "PEL", "PJL", "KHV", "ACB", "GWD", "ESN", "BEB", "MSL", "STU", "ITU", "CEU", "YRI", "CHB", "JPT", "LWK", "ASW", "MXL", "TSI", "GIH"]
-
-# GWAS catalog summary statistic studies
-studies: ["GCST005413"]
 
 
 ##################

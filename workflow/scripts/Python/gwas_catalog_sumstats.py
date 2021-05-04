@@ -21,7 +21,22 @@ given study id supports API access (you can check this at the GWAS catalog websi
 import requests
 import argparse
 import pandas as pd
+
+import re
+import os
+import ftplib
+import ntpath
+
+import sys
 import time
+
+import gzip
+import shutil
+
+from progressbar import AnimatedMarker, Bar, BouncingBar, Counter, ETA, \
+    AdaptiveETA, FileTransferSpeed, FormatLabel, Percentage, \
+    ProgressBar, ReverseBar, RotatingMarker, \
+    SimpleProgress, Timer, UnknownLength
 
 
 parser = argparse.ArgumentParser()
@@ -78,59 +93,18 @@ def get_sample_size(study_details):
     return N
 
 
-def get_number_snps(study_details):
-    """Returns the number of snps in the study given in the GWAS catalog
-
-    Args:
-        study_details: The study information obtained from the API endpoint
-    """
-    n_snps = study_details['snpCount']
-
-    return n_snps
-
-
-def get_summary_statistics(study_id, study_details):
-    """Get summary statistics from the GWAS catalog for a specified study
-
-    Args:
-        study_id: The study id from the GWAS catalog 
-        study_details: The study information obtained from the API endpoint
-    """
-    size = 500 # the API returns 20 items by default and you increase this by setting the size parameter (up to a limit of 500)
-    n_snps = get_number_snps(study_details)
-
-    url = f'http://www.ebi.ac.uk/gwas/summary-statistics/api/studies/{study_id}/associations?size={size}'
-
-    df = pd.DataFrame()
-
-    pages = list(range(0,n_snps,size))
-    n_pages = len(pages)
-    start_time = time.time()
-    for _ in pages:
-        counter = int(_/size)+1
-        checkpoint = time.time() - start_time
-        print(f'>> {checkpoint}: downloading page {counter}/{n_pages}')
-        data = get_request(url)
-        url = data['_links']['next']['href'] # get url for next page
-        df = pd.concat([df, pd.DataFrame(data['_embedded']['associations'].values())])
-        if _==2000: break # TODO remove this later - this is here now to speed up execution for testing purposes
-
-    return df
-
-
-def cleanup_summary_statistics(df, study_id, study_details):
+def cleanup_summary_statistics(df, study_id, n_gwas):
     """Reformat the summary statistics download from the GWAS catalog
     into a format that can be used by the QC script
 
     Args:
         df: The dataframe of summary statistics downloaded from the GWAS catalog
         study_id: The study id from the GWAS catalog 
-        study_details: The study information obtained from the API endpoint
+        n_gwas: The sample size of the GWAS study
     """
     # rename the columns to those used by https://github.com/bulik/ldsc/blob/master/munge_sumstats.py
     rename_cols = {'variant_id':'SNP', 
                     'chromosome':'CHR',
-                    'study_accession':'STUDY',
                     'p_value':'P', 
                     'effect_allele':'A1', 
                     'other_allele':'A2', 
@@ -140,14 +114,59 @@ def cleanup_summary_statistics(df, study_id, study_details):
 
     df = df.rename(columns=rename_cols)
 
+    df['STUDY'] = study_id
+
+    # ensure A1,A2 are upper case - otherwise QC script disregards them
+    df['A1'] = df['A1'].str.upper()
+    df['A2'] = df['A2'].str.upper()
+
     # drop irrelevant columns
     # also drop anything with all NaNs (otherwise the QC script will remove all rows)
     df = df[rename_cols.values()]
     df = df.dropna(axis=1,how='all')
 
-    df['N'] = get_sample_size(study_details)
+    df['N'] = n_gwas
 
     return df
+
+
+def file_write(data, file, pbar):
+   file.write(data) 
+   pbar += len(data)
+
+
+def download_ftp_sumstats(local_path, remote_path):
+    """
+    Download GWAS summary statistics using FTP download at given remote path
+    Stores the unzipped file at the given local path
+
+    Args: 
+        local_path: Filepath for storing the downloaded (both raw and unzipped) files
+        remote_path: FTP path for the file download
+    """
+    ftp = ftplib.FTP('ftp.ebi.ac.uk')
+    ftp.login()
+
+    file = open(local_path, 'wb')
+
+    size = ftp.size(remote_path)
+
+    widgets = ['Downloading: ', Percentage(), ' ',
+                        Bar(marker='#',left='[',right=']'),
+                        ' ', ETA(), ' ', FileTransferSpeed()]
+
+    pbar = ProgressBar(widgets=widgets, maxval=size)
+    pbar.start()
+
+    ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, file, pbar))
+
+    # unzip the file
+    with gzip.open(local_path, 'rb') as f_in:
+        with open(local_path[:-3], 'wb') as f_out:
+            shutil.copyfileobj(f_in, f_out)
+
+    sumstats_df = pd.read_csv(local_path[:-3], sep='\t')
+    return sumstats_df
 
 
 def download_sumstats(args, p=True):
@@ -156,10 +175,14 @@ def download_sumstats(args, p=True):
     if args.out is None:
         raise ValueError('The --out flag is required.')
 
+    studies = pd.read_csv('config/studies.tsv', dtype=str, sep='\t').set_index(["study_id"], drop=False)
+    ftp_path = studies.loc[args.study_id]['ftp_address']
+    local_path = '{}/{}'.format('/'.join(args.out.split('/')[:-1]), ftp_path.split('/')[-1])
+
     print(f'downloading summary statistics for {args.study_id}')
-    study_details = get_study_details(args.study_id)
-    sumstats = get_summary_statistics(args.study_id, study_details)
-    cleaned_sumstats = cleanup_summary_statistics(sumstats, args.study_id, study_details)
+    sumstats = download_ftp_sumstats(local_path, ftp_path)
+    n_gwas = int(studies.loc[args.study_id]['n_cases']) + int(studies.loc[args.study_id]['n_controls'])
+    cleaned_sumstats = cleanup_summary_statistics(sumstats, args.study_id, n_gwas)
     cleaned_sumstats.to_csv(args.out, index=None)
     print(f'>> output saved at {args.out}')
 

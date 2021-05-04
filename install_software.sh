@@ -5,6 +5,7 @@
 # Description:  Download binaries, move them to bin, clone GenoPred repo
 
 GENOPRED_VERION="4a0eaec89acb336c532a59dd005e914704184d32"
+LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
 
 if [ ! -f README.md ]; then
     echo "Error: Are you in the project base directory? Abort."
@@ -68,6 +69,16 @@ if [ ! -f ./bin/gctb/gctb ]; then
     )
 fi
 
+# Download lassosum
+if [ ! -f ./bin/lassosum ]; then
+    >&2 echo "Downloading Lassosum"
+    (
+    mkdir bin/lassosum
+    cd bin/lassosum
+    wget https://github.com/tshmak/lassosum/releases/download/v0.4.5/lassosum_0.4.5.tar.gz
+    )
+fi
+
 # "Install" GenoPred
 if [ ! -d ./workflow/scripts/GenoPred ]; then
     >&2 echo "Downloading GenoPred"
@@ -78,4 +89,17 @@ if [ ! -d ./workflow/scripts/GenoPred ]; then
 else
    cd ./workflow/scripts/GenoPred && git checkout ${GENOPRED_VERSION}
 fi 
+
+# "Install" LDSC
+if [ ! -d ./workflow/scripts/ldsc ]; then
+    >&2 echo "Downloading LDSC"
+    (
+    cd workflow/scripts
+    git clone https://github.com/bulik/ldsc.git && cd ldsc  && git checkout ${LDSC_VERSION}
+    )
+else
+   cd ./workflow/scripts/ldsc && git checkout ${LDSC_VERSION}
+fi 
+
+
 

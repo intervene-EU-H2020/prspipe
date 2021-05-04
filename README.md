@@ -42,7 +42,10 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
 Currently dependency management is left to the user (will change in the future). To run the setup scripts below, the user needs to have R available, and install the following dependencies:
 
     R
-    install.packages('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification')
+    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix'), dependencies=TRUE)
+
+    install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
+
 
 ### Step 4: Execute workflow
 
@@ -96,3 +99,21 @@ In case you have also changed or added steps, please consider contributing them 
 
 Test cases are in the subfolder `.test`. They are automatically executed via continuous integration with [Github Actions](https://github.com/features/actions).
 
+## Downloading GWAS summary statistics
+
+The code implements rules for automatically downloading and pre-processing summary statistics from the [GWAS catalog](https://www.ebi.ac.uk/gwas/home).
+
+To configure and run the code for downloading summary statistics:
+1. Select the studies from the GWAS catalog that you want to use
+2. For each study, enter the details in the config/studies.tsv file:
+
+| study_id | ancestry | n_cases | n_controls | ftp_address |
+| --- | --- | --- | --- | --- |
+| The study acccession number given in the GWAS catalog | The ancestry abbreviation (we currently support EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) |
+| e.g. GCST000998 | e.g. EUR | e.g. 22233 | e.g. 64762 | e.g. /pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz |
+
+3. Run the ```all_QC``` rule in the ```base_sumstats.smk``` rule file. Snakemake will download the summary statistics and run scripts to format and QC the data 
+
+```
+./run.sh all_QC
+```
