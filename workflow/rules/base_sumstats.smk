@@ -10,6 +10,8 @@ rule download_sumstats:
         "{}/{{study}}.{{ancestry}}.raw".format(config['Base_sumstats_dir']),
     log:
         "logs/base_sumstats/download_{study}.{ancestry}.log"
+    conda:
+        "envs/sumstats.yaml"
     shell:
         "python {config[Python_scr_dir]}/gwas_catalog_sumstats.py "
         "--study-id {wildcards[study]} "
