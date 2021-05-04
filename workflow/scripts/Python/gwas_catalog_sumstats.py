@@ -147,8 +147,6 @@ def download_ftp_sumstats(local_path, remote_path):
     ftp = ftplib.FTP('ftp.ebi.ac.uk')
     ftp.login()
 
-    file = open(local_path, 'wb')
-
     size = ftp.size(remote_path)
 
     widgets = ['Downloading: ', Percentage(), ' ',
@@ -158,14 +156,15 @@ def download_ftp_sumstats(local_path, remote_path):
     pbar = ProgressBar(widgets=widgets, maxval=size)
     pbar.start()
 
-    ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, file, pbar))
+    with open(local_path, 'wb') as outfile:
+        ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, outfile, pbar))
 
     # unzip the file
-    with gzip.open(local_path, 'rb') as f_in:
-        with open(local_path[:-3], 'wb') as f_out:
-            shutil.copyfileobj(f_in, f_out)
+    #with gzip.open(local_path, 'rb') as f_in:
+    #    with open(local_path[:-3], 'wb') as f_out:
+    #        shutil.copyfileobj(f_in, f_out)
 
-    sumstats_df = pd.read_csv(local_path[:-3], sep='\t')
+    sumstats_df = pd.read_csv(local_path, sep='\t')
     return sumstats_df
 
 
