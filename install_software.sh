@@ -4,8 +4,9 @@
 # Author:       Remo Monti & Sophie Wharrie
 # Description:  Download binaries, move them to bin, clone GenoPred repo
 
-GENOPRED_VERION="4a0eaec89acb336c532a59dd005e914704184d32"
+GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
+PRSICE_VERSION="2.3.3"
 
 if [ ! -f README.md ]; then
     echo "Error: Are you in the project base directory? Abort."
@@ -70,7 +71,7 @@ if [ ! -f ./bin/gctb/gctb ]; then
 fi
 
 # Download lassosum
-if [ ! -f ./bin/lassosum ]; then
+if [ ! -d ./bin/lassosum ]; then
     >&2 echo "Downloading Lassosum"
     (
     mkdir bin/lassosum
@@ -84,10 +85,23 @@ if [ ! -d ./workflow/scripts/GenoPred ]; then
     >&2 echo "Downloading GenoPred"
     (
     cd workflow/scripts
-    git clone https://github.com/opain/GenoPred.git && cd GenoPred  && git checkout ${GENOPRED_VERSION}
+    # git clone https://github.com/opain/GenoPred.git && cd GenoPred  && git checkout ${GENOPRED_VERSION}
+    git clone git@github.com:intervene-EU-H2020/GenoPred.git && cd GenoPred
+    if [ "${GENOPRED_VERSION}" = "latest" ]; then
+        git pull
+    else
+        git checkout ${GENOPRED_VERSION}
+    fi
     )
 else
-   cd ./workflow/scripts/GenoPred && git checkout ${GENOPRED_VERSION}
+    (
+    cd ./workflow/scripts/GenoPred
+    if [ "${GENOPRED_VERSION}" = "latest" ]; then
+         git pull
+    else
+         git checkout ${GENOPRED_VERSION}
+    fi
+    )
 fi 
 
 # "Install" LDSC
@@ -98,8 +112,17 @@ if [ ! -d ./workflow/scripts/ldsc ]; then
     git clone https://github.com/bulik/ldsc.git && cd ldsc  && git checkout ${LDSC_VERSION}
     )
 else
+   (
    cd ./workflow/scripts/ldsc && git checkout ${LDSC_VERSION}
+   )
 fi 
 
 
-
+# "Install" PRSice-2
+if [ ! -f ./bin/PRSice_linux ]; then
+    >&2 echo "Downloading PRSice-2" 
+    (
+    cd bin
+    wget https://github.com/choishingwan/PRSice/releases/download/${PRSICE_VERSION}/PRSice_linux.zip && unzip PRSice_linux.zip && rm TOY_BASE_GWAS.assoc TOY_TARGET_DATA.bed TOY_TARGET_DATA.bim TOY_TARGET_DATA.fam TOY_TARGET_DATA.pheno
+    )
+fi

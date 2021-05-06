@@ -36,13 +36,19 @@ rule get_plink_files_chr:
          bed="{}/1KGPhase3.chr{{chr}}.bed".format(config['Geno_1KG_dir']),
          fam="{}/1KGPhase3.chr{{chr}}.fam".format(config['Geno_1KG_dir']),
          bim="{}/1KGPhase3.chr{{chr}}.bim".format(config['Geno_1KG_dir'])
+    params:
+        ftp_path=lambda wc: "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr']),
+        target_name=lambda wc: "ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr'])
     log:
         "logs/get_plink_files_chr/{chr}.log"
     shell:
         # v5b version does not contain rs ids!
         # "(cd {config[Geno_1KG_dir]} && wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{wildcards[chr]}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz); "
         # "{config[plink1_9]} --vcf {config[Geno_1KG_dir]}/ALL.chr{wildcards[chr]}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz "
-        "(cd {config[Geno_1KG_dir]} && wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{wildcards[chr]}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz) 2> {log}; "
+        "(cd {config[Geno_1KG_dir]}; "
+        "if [ ! -f {params[target_name]} ]; then "
+        "wget {params[ftp_path]} ; fi" 
+        ") 2> {log}; "
         "({config[plink1_9]} --vcf {config[Geno_1KG_dir]}/ALL.chr{wildcards[chr]}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz "
         "--make-bed "
         "--out {config[Geno_1KG_dir]}/1KGPhase3.chr{wildcards[chr]};) &> {log} "
@@ -78,6 +84,7 @@ rule snp_to_iupac:
     # 2.4 1000 Genomes PLINK files (step 2)
     # https://opain.github.io/GenoPred/Pipeline_prep.html
     # Use R to identify a list of SNPs that matches with the hapmap3 snplist
+    # Note: this script has the ugly side effect of overwriting one of the input .bim files
     input:
         bed_bim_fam=rules.get_plink_files_chr_all.input,
         hapmap3_snplist='{}/w_hm3.snplist'.format(config['HapMap3_snplist_dir']),

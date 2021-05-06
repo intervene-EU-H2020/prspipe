@@ -21,7 +21,7 @@ plink1_9: "bin/plink"
 plink2: "bin/plink2"
 gcta: "bin/gcta/gcta64"
 gctb: "bin/gctb/gctb"
-
+prsice_path: "bin/"
 
 ##################
 # Resource paths #
