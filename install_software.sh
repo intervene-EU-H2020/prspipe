@@ -7,6 +7,7 @@
 GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
 PRSICE_VERSION="2.3.3"
+PRSCS_VERSION="f2f2b4201ffe80715d4bc46582a5207f6a31dd57"
 
 if [ ! -f README.md ]; then
     echo "Error: Are you in the project base directory? Abort."
@@ -117,6 +118,17 @@ else
    )
 fi 
 
+if [ ! -d ./workflow/scripts/PRScs ]; then
+    >&2 echo "Downloading PRScs"
+    (
+    cd workflow/scripts
+    git clone https://github.com/getian107/PRScs.git && git checkout ${PRSCS_VERSION}
+    )
+else
+    (
+    cd workflow/scripts/PRScs && git checkout ${PRSCS_VERSION}
+    )
+fi
 
 # "Install" PRSice-2
 if [ ! -f ./bin/PRSice_linux ]; then

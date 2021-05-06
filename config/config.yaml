@@ -23,6 +23,8 @@ gcta: "bin/gcta/gcta64"
 gctb: "bin/gctb/gctb"
 prsice_path: "bin/"
 
+PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
+
 ##################
 # Resource paths #
 ##################
