@@ -6,6 +6,7 @@
 
 GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
+LDPRED_VERSION="aa6b27c8ba9b88e77731ca3ccceb585f7f2362fc"
 PRSICE_VERSION="2.3.3"
 
 if [ ! -f README.md ]; then
@@ -114,6 +115,20 @@ if [ ! -d ./workflow/scripts/ldsc ]; then
 else
    (
    cd ./workflow/scripts/ldsc && git checkout ${LDSC_VERSION}
+   )
+fi 
+
+
+# "Install" LDpred
+if [ ! -d ./workflow/scripts/ldpred ]; then
+    >&2 echo "Downloading LDpred"
+    (
+    cd workflow/scripts
+    git clone https://github.com/bvilhjal/ldpred.git && cd ldpred
+    )
+else
+   (
+   cd ./workflow/scripts/ldpred
    )
 fi 
 

@@ -42,7 +42,7 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
 Currently dependency management is left to the user (will change in the future). To run the setup scripts below, the user needs to have R available, and install the following dependencies:
 
     R
-    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix'), dependencies=TRUE)
+    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool'), dependencies=TRUE)
 
     install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
 

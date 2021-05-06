@@ -7,6 +7,7 @@ studies: "config/studies.tsv"
 GenoPred_dir: "workflow/scripts/GenoPred"
 Python_scr_dir: "workflow/scripts/Python"
 R_scr_dir: "workflow/scripts/R"
+LDSC_dir: "workflow/scripts/ldsc"
 
 # 1000 genomes superpopulations:
 1kg_superpop: ["EUR", "EAS", "AMR", "SAS", "AFR"]
@@ -34,4 +35,4 @@ Geno_1KG_dir: "resources/Geno_1KG"
 Base_sumstats_dir: "resources/Base_sumstats"
 
 gwas_rep: "resources/ss/munged"
-
+ldsc_ref: "resources/LD_ref/eur_w_ld_chr"
