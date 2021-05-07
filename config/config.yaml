@@ -13,6 +13,14 @@ R_scr_dir: "workflow/scripts/R"
 1kg_pop: ["GBR", "FIN", "CHS", "PUR", "CDX", "CLM", "IBS", "PEL", "PJL", "KHV", "ACB", "GWD", "ESN", "BEB", "MSL", "STU", "ITU", "CEU", "YRI", "CHB", "JPT", "LWK", "ASW", "MXL", "TSI", "GIH"]
 
 
+##############
+# parameters #
+##############
+
+# use this many SNPs t0 calculate SBayesR LD-matrix in chunks
+sbayesr_ldm_chunksize: 20000
+
+
 ##################
 # Software paths #
 ##################
@@ -32,6 +40,8 @@ PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 Impute2_1KG_dir: "resources/Impute2_1KG"
 HapMap3_snplist_dir: "resources/HapMap3_snplist"
 Geno_1KG_dir: "resources/Geno_1KG"
+
+genetic_map: "resources/genetic_map"
 
 Base_sumstats_dir: "resources/Base_sumstats"
 
