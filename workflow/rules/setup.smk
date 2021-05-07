@@ -23,7 +23,8 @@ rule create_ancestry:
         super_pop_keep="{}/super_pop_keep.list".format(config['Geno_1KG_dir']),
         pop_keep="{}/pop_keep.list".format(config['Geno_1KG_dir']),
         super_pop_and_pop="{}/super_pop_and_pop_keep.list".format(config['Geno_1KG_dir']),
-        create_ancestry_ok=touch("{}/keep_files/create_ancestry.ok".format(config['Geno_1KG_dir']))
+        create_ancestry_ok=touch("{}/keep_files/create_ancestry.ok".format(config['Geno_1KG_dir'])),
+        keep_files=expand("{}/keep_files/{{popul}}_samples.keep".format(config['Geno_1KG_dir']),popul=config['1kg_superpop'])
     script:
         "../scripts/R/setup/create_ancestry.R"
 
@@ -140,6 +141,7 @@ rule allele_freq_pop:
         "("
         "for chrom in $(seq 1 22); do "
         "{config[plink1_9]} --bfile {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr${{chrom}} "
+        "--keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
         "--freq "
         "--out {config[Geno_1KG_dir]}/freq_files/{wildcards[popul]}/1KGPhase3.w_hm3.{wildcards[popul]}.chr${{chrom}}; "
         "done "
@@ -187,7 +189,7 @@ rule run_allele_freq_all:
         rules.run_allele_freq_pop.output,
         rules.run_allele_freq_superpop.output,
         rules.run_allele_freq_allancestry.output
-    input:
+    output:
         touch("{}/freq_files/all.ok".format(config['Geno_1KG_dir']))
 
 
