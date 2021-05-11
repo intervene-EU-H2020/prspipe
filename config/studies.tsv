@@ -1,3 +1,2 @@
 study_id	ancestry	n_cases	n_controls	ftp_address
-GCST005413	EUR	12931	57196	/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005413/harmonised/29358691-GCST005413-GCST005413.h.tsv.gz
-GCST000998	EUR	22233	64762	/pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz
+GCST005413s	EUR	12931	57196	/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005413/harmonised/29358691-GCST005413-GCST005413.h.tsv.gz

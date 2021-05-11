@@ -1,9 +1,12 @@
 # Rules for preparing score and scale files for polygenic scoring using ldpred
 
+# TODO install_software.sh script doesn't work properly for ldpred? need to fix this
+# TODO for some reason the genopred scripts run ldpred from raw scripts (even though it could be used directly as a python package)
+
 rule install_ldpred_software:
     # Check if ldpred software has been downloaded from https://github.com/bvilhjal/ldpred
     output:
-        "workflow/scripts/ldpred/ldpred/run.py"
+        ldpred_software="{}/ldpred/run.py".format(config['LDPRED_dir'])
     shell:
         "bash install_software.sh"
 
@@ -11,7 +14,7 @@ rule install_ldpred_software:
 rule ldpred_prep:
     # Note that the ldpred software requires Python dependencies, specified in the ldpred.yaml conda environment
     input:
-        ldpred=rules.install_ldpred_software.output,
+        ldpred_software=rules.install_ldpred_software.output.ldpred_software,
         sumstats="{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:
         "{}/ldpred/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}".format(config['Base_sumstats_dir'])
@@ -28,9 +31,9 @@ rule ldpred_prep:
         "--plink {config[plink1_9]} "
         "--memory 20000 "
         "--n_cores 1 "
-        "--ldpred ./{input.ldpred} "
+        "--ldpred ./{input.ldpred_software} "
         "--output {output} "
-        "--ref_pop_scale {config['Geno_1KG_dir']}/super_pop_keep.list "
+        "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
         ") &> {log}"
 
 

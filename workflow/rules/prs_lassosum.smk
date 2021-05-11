@@ -1,13 +1,12 @@
 # Rules for preparing score and scale files for polygenic scoring using lassosum
 
 # TODO the output file currently there is a bit of a hack to get it to run... but doesn't accurately represent all the outputs
-# TODO will need to give the studies different directories b/c the scripts are overwriting files (they were written with generic naming)
 
 rule lassosum_prep:
     input: 
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:
-        "{}/lassosum/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}.EUR.scale".format(config['Base_sumstats_dir'])
+        "{}/lassosum/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}.{{ancestry}}.scale".format(config['Base_sumstats_dir'])
     log:
         "logs/base_sumstats/prs_lassosum_{study}.{ancestry}.log"
     shell:
@@ -24,4 +23,4 @@ rule lassosum_prep:
 
 rule all_lassosum_prep:
     input: 
-        expand("{}/lassosum/{{study}}/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}.EUR.scale".format(config['Base_sumstats_dir']), study=studies.itertuples())
+        expand("{}/lassosum/{{study.study_id}}/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Base_sumstats_dir']), study=studies.itertuples())

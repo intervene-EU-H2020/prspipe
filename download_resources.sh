@@ -3,6 +3,7 @@
 Impute2_1KG_dir="resources/Impute2_1KG"
 HapMap3_snplist_dir="resources/HapMap3_snplist"
 Geno_1KG_dir="resources/Geno_1KG"
+LD_ref_dir="resources/LD_ref"
 
 # Create directory for the data
 mkdir -p ${Impute2_1KG_dir}
@@ -45,3 +46,28 @@ cut -f 1-3 integrated_call_samples_v3.20130502.ALL.panel > integrated_call_sampl
 #TODO: Create a keep file listing each population super population from the reference.
 )
 
+
+# Create a directory for the data
+mkdir -p ${LD_ref_dir}/EUR
+(
+# Download the LD ref score for EUR
+cd ${LD_ref_dir}/EUR
+if [ ! -f 1.l2.ldscore.gz ]; then
+    wget https://data.broadinstitute.org/alkesgroup/LDSCORE/eur_w_ld_chr.tar.bz2
+    tar -xf eur_w_ld_chr.tar.bz2 && rm eur_w_ld_chr.tar.bz2
+    mv eur_w_ld_chr/* . && rm -r eur_w_ld_chr
+fi
+)
+
+
+# Create a directory for the data
+mkdir -p ${LD_ref_dir}/EAS
+(
+# Download the LD ref score for EAS
+cd ${LD_ref_dir}/EAS
+if [ ! -f 1.l2.ldscore.gz ]; then
+    wget https://data.broadinstitute.org/alkesgroup/LDSCORE/eas_ldscores.tar.bz2
+    tar -xf eas_ldscores.tar.bz2 && rm eas_ldscores.tar.bz2
+    mv eas_ldscores/* . && rm -r eas_ldscores
+fi
+)

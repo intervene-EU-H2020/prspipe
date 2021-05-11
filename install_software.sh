@@ -110,7 +110,7 @@ if [ ! -d ./workflow/scripts/ldsc ]; then
     >&2 echo "Downloading LDSC"
     (
     cd workflow/scripts
-    git clone https://github.com/bulik/ldsc.git && cd ldsc  && git checkout ${LDSC_VERSION}
+    git clone https://github.com/bulik/ldsc.git && cd ldsc && git checkout ${LDSC_VERSION}
     )
 else
    (
@@ -124,11 +124,11 @@ if [ ! -d ./workflow/scripts/ldpred ]; then
     >&2 echo "Downloading LDpred"
     (
     cd workflow/scripts
-    git clone https://github.com/bvilhjal/ldpred.git && cd ldpred
+    git clone https://github.com/bvilhjal/ldpred.git && cd ldpred && git checkout ${LDPRED_VERSION}
     )
 else
    (
-   cd ./workflow/scripts/ldpred
+   cd ./workflow/scripts/ldpred && git checkout ${LDPRED_VERSION}
    )
 fi 
 
