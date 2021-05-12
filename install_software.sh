@@ -6,7 +6,7 @@
 
 GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
-LDPRED_VERSION="aa6b27c8ba9b88e77731ca3ccceb585f7f2362fc"
+LDPRED_VERSION="77084f1196239ab42c92492af85128c1c3d0d0c1"
 PRSICE_VERSION="2.3.3"
 
 if [ ! -f README.md ]; then
@@ -130,7 +130,7 @@ else
    (
    cd ./workflow/scripts/ldpred && git checkout ${LDPRED_VERSION}
    )
-fi 
+fi
 
 
 # "Install" PRSice-2

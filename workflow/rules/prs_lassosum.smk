@@ -1,7 +1,5 @@
 # Rules for preparing score and scale files for polygenic scoring using lassosum
 
-# TODO the output file currently there is a bit of a hack to get it to run... but doesn't accurately represent all the outputs
-
 rule lassosum_prep:
     input: 
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
