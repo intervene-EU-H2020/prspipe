@@ -4,6 +4,7 @@ Impute2_1KG_dir="resources/Impute2_1KG"
 HapMap3_snplist_dir="resources/HapMap3_snplist"
 Geno_1KG_dir="resources/Geno_1KG"
 LD_ref_dir="resources/LD_ref"
+LDBLOCK_VERSION='ac125e47bf7ff3e90be31f278a7b6a61daaba0dc'
 
 # Create directory for the data
 mkdir -p ${Impute2_1KG_dir}
@@ -71,3 +72,18 @@ if [ ! -f 1.l2.ldscore.gz ]; then
     mv eas_ldscores/* . && rm -r eas_ldscores
 fi
 )
+
+
+# Download the LD block information for the DBSLMM method
+if [ ! -d ./resources/ldetect-data ]; then
+    >&2 echo "Downloading LD block information"
+    (
+    cd resources
+    git clone https://bitbucket.org/nygcresearch/ldetect-data.git && cd ldetect-data && git checkout ${LDBLOCK_VERSION}
+    )
+else
+   (
+   cd ./resources/ldetect-data && git checkout ${LDBLOCK_VERSION}
+   )
+fi
+

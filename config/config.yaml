@@ -24,6 +24,7 @@ gctb: "bin/gctb/gctb"
 prsice_path: "bin/"
 LDSC_dir: "workflow/scripts/ldsc"
 LDPRED_dir: "workflow/scripts/ldpred"
+DBSLMM_dir: "workflow/scripts/DBSLMM"
 
 ##################
 # Resource paths #
@@ -35,5 +36,6 @@ Geno_1KG_dir: "resources/Geno_1KG"
 
 Base_sumstats_dir: "resources/Base_sumstats"
 LD_ref_dir: "resources/LD_ref"
+LD_block_dir: "resources/ldetect-data"
 
 gwas_rep: "resources/ss/munged"

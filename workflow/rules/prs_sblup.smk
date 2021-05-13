@@ -9,7 +9,7 @@ rule install_sblup_software:
         "bash install_software.sh"
 
 
-rule download_ld_ref:
+rule download_sblup_ld_ref:
     # Download the LD refence panel for the given ancestry (note that it currently only supports EUR and EAS) 
     output:
         ld_ref="{}/{{ancestry}}/1.l2.ldscore.gz".format(config['LD_ref_dir'])
@@ -22,7 +22,7 @@ rule sblup_prep:
     input: 
         ldsc_software=rules.install_sblup_software.output.ldsc_software,
         munge_sumstats_software=rules.install_sblup_software.output.munge_sumstats_software,
-        ld_ref=rules.download_ld_ref.output.ld_ref,
+        ld_ref=rules.download_sblup_ld_ref.output.ld_ref,
         sumstats="{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:
         "{}/sblup/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}.{{ancestry}}.scale.{{ancestry}}.scale".format(config['Base_sumstats_dir'])
