@@ -85,3 +85,55 @@ rule all_sbayesr_ldm:
         
 
 
+rule download_sbasesr_ld_reference:
+    # download the pre-computed LD matrix provided for GCTB
+    # effectively this skips the steps to generate the LD-matrix (ldm) above
+    # TODO: currently only works for EUR, and path is probably hardcoded in subsequent rules
+    # Genopred 4.6
+    output:
+        bin=expand('{geno1kdir}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.bin', geno1kdir=config['Geno_1KG_dir'], chr=range(1,23), allow_missing=True),
+        info=expand('{geno1kdir}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.info', geno1kdir=config['Geno_1KG_dir'],chr=range(1,23), allow_missing=True)
+    log:
+        'logs/download_sbasesr_ld_reference_{popul}.log'
+    shell:
+        "("
+        "bash workflow/scripts/bash/download_sbayesr_reference.sh {wildcards[popul]} {config[Geno_1KG_dir]}/LD_matrix/GCTB_shared/ "
+        ") &> {log}"
+        
+  
+rule all_download_sbayesr_ld_reference:
+    # runs rule above for all supported superpopulations (currently only EUR)
+    input:
+        expand(rules.download_sbasesr_ld_reference.output, popul=['EUR'])
+        
+        
+rule run_sbayesr_precomputed_1kg:
+    # 4.6 Prepare score and scale files for polygenic scoring using SBayesR
+    # rule that uses pre-computed LD matrix
+    # TODO: currently assumes EUR ancestry -> could change in the future
+    # TODO: implement the rule for LD-matrix that is computed "from scratch",
+    # TODO: adjust outputs
+    input:
+        super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
+        qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
+        ld_reference=lambda wc: expand(rules.download_sbasesr_ld_reference.output, popul=studies.ancestry[studies.study_id == wc.study])
+    output:
+        touch('{study}_{popul}_sbayesr1kg.ok')
+    log:
+        "logs/run_sbayesr_precomputed_1kg_{study}_{popul}.log"
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR.R "
+        "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
+        "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
+        "--sumstats {input[qc_stats]} "
+        "--plink {config[plink1_9]} "
+        "--gctb {config[gctb]} "
+        "--ld_matrix_chr {config[Geno_1KG_dir]}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukbEURu_hm3_v3_50k_chr "
+        "--memory 50000 "
+        "--n_cores 6 "
+        "--output {config[GenoPred_dir]}/Score_files_for_polygenic/SBayesR/ldm_precomputed/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
+        ") &> {log}"
+        
+        

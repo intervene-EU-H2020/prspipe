@@ -138,3 +138,16 @@ if [ ! -f ./bin/PRSice_linux ]; then
     wget https://github.com/choishingwan/PRSice/releases/download/${PRSICE_VERSION}/PRSice_linux.zip && unzip PRSice_linux.zip && rm TOY_BASE_GWAS.assoc TOY_TARGET_DATA.bed TOY_TARGET_DATA.bim TOY_TARGET_DATA.fam TOY_TARGET_DATA.pheno
     )
 fi
+
+# "Install" QCTOOL 2
+if [ ! -f ./bin/qctool ]; then
+    >&2 echo "Downloading QCTOOL V2" 
+    (
+    # TODO: configure version (?)
+    cd bin
+    wget https://www.well.ox.ac.uk/~gav/resources/qctool_v2.0.6-Ubuntu16.04-x86_64.tgz
+    tar -xvf qctool_v2.0.6-Ubuntu16.04-x86_64.tgz && rm qctool_v2.0.6-Ubuntu16.04-x86_64.tgz
+    mv qctool_v2.0.6-Ubuntu16.04-x86_64/qctool ./ && rm -r qctool_v2.0.6-Ubuntu16.04-x86_64
+    )
+fi
+

@@ -1,4 +1,6 @@
 
+#TODO: change LD matrix output directories, they're a mess... (also for other methods)
+
 rule download_ld_blocks:
     # 4.4.1 Prepare PRScs LD reference
     # TODO: instead of generating the reference ourselved, Oliver Pain indicated that we might want to use the pre-computed matrices instead!

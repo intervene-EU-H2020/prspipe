@@ -1,7 +1,6 @@
 # Rules for downloading and running QC for the base data from the GWAS catalog
 # Automatically downloads summary statistics for studies specified in config file
 
-
 rule download_sumstats:
     # downloads summary statistics from the GWAS catalog
     # for the studies specified in the studies.tsv file
