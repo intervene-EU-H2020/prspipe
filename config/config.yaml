@@ -31,6 +31,9 @@ plink2: "bin/plink2"
 gcta: "bin/gcta/gcta64"
 gctb: "bin/gctb/gctb"
 prsice_path: "bin/"
+LDSC_dir: "workflow/scripts/ldsc"
+LDPRED_dir: "workflow/scripts/ldpred"
+DBSLMM_dir: "workflow/scripts/DBSLMM"
 qctool2: "bin/qctool"
 PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 
@@ -45,11 +48,10 @@ Geno_1KG_dir: "resources/Geno_1KG"
 genetic_map: "resources/genetic_map"
 
 Base_sumstats_dir: "resources/Base_sumstats"
+LD_ref_dir: "resources/LD_matrix"
+LD_block_dir: "resources/ldetect-data"
 
 gwas_rep: "resources/ss/munged"
-
 UKBB_original: "/mnt/projects/ukbiobank/original/genetics/imputed/EGAD00010001474/"
 UKBB_fam: "/mnt/projects/ukbiobank/original/genetics/imputed/sample/ukb40502_imp_chr1_v3_s487296.sample"
 UKBB_output: "results/UKBB"
-
-

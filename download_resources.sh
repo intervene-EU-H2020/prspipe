@@ -3,6 +3,8 @@
 Impute2_1KG_dir="resources/Impute2_1KG"
 HapMap3_snplist_dir="resources/HapMap3_snplist"
 Geno_1KG_dir="resources/Geno_1KG"
+LD_ref_dir="resources/LD_matrix"
+LDBLOCK_VERSION='ac125e47bf7ff3e90be31f278a7b6a61daaba0dc'
 
 # Create directory for the data
 mkdir -p ${Impute2_1KG_dir}
@@ -44,4 +46,32 @@ fi
 cut -f 1-3 integrated_call_samples_v3.20130502.ALL.panel > integrated_call_samples_v3.20130502.ALL.panel_small
 #TODO: Create a keep file listing each population super population from the reference.
 )
+
+
+# Create a directory for the data
+mkdir -p ${LD_ref_dir}/sblup_dbslmm/1000G/precomputed/EUR
+(
+# Download the LD ref matrix for EUR
+# naming convention is ${LD_ref_dir}/<method1>_<method2>.../<1000G/UKBB>/<precomputed/fromscratch>/<ancestry>
+cd ${LD_ref_dir}/sblup_dbslmm/1000G/precomputed/EUR
+if [ ! -f 1.l2.ldscore.gz ]; then
+    wget https://data.broadinstitute.org/alkesgroup/LDSCORE/eur_w_ld_chr.tar.bz2
+    tar -xf eur_w_ld_chr.tar.bz2 && rm eur_w_ld_chr.tar.bz2
+    mv eur_w_ld_chr/* . && rm -r eur_w_ld_chr
+fi
+)
+
+
+# Download the LD block information for the DBSLMM method
+if [ ! -d ./resources/ldetect-data ]; then
+    >&2 echo "Downloading LD block information"
+    (
+    cd resources
+    git clone https://bitbucket.org/nygcresearch/ldetect-data.git && cd ldetect-data && git checkout ${LDBLOCK_VERSION}
+    )
+else
+   (
+   cd ./resources/ldetect-data && git checkout ${LDBLOCK_VERSION}
+   )
+fi
 

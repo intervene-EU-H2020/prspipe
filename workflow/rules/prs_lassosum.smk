@@ -1,12 +1,11 @@
 # Rules for preparing score and scale files for polygenic scoring using lassosum
 
-# TODO log error says it can't find input summary stats files?
-
 rule lassosum_prep:
+    # Implements the lassosum method
     input: 
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:
-        "{}/lassosum/1KGPhase3.w_hm3.{{ancestry}}.{{study}}".format(config['Base_sumstats_dir'])
+        "{}/lassosum/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}.{{ancestry}}.scale".format(config['Base_sumstats_dir'])
     log:
         "logs/base_sumstats/prs_lassosum_{study}.{ancestry}.log"
     shell:
@@ -15,12 +14,13 @@ rule lassosum_prep:
         "--ref_plink_gw {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
         "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[ancestry]}_samples.keep "
         "--sumstats {input} "
-        "--output {output} "
+        "--output {config[Base_sumstats_dir]}/lassosum/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[ancestry]}.{wildcards[study]} "
         "--plink {config[plink1_9]} "
         "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
         ") &> {log}"
 
 
 rule all_lassosum_prep:
+    # Run this rule to run the lassosum method
     input: 
-        expand("{}/lassosum/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}".format(config['Base_sumstats_dir']), study=studies.itertuples())
+        expand("{}/lassosum/{{study.study_id}}/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Base_sumstats_dir']), study=studies.itertuples())

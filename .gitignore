@@ -3,4 +3,8 @@ bin/
 resources/*
 .ipynb_checkpoints
 workflow/scripts/GenoPred
+workflow/scripts/ldpred
+workflow/scripts/ldsc
+workflow/scripts/DBSLMM
+logs/
 logs/results/UKBB
