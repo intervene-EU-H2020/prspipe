@@ -7,3 +7,4 @@ workflow/scripts/ldpred
 workflow/scripts/ldsc
 workflow/scripts/DBSLMM
 logs/
+logs/results/UKBB
