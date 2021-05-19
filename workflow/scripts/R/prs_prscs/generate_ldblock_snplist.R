@@ -14,6 +14,11 @@ source('workflow/scripts/R/source_config.R')
 
 library(data.table)
 
+args <- commandArgs(trailingOnly = TRUE)
+
+# 1000 genomes superpopulation
+popul <- args[1]
+
 # Read in bim file for reference
 bim_all<-NULL
 for(i in 1:22){
@@ -24,7 +29,7 @@ for(i in 1:22){
 # Read in the freq files to create the snpinfo file
 frq_all<-NULL
 for(i in 1:22){
-    frq<-fread(paste0(Geno_1KG_dir,'/freq_files/EUR/1KGPhase3.w_hm3.EUR.chr',i,'.frq'))
+    frq<-fread(paste0(Geno_1KG_dir,'/freq_files/',popul,'/1KGPhase3.w_hm3.',popul,'.chr',i,'.frq'))
     frq_all<-rbind(frq_all, frq)
 }
 
@@ -41,11 +46,11 @@ frq_bim<-frq_bim[frq_bim$NCHROBS > (max(frq_bim$NCHROBS)*0.99),]
 frq_bim$NCHROBS<-NULL
 
 # Extract snplist for each range in LD Block bed files
-bed<-fread('resources/ldetect-data/EUR/fourier_ls-all.bed')
+bed<-fread('resources/ldetect-data/',popul,'/fourier_ls-all.bed')
 bed$chr<-as.numeric(gsub('chr','',bed$chr))
 
 blk_chr<-bed$chr
-write.table(blk_chr,paste0(Geno_1KG_dir,'/PRScs_LD_matrix/LD_Blocks/blk_chr'), col.names=F, row.names=F, quote=F)
+write.table(blk_chr,paste0('/resources/LD_matrix/prscs/1000G/fromscratch/',popul,'/blk_chr'), col.names=F, row.names=F, quote=F)
 
 blk_size<-NULL
 snpinfo_1kg_hm3<-NULL
@@ -53,10 +58,9 @@ for(i in 1:dim(bed)[1]){
   frq_bim_i<-frq_bim[frq_bim$CHR == bed$chr[i] & frq_bim$BP > bed$start[i] & frq_bim$BP < bed$stop[i],]
   blk_size<-c(blk_size,dim(frq_bim_i)[1])
   snpinfo_1kg_hm3<-rbind(snpinfo_1kg_hm3,frq_bim_i)
-  write.table(frq_bim_i$SNP,paste0(Geno_1KG_dir,'/PRScs_LD_matrix/LD_Blocks/Block_',i,'.snplist'), col.names=F, row.names=F, quote=F)
+  write.table(frq_bim_i$SNP,paste0('/resources/LD_matrix/prscs/1000G/fromscratch/',popul,'/LD_Blocks/Block_',i,'.snplist'), col.names=F, row.names=F, quote=F)
 }
 
-write.table(blk_size,paste0(Geno_1KG_dir,'/PRScs_LD_matrix/LD_Blocks/blk_size'), col.names=F, row.names=F, quote=F)
+write.table(blk_size,paste0('/resources/LD_matrix/prscs/1000G/fromscratch/',popul,'/LD_Blocks/blk_size'), col.names=F, row.names=F, quote=F)
 
-write.table(snpinfo_1kg_hm3, paste0(Geno_1KG_dir,'/PRScs_LD_matrix/EUR/snpinfo_1kg_hm3'), col.names=T, row.names=F, quote=F)
-
+write.table(snpinfo_1kg_hm3, paste0('/resources/LD_matrix/prscs/1000G/fromscratch/',popul,'/LD_blocks/snpinfo_1kg_hm3'), col.names=T, row.names=F, quote=F)

@@ -18,15 +18,15 @@ rule download_genetic_map:
 
 rule generate_ldm_chunks_1:
     # generate sbayesr LD matrix in chunks, step 1
-    # filter SNPs to those with MAF > 0.001
+    # filter SNPs to those with MAF > 0.0
     # generate chunk files
     input:
         rules.run_allele_freq_superpop.output
     output:
         # A rule with dynamic output may not define any non-dynamic output files.
         # however, this temporary file is produced as well:
-        # snp=expand("{geno1kdir}/LD_matrix/{{popul}}/chr{{chr}}/SNP.txt", geno1kdir=config['Geno_1KG_dir']),
-        chunk=dynamic(expand("{geno1kdir}/LD_matrix/{{popul}}/chr{{chr}}/SNP_{{chunk}}.txt", geno1kdir=config['Geno_1KG_dir']))
+        # snp=expand("resources/LD_matrix/sbayesr/1000G/fromscratch/{{popul}}/chr{{chr}}/SNP.txt", geno1kdir=config['Geno_1KG_dir']),
+        chunk=dynamic(expand("resources/LD_matrix/sbayesr/1000G/fromscratch/{{popul}}/chr{{chr}}/SNP_{{chunk}}.txt", geno1kdir=config['Geno_1KG_dir']))
     shell:
         "Rscript workflow/scripts/R/prs_sbayesr/generate_ld_matrix_chunks.R {wildcards[popul]} {config[sbayesr_ldm_chunksize]} {wildcards[chr]}"
 
@@ -40,13 +40,13 @@ rule generate_ldm_chunks_1_all:
 rule generate_ldm_chunks_2:
     # generate sbayesr LD matrix in chunks, step 2
     input:
-        chunkfile='{}/LD_matrix/{{popul}}/chr{{chr}}/SNP_{{chunk}}.txt'.format(config['Geno_1KG_dir']),
+        chunkfile='resources/LD_matrix/sbayesr/1000G/fromscratch/{popul}/chr{chr}/SNP_{chunk}.txt',
         genetic_map=lambda wc: rules.download_genetic_map.output[int(wc['chr'])-1],
         extract_hm3=rules.extract_hm3.output,
         keep=rules.create_ancestry.output
     output:
-        bin=temp('{}/LD_matrix/{{popul}}/chr{{chr}}/1KGPhase3.w_hm3.{{chunk}}.ldm.shrunk.bin'.format(config['Geno_1KG_dir'])),
-        info=temp('{}/LD_matrix/{{popul}}/chr{{chr}}/1KGPhase3.w_hm3.{{chunk}}.ldm.shrunk.info'.format(config['Geno_1KG_dir']))
+        bin=temp('resources/LD_matrix/sbayesr/1000G/fromscratch/{popul}/chr{chr}/1KGPhase3.w_hm3.{chunk}.ldm.shrunk.bin'),
+        info='resources/LD_matrix/sbayesr/1000G/fromscratch/{popul}/chr{chr}/1KGPhase3.w_hm3.{chunk}.ldm.shrunk.info'
     log:
         'logs/generate_ldm_chunks_2/{popul}_{chr}_{chunk}.log'
     shell:
@@ -56,10 +56,10 @@ rule generate_ldm_chunks_2:
         "--bfile {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr{wildcards[chr]} "
         "--keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
         "--make-shrunk-ldm "
-        "--extract {config[Geno_1KG_dir]}/LD_matrix/{wildcards[popul]}/chr{wildcards[chr]}/SNP.txt "
+        "--extract resources/LD_matrix/sbayesr/1000G/fromscratch/{wildcards[popul]}/chr{wildcards[chr]}/SNP.txt "
         "--gen-map {input[genetic_map]} "
         "--snp ${{start}}-${{end}} "
-        "--out {config[Geno_1KG_dir]}/LD_matrix/{wildcards[popul]}/chr{wildcards[chr]}/1KGPhase3.w_hm3; "
+        "--out resources/LD_matrix/sbayesr/1000G/fromscratch/{wildcards[popul]}/chr{wildcards[chr]}/1KGPhase3.w_hm3; "
         "done < {input[chunkfile]} "
         ") &> {log} "
 
@@ -69,7 +69,7 @@ rule merge_ldm_chunks:
     input:
         chunks=dynamic(rules.generate_ldm_chunks_2.output.bin)
     output:
-        '{}/LD_matrix/{{popul}}/1KGPhase3.w_hm3.{{popul}}.chr{{chr}}.ldm.shrunk.bin'.format(config['Geno_1KG_dir'])
+        'resources/LD_matrix/sbayesr/1000G/fromscratch/{popul}/1KGPhase3.w_hm3.{popul}.chr{chr}.ldm.shrunk.bin'
     log:
         "logs/merge_ldm_chunks/{popul}_{chr}.log"
     shell:
@@ -84,20 +84,19 @@ rule all_sbayesr_ldm:
         expand(rules.merge_ldm_chunks.output, popul=['EUR'], chr=range(1,23))
         
 
-
 rule download_sbasesr_ld_reference:
-    # download the pre-computed LD matrix provided for GCTB
+    # download the pre-computed LD matrix provided for GCTB (EUR UKBB)
     # effectively this skips the steps to generate the LD-matrix (ldm) above
     # TODO: currently only works for EUR, and path is probably hardcoded in subsequent rules
     # Genopred 4.6
     output:
-        bin=expand('{geno1kdir}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.bin', geno1kdir=config['Geno_1KG_dir'], chr=range(1,23), allow_missing=True),
-        info=expand('{geno1kdir}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.info', geno1kdir=config['Geno_1KG_dir'],chr=range(1,23), allow_missing=True)
+        bin=expand('resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.bin', geno1kdir=config['Geno_1KG_dir'], chr=range(1,23), allow_missing=True),
+        info=expand('resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukb{popul}u_hm3_v3_50k_chr{chr}.ldm.sparse.info', geno1kdir=config['Geno_1KG_dir'],chr=range(1,23), allow_missing=True)
     log:
         'logs/download_sbasesr_ld_reference_{popul}.log'
     shell:
         "("
-        "bash workflow/scripts/bash/download_sbayesr_reference.sh {wildcards[popul]} {config[Geno_1KG_dir]}/LD_matrix/GCTB_shared/ "
+        "bash workflow/scripts/bash/download_sbayesr_reference.sh {wildcards[popul]} resources/LD_matrix/sbayesr/1000G/precomputed/EUR/ "
         ") &> {log}"
         
   
@@ -107,33 +106,48 @@ rule all_download_sbayesr_ld_reference:
         expand(rules.download_sbasesr_ld_reference.output, popul=['EUR'])
         
         
-rule run_sbayesr_precomputed_1kg:
+# TODO: rule that runs SBasesR with custom reference panel (1000 genomes)
+        
+rule run_sbayesr_precompld_1kg:
     # 4.6 Prepare score and scale files for polygenic scoring using SBayesR
     # rule that uses pre-computed LD matrix
     # TODO: currently assumes EUR ancestry -> could change in the future
-    # TODO: implement the rule for LD-matrix that is computed "from scratch",
+    # TODO: implement the rule for LD-matrix that is computed "from scratch"
+    # TODO: get rid of ugly names (?)
     # TODO: adjust outputs
+    # TODO: this only runs SBayesR with default parameters (?), what about other parameters
     input:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
         ld_reference=lambda wc: expand(rules.download_sbasesr_ld_reference.output, popul=studies.ancestry[studies.study_id == wc.study])
     output:
-        touch('{study}_{popul}_sbayesr1kg.ok')
+        scale=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop']),
+        log1=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/SBayesR.chr{chr}.log', geno1kg=config['Geno_1KG_dir'], chr=range(1,23)),
+        log2=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log', geno1kg=config['Geno_1KG_dir']),
+        parres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.parRes', geno1kg=config['Geno_1KG_dir']),
+        snpres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.snpRes', geno1kg=config['Geno_1KG_dir'])
     log:
-        "logs/run_sbayesr_precomputed_1kg_{study}_{popul}.log"
+        "logs/run_sbayesr_precomputed_1kg_{study}.log"
     shell:
+        # this argument actually doesn't do anything (?)
+        # "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR.R "
         "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
-        "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
         "--gctb {config[gctb]} "
-        "--ld_matrix_chr {config[Geno_1KG_dir]}/LD_matrix/GCTB_shared/ukbEURu_hm3_shrunk_sparse/ukbEURu_hm3_v3_50k_chr "
+        "--ld_matrix_chr resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukbEURu_hm3_v3_50k_chr "
         "--memory 50000 "
-        "--n_cores 6 "
-        "--output {config[GenoPred_dir]}/Score_files_for_polygenic/SBayesR/ldm_precomputed/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--n_cores 32 "
+        "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
         ") &> {log}"
+        
+
+rule all_run_sbayesr_precompld_1kg:
+    # runs rule above for all studies
+    input:
+        expand(rules.run_sbayesr_precompld_1kg.output, study=studies.study_id)
         
         

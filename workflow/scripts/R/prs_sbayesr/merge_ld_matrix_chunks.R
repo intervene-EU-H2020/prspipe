@@ -21,6 +21,10 @@ file_num<-as.numeric(gsub('-.*', '', file_num))
 # Sort files in order of genomic location otherwise SBayeR does not converge!
 files<-files[order(file_num)]
 
-write.table(files,paste0(Geno_1KG_dir,'/LD_matrix/',popul,'/shrunk_ld_chr',chrom,'merge_list'), col.names=F, row.names=F, quote=F)
-system(paste0(gctb,' --mldm ',Geno_1KG_dir,'/LD_matrix/',popul,'/shrunk_ld_chr',chrom,'merge_list --make-shrunk-ldm --out ',Geno_1KG_dir,'/LD_matrix/',popul,'/1KGPhase3.w_hm3.',popul,'.chr',chrom))
-
+write.table(files,paste0('resources/LD_matrix/sbayesr/1000G/fromscratch/',popul,'/shrunk_ld_chr',chrom,'merge_list'), col.names=F, row.names=F, quote=F)
+if (length(files) == 1){
+    # prevents a crash
+    system(paste0(gctb,' --ldm ',files[1],' --make-shrunk-ldm --out resources/LD_matrix/sbayesr/1000G/fromscratch/',popul,'/1KGPhase3.w_hm3.',popul,'.chr',chrom))
+} else { 
+    system(paste0(gctb,' --mldm resources/LD_matrix/sbayesr/1000G/fromscratch/',popul,'/shrunk_ld_chr',chrom,'merge_list --make-shrunk-ldm --out resources/LD_matrix/sbayesr/1000G/fromscratch/',popul,'/1KGPhase3.w_hm3.',popul,'.chr',chrom))
+}

@@ -25,7 +25,7 @@ if [ -d ukbEURu_hm3_shrunk_sparse ]; then
     rm -r ukbEURu_hm3_shrunk_sparse
 fi
 
-unzip ukbEURu_hm3_sparse.zip && cd ukbEURu_hm3_shrunk_sparse
+unzip ukbEURu_hm3_sparse.zip && mv ukbEURu_hm3_shrunk_sparse/* && rm -r ukbEURu_hm3_shrunk_sparse/ && rm ukbEURu_hm3_sparse.zip
 
 # Rename matrices so chromosome number is at the end of the file name
 # currently these are the same names as provided in GenoPred (step 4.6, https:/opain.github.io/GenoPred/Pipeline_prep.html#46_Prepare_score_and_scale_files_for_polygenic_scoring_using_SBayesR), could be renamed at some point...
