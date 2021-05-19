@@ -1,6 +1,7 @@
 # Rules for preparing score and scale files for polygenic scoring using lassosum
 
 rule lassosum_prep:
+    # Implements the lassosum method
     input: 
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:
@@ -20,5 +21,6 @@ rule lassosum_prep:
 
 
 rule all_lassosum_prep:
+    # Run this rule to run the lassosum method
     input: 
         expand("{}/lassosum/{{study.study_id}}/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Base_sumstats_dir']), study=studies.itertuples())

@@ -8,7 +8,7 @@ GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
 LDPRED_VERSION="77084f1196239ab42c92492af85128c1c3d0d0c1"
 PRSICE_VERSION="2.3.3"
-DBSLMM_VERSION="9606ad84c320c1bbd872510f6f7546f22972f0bf"
+DBSLMM_VERSION="latest"
 
 if [ ! -f README.md ]; then
     echo "Error: Are you in the project base directory? Abort."
@@ -139,7 +139,7 @@ if [ ! -d ./workflow/scripts/DBSLMM ]; then
     >&2 echo "Downloading DBSLMM"
     (
     cd workflow/scripts
-    git clone https://github.com/biostat0903/DBSLMM.git && cd DBSLMM && git checkout ${DBSLMM_VERSION}
+    git clone https://github.com/intervene-EU-H2020/DBSLMM.git && cd DBSLMM && git checkout ${DBSLMM_VERSION}
     )
 else
    (

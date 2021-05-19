@@ -35,7 +35,7 @@ HapMap3_snplist_dir: "resources/HapMap3_snplist"
 Geno_1KG_dir: "resources/Geno_1KG"
 
 Base_sumstats_dir: "resources/Base_sumstats"
-LD_ref_dir: "resources/LD_ref"
+LD_ref_dir: "resources/LD_matrix"
 LD_block_dir: "resources/ldetect-data"
 
 gwas_rep: "resources/ss/munged"
