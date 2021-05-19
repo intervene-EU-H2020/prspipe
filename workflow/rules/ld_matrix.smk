@@ -1,4 +1,4 @@
-# Rules for download LD references or calculating them from scratch
+# Rules for downloading LD references or calculating them from scratch
 
 rule create_dbslmm_sblup_ld_ref:
     # Compute a custom LD reference panel 
