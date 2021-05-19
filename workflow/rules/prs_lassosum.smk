@@ -2,6 +2,9 @@
 
 rule lassosum_prep:
     # Implements the lassosum method
+    # TODO: add input files (otherwise rule might be executed too soon)
+    # TODO: try to list all the output files (...*.score), use either dynamic wildcard or hardcoded
+    # TODO: possibly change output directory (?)
     input: 
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     output:

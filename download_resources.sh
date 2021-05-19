@@ -9,6 +9,8 @@ LDBLOCK_VERSION='ac125e47bf7ff3e90be31f278a7b6a61daaba0dc'
 # Create directory for the data
 mkdir -p ${Impute2_1KG_dir}
 
+set -e
+
 # Download data using wget
 (
 cd ${Impute2_1KG_dir}

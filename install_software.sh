@@ -151,12 +151,22 @@ if [ ! -d ./workflow/scripts/DBSLMM ]; then
     >&2 echo "Downloading DBSLMM"
     (
     cd workflow/scripts
-    git clone https://github.com/intervene-EU-H2020/DBSLMM.git && cd DBSLMM && git checkout ${DBSLMM_VERSION}
+    git clone https://github.com/intervene-EU-H2020/DBSLMM.git && cd DBSLMM
+    if [ "${DBSLMM_VERSION}" = "latest" ]; then
+        git pull
+    else
+        git checkout ${DBSLMM_VERSION}
+    fi
     )
 else
-   (
-   cd ./workflow/scripts/DBSLMM && git checkout ${DBSLMM_VERSION}
-   )
+    (
+    cd ./workflow/scripts/DBSLMM
+    if [ "${DBSLMM_VERSION}" = "latest" ]; then
+        git pull
+    else
+        git checkout ${DBSLMM_VERSION}
+    fi
+    )
 fi
 
 

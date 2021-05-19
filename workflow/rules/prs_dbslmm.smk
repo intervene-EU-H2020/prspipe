@@ -3,6 +3,7 @@
 rule install_dbslmm_software:
     # Install the external software required by the dbslmm method
     # Note that we use our own fork of DBSLMM (had to make changes for compatibility with GenoPred scripts)
+    # TODO: remove this rule, assume we have run install_software.sh
     output:
         ldsc_software="{}/ldsc.py".format(config['LDSC_dir']),
         munge_sumstats_software="{}/munge_sumstats.py".format(config['LDSC_dir']),
@@ -12,7 +13,8 @@ rule install_dbslmm_software:
 
 
 rule download_dbslmm_ld_block:
-    # Download the LD block data for the given ancestry (note that it currently only supports AFR, ASN and EUR) 
+    # Download the LD block data for the given ancestry (note that it currently only supports AFR, ASN and EUR)
+    # TODO: move this outside of download_resources.sh
     output:
         ld_block="{}/{{ancestry}}/fourier_ls-all.bed".format(config['LD_block_dir'])
     shell:
@@ -24,6 +26,7 @@ rule dbslmm_prep:
     # Note that LDSC requires python 2 so Snakemake will setup this environment using the given .yml file
     # Uses the precomputed LD ref (based on 1000G) by default - 
     # If you want to compute the LD ref from scratch, replace ld_ref with expand("{}/sblup_dbslmm/1000G/fromscratch/{{study.ancestry}}/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples())
+    # TODO: add all input files (otherwise rule might be executed too soon)
     input: 
         ldsc_software=rules.install_dbslmm_software.output.ldsc_software,
         munge_sumstats_software=rules.install_dbslmm_software.output.munge_sumstats_software,
@@ -36,7 +39,7 @@ rule dbslmm_prep:
     log:
         "logs/base_sumstats/prs_dbslmm_{study}.{ancestry}.log"
     conda:
-        "../../{}/environment.yml".format(config['LDSC_dir'])
+        "../envs/ldsc.yaml"
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_DBSLMM/polygenic_score_file_creator_DBSLMM.R "
