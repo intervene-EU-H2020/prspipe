@@ -3,4 +3,4 @@ bin/
 resources/*
 .ipynb_checkpoints
 workflow/scripts/GenoPred
-logs/
+logs/results/UKBB
