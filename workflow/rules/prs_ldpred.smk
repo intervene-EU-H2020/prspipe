@@ -1,25 +1,16 @@
 # Rules for preparing score and scale files for polygenic scoring using ldpred
 
-rule install_ldpred_software:
-    # Note: There's a bug in the latest version of ldpred (1.0.11), see https://github.com/bvilhjal/ldpred/issues/151
-    # To avoid this issue you need to use v1.0.10 (specifically, commit 77084f1196239ab42c92492af85128c1c3d0d0c1)
-    output:
-        ldpred_software="{}/ldpred/run.py".format(config['LDPRED_dir'])
-    shell:
-        "bash install_software.sh"
-
-
 rule ldpred_prep:
     # Implements the ldpred method
     # Note 1: the ldpred software requires Python dependencies, specified in the ldpred.yaml conda environment
     # Note 2: because the R script uses the ldpred software scripts (instead of the Python package), the script exports the module to the pythonpath
     input:
-        ldpred_software=rules.install_ldpred_software.output.ldpred_software,
-        sumstats="{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
+        qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
+        super_pop_keep=rules.create_ancestry.output['super_pop_keep']
     output:
-        "{}/ldpred/{{study}}/1KGPhase3.w_hm3.{{ancestry}}.{{study}}.{{ancestry}}.scale".format(config['Base_sumstats_dir'])
+        "{}/Score_files_for_polygenic/ldpred/{{study}}/1KGPhase3.w_hm3.{{study}}.{{ancestry}}.scale".format(config['Geno_1KG_dir'])
     log:
-        "logs/base_sumstats/prs_ldpred_{study}.{ancestry}.log"
+        "logs/prs_ldpred_{study}.{ancestry}.log"
     conda:
         "../envs/ldpred.yaml"
     shell:
@@ -27,18 +18,19 @@ rule ldpred_prep:
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred/polygenic_score_file_creator_LDPred.R "
         "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
         "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[ancestry]}_samples.keep "
-        "--sumstats {input.sumstats} "
+        "--sumstats {input.qc_stats} "
         "--plink {config[plink1_9]} "
         "--memory 20000 "
         "--n_cores 1 "
         "--ldpred \"python -m ldpred\" "
-        "--output {output} "
-        "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
+        "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/ldpred/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_pop_scale {input.super_pop_keep} "
         ") &> {log}"
 
 
 rule all_ldpred_prep:
     # Run this rule to run the ldpred method
     # IMPORTANT NOTE you have to run the rules using the --conda-not-block-search-path-envvars option because of the pythonpath adjustment
+    # TODO try to find a way to avoid this issue
     input: 
-        expand("{}/ldpred/{{study.study_id}}/1KGPhase3.w_hm3.{{study.ancestry}}.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Base_sumstats_dir']), study=studies.itertuples())
+        expand("{}/Score_files_for_polygenic/ldpred/{{study.study_id}}/1KGPhase3.w_hm3.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Geno_1KG_dir']), study=studies.itertuples())

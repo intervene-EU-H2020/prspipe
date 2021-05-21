@@ -87,7 +87,8 @@ def get_sample_size(study_details):
     Args:
         study_details: The study information obtained from the API endpoint
     """
-    # TODO check I am calculating sample size correctly - there was no field for this so I'm adding all individuals in the initial ancestries (i.e. not replicates)
+    # note there's no field for sample size in the GWAS catalog, so this is calculated here by summing individual ancestry populations
+    # (therefore it's advised to specify the sample size in the input studies.tsv file)
     N = sum([_['numberOfIndividuals'] for _ in study_details['ancestries'] if _['type']=='initial'])
 
     return N

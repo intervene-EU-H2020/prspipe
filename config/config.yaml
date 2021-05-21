@@ -20,6 +20,9 @@ R_scr_dir: "workflow/scripts/R"
 # use this many SNPs to calculate SBayesR LD-matrix in chunks
 sbayesr_ldm_chunksize: 20000
 
+# github repository version for LD block data
+ldbloc_version: "ac125e47bf7ff3e90be31f278a7b6a61daaba0dc"
+
 
 ##################
 # Software paths #
