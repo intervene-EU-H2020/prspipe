@@ -6,7 +6,8 @@
 
 GENOPRED_VERION="latest"
 LDSC_VERSION="aa33296abac9569a6422ee6ba7eb4b902422cc74"
-LDPRED_VERSION="77084f1196239ab42c92492af85128c1c3d0d0c1"
+# LDpred is installed via pip!
+# LDPRED_VERSION="77084f1196239ab42c92492af85128c1c3d0d0c1"
 PRSICE_VERSION="2.3.3"
 DBSLMM_VERSION="latest"
 PRSCS_VERSION="f2f2b4201ffe80715d4bc46582a5207f6a31dd57"
@@ -133,17 +134,17 @@ else
 fi
 
 # "Install" LDpred
-if [ ! -d ./workflow/scripts/ldpred ]; then
-    >&2 echo "Downloading LDpred"
-    (
-    cd workflow/scripts
-    git clone https://github.com/bvilhjal/ldpred.git && cd ldpred && git checkout ${LDPRED_VERSION}
-    )
-else
-   (
-   cd ./workflow/scripts/ldpred && git checkout ${LDPRED_VERSION}
-   )
-fi
+#if [ ! -d ./workflow/scripts/ldpred ]; then
+#    >&2 echo "Downloading LDpred"
+#    (
+#    cd workflow/scripts
+#    git clone https://github.com/bvilhjal/ldpred.git && cd ldpred && git checkout ${LDPRED_VERSION}
+#    )
+#else
+#   (
+#   cd ./workflow/scripts/ldpred && git checkout ${LDPRED_VERSION}
+#   )
+#fi
 
 
 # "Install" DBSLMM

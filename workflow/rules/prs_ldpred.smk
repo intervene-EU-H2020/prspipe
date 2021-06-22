@@ -14,7 +14,8 @@ rule ldpred_prep:
     conda:
         "../envs/ldpred.yaml"
     shell:
-        "export PYTHONPATH=$PYTHONPATH:$PWD/workflow/scripts/ldpred && ("
+        #"export PYTHONPATH=$PYTHONPATH:$PWD/workflow/scripts/ldpred && ("
+        "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred/polygenic_score_file_creator_LDPred.R "
         "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
         "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[ancestry]}_samples.keep "
@@ -22,7 +23,7 @@ rule ldpred_prep:
         "--plink {config[plink1_9]} "
         "--memory 20000 "
         "--n_cores 1 "
-        "--ldpred \"python -m ldpred\" "
+        "--ldpred ldpred "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/ldpred/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input.super_pop_keep} "
         ") &> {log}"

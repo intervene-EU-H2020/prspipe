@@ -36,4 +36,5 @@ dependencies:
   - zlib=1.2.11=h7b6447c_3
   - pip:
     - plinkio==0.9.8
+    - ldpred==1.0.10
 prefix: /u/42/wharris1/unix/anaconda3/envs/ldpred

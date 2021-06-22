@@ -37,3 +37,21 @@ include: "rules/prs_sbayesr.smk"
 include: "rules/prs_prscs.smk"
 include: "rules/prs_ldpred2.smk"
 include: "rules/ukbb.smk"
+
+# Master rules that trigger specific steps from the modules:
+
+rule prs_1kg_precompld:
+    # run PRS methods for 1000G using pre-computed reference panels
+    # the predictions are used as baselines for the different ancestries
+    input:
+        # implemented by Sophie:
+        rules.all_dbslmm_prep.input,
+        rules.all_lassosum_prep.input,
+        rules.all_ldpred_prep.input,
+        rules.all_sblup_prep.input,
+        # implemented by Remo:
+        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
+        expand(rules.run_prscs_precompld_1kg.output, study=studies.study_id),
+        expand(rules.dense_thresholding_1kg.output, study=studies.study_id),
+        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id),
+        expand(rules.run_sbayesr_precompld_1kg.output, study=studies.study_id)

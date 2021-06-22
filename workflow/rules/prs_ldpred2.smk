@@ -57,12 +57,11 @@ rule download_ld_reference_ldpred2:
 
 suff1 = ["0.00018", "0.00032", "0.00056", "0.0018", "0.001", "0.0032", "0.0056", "0.018", "0.01", "0.032", "0.056", "0.18", "0.1", "0.32", "0.56", "1.8e.05", "1", "1e.04", "1e.05", "3.2e.05", "5.6e.05"]
 
-suff2 = ["0.0709","0.1013","0.1418"]
+suff2 = ["0.0012","6e.04","8e.04"]
 
 rule run_ldpred2_precompld_1kg:
     # note: this will break if GWAS ancestry is not EUR!
     # TODO: move parameters to config
-    # TODO: adjust outputs
     # TODO: check if phenotype is binary!
     # TODO: currently this assumes we only want predictions for the same ancestry as the GWAS was performed in
     input:
@@ -88,7 +87,7 @@ rule run_ldpred2_precompld_1kg:
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
         "--memory 20000 "
-        "--n_cores 64 "
+        "--n_cores 10 "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--ldpred2_ref_precomputed TRUE "
@@ -97,7 +96,6 @@ rule run_ldpred2_precompld_1kg:
         
 rule run_ldpred2_1kg:
     # TODO: move parameters to config
-    # TODO: adjust outputs
     # TODO: check if phenotype is binary!
     # TODO: currently this assumes we only want predictions for the same ancestry as the GWAS was performed in
     input:
@@ -122,7 +120,7 @@ rule run_ldpred2_1kg:
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
         "--memory 20000 "
-        "--n_cores 64 "
+        "--n_cores 10 "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--ldpred2_ref_precomputed FALSE "
@@ -132,5 +130,5 @@ rule run_ldpred2_1kg:
 rule all_run_ldpred2_1kg:
     # runs rules above
     input:
-        expand(rules.run_ldpred2_1kg.output, study=studies.study_id.iloc[0]),
-        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id.iloc[0])
+        expand(rules.run_ldpred2_1kg.output, study=studies.study_id),
+        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id)
