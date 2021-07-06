@@ -190,6 +190,8 @@ rule run_prscs_precompld_1kg:
         "logs/prs_PRScs/prscs_precompld_1kg_{study}.log"
     conda:
         "../envs/py2.yaml"
+    threads:
+        16
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs.R "
@@ -202,7 +204,7 @@ rule run_prscs_precompld_1kg:
         "--ref_pop_scale {input[super_pop_keep]} "
         "--PRScs_path {config[PRScs_dir]} "
         "--PRScs_ref_path {params[ld_reference_dir]} "
-        "--n_cores 32 "
+        "--n_cores {threads} "
         "--phi_param 1e-6,1e-4,1e-2,1,auto "
         ") &> {log} "
         
@@ -226,6 +228,8 @@ rule run_prscs_precompld_1kg_refukbb:
         "logs/prs_PRScs/prscs_precompld_1kg_refukbb_{study}.log"
     conda:
         "../envs/py2.yaml"
+    threads:
+        32
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs.R "
@@ -238,6 +242,6 @@ rule run_prscs_precompld_1kg_refukbb:
         "--ref_pop_scale {input[super_pop_keep]} "
         "--PRScs_path {config[PRScs_dir]} "
         "--PRScs_ref_path {params[ld_reference_dir]} "
-        "--n_cores 90 "
+        "--n_cores {threads} "
         "--phi_param 1e-6,1e-4,1e-2,1,auto "
         ") &> {log} "

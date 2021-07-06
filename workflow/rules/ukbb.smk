@@ -2,6 +2,10 @@
 
 # https://opain.github.io/GenoPred/Genotype-based_scoring_in_target_samples.html
 
+############################
+# Harmonization to HapMap3 #
+############################
+
 rule harmonize_ukbb:
     # 1.1 UK Biobank
     input:
@@ -25,6 +29,10 @@ rule harmonize_ukbb:
         "--plink {config[plink1_9]} "
         ") &> {log} "
 
+
+####################
+# Ancestry scoring #
+####################
 
 rule ancestry_scoring_ukbb:
     # 2.1 UK Biobank
@@ -83,17 +91,17 @@ rule calculate_maf_ancestry_ukbb:
         rules.ancestry_scoring_ukbb_stringent.output,
         rules.harmonize_ukbb.output
     output:
-        afreq_gz='{}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{{superpop}}.chr{{chr}}.afreq.gz'.format(config['UKBB_output'])
+        afreq_gz='{}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{{superpop}}.chr{{chr}}.frq.gz'.format(config['UKBB_output'])
     log:
         'logs/calculate_maf_ancestry_ukbb_{superpop}_{chr}.log'
     shell:
         '('
-        '{config[plink2]} '
+        '{config[plink1_9]} '
         '--bfile {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr{wildcards[chr]} '
         '--freq '
         '--keep {config[UKBB_output]}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{wildcards[superpop]}.keep '
         '--out {config[UKBB_output]}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{wildcards[superpop]}.chr{wildcards[chr]}; '
-        'gzip {config[UKBB_output]}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{wildcards[superpop]}.chr{wildcards[chr]}.afreq; '
+        'gzip {config[UKBB_output]}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.{wildcards[superpop]}.chr{wildcards[chr]}.frq; '
         ') &> {log} '
     
 
@@ -103,3 +111,487 @@ rule all_calculate_maf_ancestry_ukbb:
         expand(rules.calculate_maf_ancestry_ukbb.output, chr=range(1,23), superpop=config['1kg_superpop'])
     output:
         touch('{}/Projected_PCs/Ancestry_idenitfier/stringent/UKBB.w_hm3.AllAncestry.all_afreq.ok'.format(config['UKBB_output']))
+        
+
+######################
+# UKBB 10K reference #
+######################
+
+rule export_ukbb10k_keep:
+    # generate keep-file for UKBB 10K reference
+    # https://opain.github.io/GenoPred/Pipeline_prep_withUKBB_ref.html
+    # 1.1
+    input:
+        expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        rules.ancestry_scoring_ukbb.output
+    output:
+        config['UKBB_output'] + '/UKBB_ref/keep_files/UKBB_noPheno_EUR_10K.keep'
+    log:
+        'logs/export_ukbb10k_keep/EUR.log'
+    shell:
+        "("
+        "Rscript workflow/scripts/R/ukbb/export_ukbb10k_keep.R"
+        ") &> {log}"
+
+
+rule extract_ukbb10k:
+    # extract genotypes of UKBB 10K subset and calculate MAF
+    # https://opain.github.io/GenoPred/Pipeline_prep_withUKBB_ref.html
+    # 2 
+    input:
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        keep_files=rules.export_ukbb10k_keep.output
+    output:
+        bed=expand(config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr{chr}.bed', chr=range(1,23)),
+        bim=expand(config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr{chr}.bim', chr=range(1,23)),
+        fam=expand(config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr{chr}.fam', chr=range(1,23)),
+        frq=expand(config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr{chr}.frq', chr=range(1,23)),
+        bed_gw = config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.GW.bed',
+        bim_gw = config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.GW.bim',
+        fam_gw = config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.GW.fam'
+    log:
+        "logs/extract_ukbb10k/EUR.log"
+    shell:
+        "("
+        "for chr in $(seq 1 22); do "
+        "{config[plink1_9]} "
+        "--bfile {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr${{chr}} "
+        "--make-bed "
+        "--geno 0.02 "
+        "--keep {config[UKBB_output]}/UKBB_ref/keep_files/UKBB_noPheno_EUR_10K.keep "
+        "--out {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr${{chr}}; "
+        " done; "
+        "for chr in $(seq 1 22); do "
+        "{config[plink1_9]} "
+        "--bfile {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr${{chr}} "
+        "--freq "
+        "--out {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr${{chr}}; "
+        "done; "
+        "ls {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr*.bed | sed -e 's/.bed//g' > {config[UKBB_output]}/UKBB_ref/genotype/merge_list.txt; "
+        "{config[plink1_9]} "
+        "--merge-list {config[UKBB_output]}/UKBB_ref/genotype/merge_list.txt "
+        "--make-bed "
+        "--out {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.GW; "
+        "rm {config[UKBB_output]}/UKBB_ref/genotype/merge_list.txt; "
+        ") &> {log} "
+
+        
+##########################
+# Polygenic scoring UKBB #
+##########################
+
+rule ukbb_prs_input:
+    # rule that checks if the phenotype input files are present
+    input:
+        phenotypes = expand('{}/Phenotype/PRS_comp_subset/UKBB.{{pheno}}.txt'.format(config['UKBB_output']), pheno=studies.name)
+
+
+##########################
+# Pruning & Thresholding #
+##########################
+
+       
+rule nested_sparse_thresholding_score_ukbb_ref1kg:
+    # P+T clump - nested sparse 
+    # TODO: outputs
+    input:
+        score_files=rules.nested_sparse_thresholding_1kg.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/pt_clump/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/nested_sparse_thresholding_score_ukbb/{study}_{pheno}.log"
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/pt_clump/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+
+rule all_nested_sparse_thresholding_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.nested_sparse_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+        
+rule dense_thresholding_score_ukbb_ref1kg:
+    # TODO: outputs
+    # P+T clump - dense (note: this one took long to finish according to GenoPred... might skip)
+    input:
+        score_files=rules.dense_thresholding_1kg.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/pt_clump_dense/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/dense_thresholding_score_ukbb/{study}_{pheno}.log"
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_dense/Scaled_polygenic_scorer_dense.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump_dense/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.GWAS_sumstats_clumped.txt "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump_dense/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--prsice_path {config[prsice_path]} "
+        "--rscript Rscript "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/pt_clump_dense/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+
+rule all_dense_thresholding_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.dense_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+rule sparse_thresholding_score_ukbb_ref1kg:
+    # P+T clump sparse (non nested)
+    # TODO: outputs
+    input:
+        score_files = rules.sparse_thresholding_1kg.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/pt_clump_nonnested/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/sparse_thresholding_score_ukbb/{study}_{pheno}.log"
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump_nonnested/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/pt_clump_nonnested/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/pt_clump_nonnested/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+
+rule all_sparse_thresholding_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.sparse_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+############
+# lassosum #
+############
+
+rule lassosum_score_ukbb:
+    # lassosum, using 1000G reference MAF
+    # TODO: outputs
+    input:
+        score_files = lambda wc: expand(rules.lassosum_prep.output, study=wc['study'], ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0]),
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/lassosum/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/lassosum_score_ukbb/{study}_{pheno}.log"
+    threads:
+        10
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_lassosum/Scaled_polygenic_scorer_lassosum.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/lassosum/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/lassosum/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--pheno_name {wildcards[study]} "
+        "--n_cores {threads} "
+        "--plink {config[plink1_9]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/lassosum/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+rule all_lassosum_score_ukbb:
+    # run rule above for all studies
+    input:
+        expand(rules.lassosum_score_ukbb.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+        
+        
+#########
+# PRScs #
+#########
+
+rule prscs_score_ukbb_ref1kg:
+    # PRScs 
+    # Scoring using the pre-computed 1000G reference
+    input:
+        score_files=rules.run_prscs_precompld_1kg.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/PRScs/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/prscs_score_ukbb/{study}_{pheno}.log"
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_PRScs/Scaled_polygenic_scorer_PRScs.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/PRScs_precompld/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/PRScs_precompld/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/PRScs/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+
+rule all_prscs_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.prscs_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+rule prscs_score_ukbb_refukbb:
+    # Scoring using the pre-computed UKBB reference 
+    # note: this is different from the original GenoPred
+    # the scores are still normalized to 1000G (not to UKBB)!
+    # however, the LD reference is the pre-computed UKBB reference + MAF calculated on the 10K subset
+    input:
+        score_files=rules.run_prscs_precompld_1kg_refukbb.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        frq = rules.extract_ukbb10k.output.frq
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/UKBB_ref/PRScs/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/prscs_score_ukbb/{study}_{pheno}.log"
+    shell:
+        # Note: this will crash / not run if study_ancestry is not EUR
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_PRScs/Scaled_polygenic_scorer_PRScs.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/PRScs_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/PRScs_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/UKBB_ref/PRScs/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+
+rule all_prscs_score_ukbb_refukbb:
+    # run rule above for all studies
+    input:
+        expand(rules.prscs_score_ukbb_refukbb.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+#########
+# SBLUP #
+#########
+
+rule sblup_score_ukbb_ref1kg:
+    # SBLUP
+    # Scoring using the 1000G reference
+    # TODO: outputs
+    input:
+        score_files = lambda wc: expand(rules.sblup_prep.output, study=wc['study'], ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0]),
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        frq = rules.extract_ukbb10k.output.frq
+    output:
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/SBLUP/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/sblup_score_ukbb_ref1kg/{study}_{pheno}.log"
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_SBLUP/Scaled_polygenic_scorer_SBLUP.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/sblup/{wildcards[study]}/GWAS_sumstats_SBLUP.sblup.cojo "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/sblup/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.EUR.10K.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/SBLUP/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+
+rule all_sblup_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.sblup_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+###########
+# SBayesR #
+###########
+
+# The original GenoPred contains all types of different settings for SBayesR
+# we won't explore all of these there, but rather keep the default.
+
+rule sbayesr_score_ukbb_refukbb_robust:
+    # SBayesR
+    # Scoring using the pre-computed UKBB reference
+    # note: this is different from the original GenoPred
+    # the scores are still normalized to 1000G (not to UKBB)!
+    # however, the LD reference is the pre-computed UKBB reference + MAF calculated on the 10K subset
+    input:
+        rules.run_sbayesr_precompld_1kg_refukbb_robust.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        frq=rules.extract_ukbb10k.output.frq
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/UKBB_ref/SBayesR/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/sbayesr_score_ukbb_refukbb/{study}_{pheno}.log"
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_SBayesR/Scaled_polygenic_scorer_SBayesR.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/SBayesR_procompld_ukbb/{wildcards[study]}/GWAS_sumstats_SBayesR.GW.snpRes "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/SBayesR_procompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/UKBB_ref/SBayesR/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+
+rule all_sbayesr_score_ukbb_refukbb_robust:
+    # run rule above for all studies
+    input:
+        expand(rules.sbayesr_score_ukbb_refukbb_robust.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+##########
+# LDpred #
+##########
+
+
+rule ldpred_score_ukbb_ref1kg:
+    # LDpred
+    # scoring using the 1000G reference
+    input:
+        score_files = lambda wc: expand(rules.ldpred_prep.output, study=wc['study'], ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0]),
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/LDPred/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/ldpred_score_ukbb_ref1kg/{study}_{pheno}.log"
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_LDPred/Scaled_polygenic_scorer_LDPred.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/ldpred/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/ldpred/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/LDPred/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+
+rule all_ldpred_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.ldpred_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+############
+# LDpred 2 #
+############
+
+rule ldpred2_score_ukbb_refukbb:
+    # LDpred 2
+    # scoring using the pre-computed UKBB reference
+    # note: won't work for non-EUR
+    # note: this is different from the original GenoPred
+    # the scores are still normalized to 1000G
+    # however, the LD reference is the pre-computed UKBB reference + MAF calculated on the 10K subset
+    input:
+        rules.run_ldpred2_precompld_1kg.output,
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
+        frq=rules.extract_ukbb10k.output.frq
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/UKBB_ref/LDPred2/{study}/{pheno}.ok"
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    log:
+        "logs/ldpred2_score_ukbb_refukbb/{study}_{pheno}.log"
+    threads:
+        6
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_LDPred2/Scaled_polygenic_scorer_LDPred2.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[UKBB_output]}/UKBB_ref/genotype/UKBB.noPheno.{params[study_ancestry]}.10K.chr "
+        "--plink {config[plink1_9]} "
+        "--n_cores {threads} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/UKBB_ref/LDPred2/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+rule all_ldpred2_score_ukbb_refukbb:
+    # run rule above for all studies
+    input:
+        expand(rules.ldpred2_score_ukbb_refukbb.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])
+
+
+##########
+# DBSLMM #
+##########
+
+rule dbslmm_score_ukbb_ref1kg:
+    # DBSLMM
+    # scoring using the 1000G reference
+    input:
+        score_files = lambda wc: expand(rules.dbslmm_prep.output, study=wc['study'], ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0]),
+        harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23))
+    params:
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+    output:
+        # TODO: adjust outputs
+        config['UKBB_output'] + "/PRS_for_comparison/1KG_ref/DBSLMM/{study}/{pheno}.ok"
+    log:
+        "logs/dbslmm_score_ukbb_ref1kg/{study}_{pheno}.log"
+    shell:
+        "( "
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_DBSLMM/Scaled_polygenic_scorer_DBSLMM.R "
+        "--target_plink_chr {config[UKBB_output]}/Genotype/Harmonised/UKBB.w_hm3.QCd.AllSNP.chr "
+        "--target_keep {config[UKBB_output]}/Phenotype/PRS_comp_subset/UKBB.{wildcards[pheno]}.subsample.txt "
+        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/dbslmm/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.dbslmm.GW.txt "
+        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/dbslmm/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{params[study_ancestry]}/1KGPhase3.w_hm3.{params[study_ancestry]}.chr "
+        "--plink {config[plink1_9]} "
+        "--pheno_name {wildcards[study]} "
+        "--output {config[UKBB_output]}/PRS_for_comparison/1KG_ref/DBSLMM/{wildcards[study]}/UKBB.subset.w_hm3.{wildcards[study]} "
+        ") &> {log} "
+        
+rule all_dbslmm_score_ukbb_ref1kg:
+    # run rule above for all studies
+    input:
+        expand(rules.dbslmm_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0], pheno=studies.name.iloc[0])

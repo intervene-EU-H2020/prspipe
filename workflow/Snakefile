@@ -52,6 +52,8 @@ rule prs_1kg_precompld:
         # implemented by Remo:
         expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
         expand(rules.run_prscs_precompld_1kg.output, study=studies.study_id),
+        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
+        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
         expand(rules.dense_thresholding_1kg.output, study=studies.study_id),
         expand(rules.sparse_thresholding_1kg.output, study=studies.study_id),
-        expand(rules.run_sbayesr_precompld_1kg.output, study=studies.study_id)
+        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)

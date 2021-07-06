@@ -9,3 +9,4 @@ workflow/scripts/DBSLMM
 logs/
 logs/results/UKBB
 *.ipynb
+results/UKBB/*

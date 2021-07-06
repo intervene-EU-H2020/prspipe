@@ -17,6 +17,8 @@ rule nested_sparse_thresholding_1kg:
         range_values=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.range_values", geno1kdir=[config['Geno_1KG_dir']], chr_id = range(1,23))
     log:
         "logs/nested_sparse_thresholding_1kg/{study}.log"
+    threads:
+        1
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator.R "
@@ -51,6 +53,8 @@ rule sparse_thresholding_1kg:
         range_values=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump_nonnested/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.range_values", geno1kdir=[config['Geno_1KG_dir']], chr_id = range(1,23))
     log:
         "logs/sparse_thresholding_1kg/{study}.log"
+    threads:
+        1
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator.R "
@@ -86,6 +90,8 @@ rule dense_thresholding_1kg:
         # range_values=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump_dense/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.range_values", geno1kdir=[config['Geno_1KG_dir']], chr_id = range(1,23))
     log:
         "logs/dense_thresholding_1kg/{study}.log"
+    threads:
+        1
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_dense/polygenic_score_file_creator_dense.R "
@@ -104,3 +110,4 @@ rule all_dense_thresholding_1kg:
     # runs rule above for all studies
     input:
         expand(rules.dense_thresholding_1kg.output, study=studies.study_id)
+

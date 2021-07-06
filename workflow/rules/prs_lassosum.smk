@@ -9,6 +9,8 @@ rule lassosum_prep:
         "{}/Score_files_for_polygenic/lassosum/{{study}}/1KGPhase3.w_hm3.{{study}}.{{ancestry}}.scale".format(config['Geno_1KG_dir'])
     log:
         "logs/prs_lassosum_{study}.{ancestry}.log"
+    threads:
+        1
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_lassosum/polygenic_score_file_creator_lassosum.R "

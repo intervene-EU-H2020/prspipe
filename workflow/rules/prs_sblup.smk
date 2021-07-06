@@ -15,6 +15,8 @@ rule sblup_prep:
         "logs/prs_sblup_{study}.{ancestry}.log"
     conda:
         "../../{}/environment.yml".format(config['LDSC_dir'])
+    threads:
+        16
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBLUP/polygenic_score_file_creator_SBLUP.R "
@@ -28,7 +30,7 @@ rule sblup_prep:
         "--ldsc_ref {config[LD_ref_dir]}/sblup_dbslmm/1000G/precomputed/{wildcards[ancestry]} "
         "--hm3_snplist {config[HapMap3_snplist_dir]}/w_hm3.snplist "
         "--memory 50000 "
-        "--n_cores 6 "
+        "--n_cores {threads} "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/sblup/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input.super_pop_keep} "
         ") &> {log}"

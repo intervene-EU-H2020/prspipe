@@ -14,6 +14,7 @@ rule dbslmm_prep:
     # Note that LDSC requires python 2 so Snakemake will setup this environment using the given .yml file
     # Uses the precomputed LD ref (based on 1000G) by default - 
     # If you want to compute the LD ref from scratch, replace ld_ref with expand("{}/sblup_dbslmm/1000G/fromscratch/{{study.ancestry}}/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples())
+    # TODO: DBSLMM has a "threads" argument, which is not used in polygenic_score_file_creator_DBSLMM.R -> could potentially be used to speed things up
     input: 
         ld_ref=expand("{}/sblup_dbslmm/1000G/precomputed/{{study.ancestry}}/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples()),
         ld_block=rules.download_dbslmm_ld_block.output.ld_block,
@@ -25,6 +26,8 @@ rule dbslmm_prep:
         "logs/prs_dbslmm_{study}.{ancestry}.log"
     conda:
         "../../{}/environment.yml".format(config['LDSC_dir'])
+    threads:
+        1
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_DBSLMM/polygenic_score_file_creator_DBSLMM.R "

@@ -1,7 +1,7 @@
 #!/bin/bash
 
 if [ -z ${SNAKEMAKE_CORES+x} ]; then
-    SNAKEMAKE_CORES=4
+    SNAKEMAKE_CORES=10
     # TODO: handle basic configuration like this with profiles https://snakemake.readthedocs.io/en/stable/executing/cli.html?highlight=default%20profile#profiles
 fi
 

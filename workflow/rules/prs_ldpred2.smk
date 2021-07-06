@@ -55,29 +55,33 @@ rule download_ld_reference_ldpred2:
 #        ") &> {log}"
 
 
-suff1 = ["0.00018", "0.00032", "0.00056", "0.0018", "0.001", "0.0032", "0.0056", "0.018", "0.01", "0.032", "0.056", "0.18", "0.1", "0.32", "0.56", "1.8e.05", "1", "1e.04", "1e.05", "3.2e.05", "5.6e.05"]
-
-suff2 = ["0.0012","6e.04","8e.04"]
+# TODO: make this work! (see "change outputs" below)
+# suff1 = ["0.00018", "0.00032", "0.00056", "0.0018", "0.001", "0.0032", "0.0056", "0.018", "0.01", "0.032", "0.056", "0.18", "0.1", "0.32", "0.56", "1.8e.05", "1", "1e.04", "1e.05", "3.2e.05", "5.6e.05"]
+# suff2 = ["0.0012","6e.04","8e.04"]
 
 rule run_ldpred2_precompld_1kg:
     # note: this will break if GWAS ancestry is not EUR!
     # TODO: move parameters to config
     # TODO: check if phenotype is binary!
     # TODO: currently this assumes we only want predictions for the same ancestry as the GWAS was performed in
+    # TODO: change outputs
     input:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
         ld_ref=rules.download_ld_reference_ldpred2.output
     params:
-        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
+        is_binary=lambda wc: {'no':'FALSE', 'yes':'TRUE'}[studies.binary[studies.study_id == wc.study].iloc[0]]
     output:
-        score_grid=expand('{geno1kg}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{s1}_{s2}_{sparse}.SCORE', geno1kg=config['Geno_1KG_dir'], s1=suff1, s2=suff2, sparse=['sparse','nosparse']),
-        score_inf='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.beta_inf.SCORE'.format(config['Geno_1KG_dir']),
+        # score_grid=expand('{geno1kg}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{s1}_{s2}_{sparse}.SCORE', geno1kg=config['Geno_1KG_dir'], s1=suff1, s2=suff2, sparse=['sparse','nosparse']),
+        # score_inf='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.beta_inf.SCORE'.format(config['Geno_1KG_dir']),
         log='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log'.format(config['Geno_1KG_dir']),
         scale=expand('{geno1kg}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop'])
         # touch('run_ldpred2_precompld_1kg_{study}.ok')
     log:
         "logs/run_ldpred2_precompld_1kg_{study}.log"
+    threads:
+        16
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred2/polygenic_score_file_creator_LDPred2.R "
@@ -87,10 +91,11 @@ rule run_ldpred2_precompld_1kg:
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
         "--memory 20000 "
-        "--n_cores 10 "
+        "--n_cores {threads} "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--ldpred2_ref_precomputed TRUE "
+        "--binary {params[is_binary]} "
         ") &> {log} "
         
         
@@ -98,19 +103,23 @@ rule run_ldpred2_1kg:
     # TODO: move parameters to config
     # TODO: check if phenotype is binary!
     # TODO: currently this assumes we only want predictions for the same ancestry as the GWAS was performed in
+    # TODO: change outputs
     input:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
         ld_ref=lambda wc: expand(rules.generate_ld_referece_ldpred2.output, popul=studies.ancestry[studies.study_id == wc.study], allow_missing=True)
     params:
-        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
+        is_binary=lambda wc: {'no':'FALSE', 'yes':'TRUE'}[studies.binary[studies.study_id == wc.study].iloc[0]]
     output:
-        score_grid=expand('{geno1kg}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.{s1}_{s2}_{sparse}.SCORE', geno1kg=config['Geno_1KG_dir'], s1=suff1, s2=suff2, sparse=['sparse','nosparse']),
-        score_inf='{}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.beta_inf.SCORE'.format(config['Geno_1KG_dir']),
+        # score_grid=expand('{geno1kg}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.{s1}_{s2}_{sparse}.SCORE', geno1kg=config['Geno_1KG_dir'], s1=suff1, s2=suff2, sparse=['sparse','nosparse']),
+        # score_inf='{}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.beta_inf.SCORE'.format(config['Geno_1KG_dir']),
         log='{}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.log'.format(config['Geno_1KG_dir']),
         scale=expand('{geno1kg}/Score_files_for_polygenic/LDPred2/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop'])
     log:
         "logs/run_ldpred2_1kg_{study}.log"
+    threads:
+        16
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred2/polygenic_score_file_creator_LDPred2.R "
@@ -120,10 +129,11 @@ rule run_ldpred2_1kg:
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
         "--memory 20000 "
-        "--n_cores 10 "
+        "--n_cores {threads} "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--ldpred2_ref_precomputed FALSE "
+        "--binary {params[is_binary]} "
         ") &> {log} "
         
         

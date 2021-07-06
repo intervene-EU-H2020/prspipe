@@ -41,10 +41,11 @@ from progressbar import AnimatedMarker, Bar, BouncingBar, Counter, ETA, \
 
 parser = argparse.ArgumentParser()
 
-parser.add_argument('--study-id', default=None, type=str,
+parser.add_argument('--study-id', required=True, type=str,
                     help="Study ID from the GWAS catalog")
-parser.add_argument('--out', default=None, type=str,
+parser.add_argument('--out', required=True, type=str,
                     help="Output filename prefix")
+parser.add_argument('--studies', required=True, type=str, help='Path to studies.tsv containing study metadata')
 
 
 def get_request(url):
@@ -104,6 +105,7 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
         n_gwas: The sample size of the GWAS study
     """
     # rename the columns to those used by https://github.com/bulik/ldsc/blob/master/munge_sumstats.py
+    # this won't do anything if the columns already have the correct names
     rename_cols = {'variant_id':'SNP', 
                     'chromosome':'CHR',
                     'p_value':'P', 
@@ -123,17 +125,24 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
 
     # drop irrelevant columns
     # also drop anything with all NaNs (otherwise the QC script will remove all rows)
-    df = df[rename_cols.values()]
+    
+    found_cols = list(col for col in df.columns if col in rename_cols.values())
+    
+    if 'N' in df.columns:
+        # "N" is not a standard column in the GWAS catalog, but may be included in munged sumstats
+        df = df[ found_cols + ['N']]
+    else:
+        df = df[ found_cols ]
+        df['N'] = n_gwas
+        
     df = df.dropna(axis=1,how='all')
-
-    df['N'] = n_gwas
 
     return df
 
 
 def file_write(data, file, pbar):
-   file.write(data) 
-   pbar += len(data)
+    file.write(data) 
+    pbar += len(data)
 
 
 def download_ftp_sumstats(local_path, remote_path):
@@ -170,18 +179,22 @@ def download_ftp_sumstats(local_path, remote_path):
 
 
 def download_sumstats(args, p=True):
-    if args.study_id is None:
-        raise ValueError('The --study-id flag is required.')
-    if args.out is None:
-        raise ValueError('The --out flag is required.')
 
-    studies = pd.read_csv('config/studies.tsv', dtype=str, sep='\t').set_index(["study_id"], drop=False)
+    studies = pd.read_csv(args.studies, dtype=str, sep='\t').set_index(["study_id"], drop=False)
+
     ftp_path = studies.loc[args.study_id]['ftp_address']
-    local_path = '{}/{}'.format('/'.join(args.out.split('/')[:-1]), ftp_path.split('/')[-1])
-
-    print(f'downloading summary statistics for {args.study_id}')
-    sumstats = download_ftp_sumstats(local_path, ftp_path)
+    
+    if pd.isna(ftp_path):
+        # if ftp address is not given, try local path 
+        path = studies.loc[args.study_id]['local_path']
+        sumstats = pd.read_csv(path, sep='\t')
+    else:
+        local_path = '{}/{}'.format('/'.join(args.out.split('/')[:-1]), ftp_path.split('/')[-1])
+        print(f'downloading summary statistics for {args.study_id}')
+        sumstats = download_ftp_sumstats(local_path, ftp_path)
+    
     n_gwas = int(studies.loc[args.study_id]['n_cases']) + int(studies.loc[args.study_id]['n_controls'])
+    
     cleaned_sumstats = cleanup_summary_statistics(sumstats, args.study_id, n_gwas)
     cleaned_sumstats.to_csv(args.out, index=None)
     print(f'>> output saved at {args.out}')

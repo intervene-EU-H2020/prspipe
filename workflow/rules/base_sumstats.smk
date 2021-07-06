@@ -15,6 +15,7 @@ rule download_sumstats:
         "python {config[Python_scr_dir]}/gwas_catalog_sumstats.py "
         "--study-id {wildcards[study]} "
         "--out {output} "
+        "--studies {config[studies]} "
         "| tee -a {log}"
 
 
@@ -30,6 +31,7 @@ rule QC_sumstats:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "
         "--sumstats {input} "
+        "--ss_freq_col FRQ "
         "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
         "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{wildcards[ancestry]}/1KGPhase3.w_hm3.{wildcards[ancestry]}.chr "
         "--output {output}"

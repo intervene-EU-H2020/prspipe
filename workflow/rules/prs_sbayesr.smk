@@ -106,11 +106,12 @@ rule all_download_sbayesr_ld_reference:
         expand(rules.download_sbasesr_ld_reference.output, popul=['EUR'])
         
         
-# TODO: rule that runs SBasesR with custom reference panel (1000 genomes)
+# TODO: rule that runs SBayesR with custom reference panel (1000 genomes)
         
-rule run_sbayesr_precompld_1kg:
+rule run_sbayesr_precompld_1kg_refukbb_robust:
     # 4.6 Prepare score and scale files for polygenic scoring using SBayesR
     # rule that uses pre-computed LD matrix
+    # this uses the --robust setting
     # TODO: currently assumes EUR ancestry -> could change in the future
     # TODO: implement the rule for LD-matrix that is computed "from scratch"
     # TODO: get rid of ugly names (?)
@@ -121,16 +122,16 @@ rule run_sbayesr_precompld_1kg:
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
         ld_reference=lambda wc: expand(rules.download_sbasesr_ld_reference.output, popul=studies.ancestry[studies.study_id == wc.study])
     output:
-        scale=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop']),
-        log1=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/SBayesR.chr{chr}.log', geno1kg=config['Geno_1KG_dir'], chr=range(1,23)),
+        log1=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/SBayesR{setting}.chr{chr}.log', geno1kg=config['Geno_1KG_dir'], setting=['','.robust'], chr=range(1,23)),
         log2=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log', geno1kg=config['Geno_1KG_dir']),
-        parres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.parRes', geno1kg=config['Geno_1KG_dir']),
-        snpres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.snpRes', geno1kg=config['Geno_1KG_dir'])
+        scale=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}{setting}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], setting=['','.robust'], superpop=config['1kg_superpop']),
+        parres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR{setting}.GW.parRes', geno1kg=config['Geno_1KG_dir'], setting=['','.robust']),
+        snpres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR{setting}.GW.snpRes', geno1kg=config['Geno_1KG_dir'], setting=['','.robust'])
     log:
         "logs/run_sbayesr_precomputed_1kg_{study}.log"
+    threads:
+        22
     shell:
-        # this argument actually doesn't do anything (?)
-        # "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR.R "
         "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
@@ -139,15 +140,67 @@ rule run_sbayesr_precompld_1kg:
         "--gctb {config[gctb]} "
         "--ld_matrix_chr resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukbEURu_hm3_v3_50k_chr "
         "--memory 50000 "
-        "--n_cores 32 "
+        "--n_cores {threads} "
+        "--robust TRUE "
         "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
         ") &> {log}"
         
 
-rule all_run_sbayesr_precompld_1kg:
+rule all_run_sbayesr_precompld_1kg_refukbb_robust:
     # runs rule above for all studies
     input:
-        expand(rules.run_sbayesr_precompld_1kg.output, study=studies.study_id)
+        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
         
-        
+
+# robust analysis and "regular" analysis are performed in the same rule
+# the rules below are not needed.
+#rule run_sbayesr_precompld_1kg_refukbb:
+#    # 4.6 Prepare score and scale files for polygenic scoring using SBayesR
+#    # rule that uses pre-computed LD matrix
+#    # this does not use the robust setting, but instead forces UKBB allele coding!
+#    # TODO: currently assumes EUR ancestry -> could change in the future
+#    # TODO: implement the rule for LD-matrix that is computed "from scratch"
+#    # TODO: get rid of ugly names (?)
+#    # TODO: adjust outputs
+#    # TODO: this only runs SBayesR with default parameters (?), what about other parameters
+#    input:
+#        super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
+#        qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
+#        ld_reference=lambda wc: expand(rules.download_sbasesr_ld_reference.output, popul=studies.ancestry[studies.study_id == wc.study]),
+#        ref_maf = lambda wc: expand(config['UKBB_output'] + '/UKBB_ref/genotype/UKBB.noPheno.{ancestry}.10K.chr{chr}.frq', chr=range(1,23), ancestry=studies.ancestry[studies.study_id == wc.study])
+#        #ref_maf=rules.extract_ukbb10k.output['frq']
+#    output:
+#        log1=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/SBayesR.chr{chr}.log', geno1kg=config['Geno_1KG_dir'], chr=range(1,23)),
+#        log2=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log', geno1kg=config['Geno_1KG_dir']),
+#        scale=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop']),
+#        parres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.parRes', geno1kg=config['Geno_1KG_dir']),
+#        snpres=expand('{geno1kg}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{{study}}/GWAS_sumstats_SBayesR.GW.snpRes', geno1kg=config['Geno_1KG_dir'])
+#    params:
+#        ancestry = lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
+#    log:
+#        "logs/run_sbayesr_precomputed_1kg_{study}.log"
+#    threads:
+#        22
+#    shell:
+#        # this argument actually doesn't do anything (?)
+#        # "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
+#        "("
+#        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR.R "
+#        "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
+#        "--sumstats {input[qc_stats]} "
+#        "--plink {config[plink1_9]} "
+#        "--gctb {config[gctb]} "
+#        "--ld_matrix_chr resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukbEURu_hm3_v3_50k_chr "
+#        "--memory 50000 "
+#        "--n_cores {threads} "
+#        "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/SBayesR_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+#        "--ref_pop_scale {config[Geno_1KG_dir]}/super_pop_keep.list "
+#        ") &> {log}"
+#        # "--force_ref_frq results/UKBB/UKBB_ref/genotype/UKBB.noPheno.{params[ancestry]}.10K "
+#        
+#
+#rule all_run_sbayesr_precompld_1kg_refukbb:
+#    # runs rule above for all studies
+#    input:
+#        expand(rules.run_sbayesr_precompld_1kg_refukbb.output, study=studies.study_id)
