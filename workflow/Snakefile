@@ -3,10 +3,22 @@
 
 import pandas as pd
 from snakemake.utils import validate
+from collections import defaultdict
 
 configfile: "config/config.yaml"
 
 studies = pd.read_csv(config["studies"], dtype=str, sep='\t').set_index(["study_id", "ancestry"], drop=False)
+
+def nan():
+    return 'NA'
+    
+# store disease prevalences, if present (needed for evaluation)
+prevalence = defaultdict(nan)
+if 'prevalence' in config:
+    with open(config['prevalence'], 'r') as infile:
+        for line in infile:
+            d, n = line.rstrip().split('\t')
+            prevalence[d] = n
 
 report: "report/workflow.rst"
 

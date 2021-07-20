@@ -2,7 +2,8 @@
 
 # In case of sample based data, it should be complemented by a samples.tsv file that contains
 # one row per sample. It can be parsed easily via pandas.
-studies: "config/studies.tsv"
+studies: "config/studies_new.tsv"
+prevalence: "config/pop_prevalence.tsv"
 
 GenoPred_dir: "workflow/scripts/GenoPred"
 Python_scr_dir: "workflow/scripts/Python"
@@ -55,6 +56,8 @@ LD_ref_dir: "resources/LD_matrix"
 LD_block_dir: "resources/ldetect-data"
 
 gwas_rep: "resources/ss/munged"
+
 UKBB_original: "/mnt/projects/ukbiobank/original/genetics/imputed/EGAD00010001474/"
 UKBB_fam: "/mnt/projects/ukbiobank/original/genetics/imputed/sample/ukb40502_imp_chr1_v3_s487296.sample"
 UKBB_output: "results/UKBB"
+UKBB_exclude: "/mnt/projects/ukbiobank/original/IDs_of_withdrawn_participants_w40502_20210201.csv"
