@@ -50,7 +50,9 @@ If running with a local R installation, the following commands will install all 
     install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
     
     install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
-    
+
+#### Containers (Docker/Singularity)
+
 Alternatively, we have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe).
 
 > Remo: Docker and Singularity are not fully supported yet (August 4, 2021)
