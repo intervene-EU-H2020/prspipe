@@ -61,3 +61,12 @@ UKBB_original: "/mnt/projects/ukbiobank/original/genetics/imputed/EGAD0001000147
 UKBB_fam: "/mnt/projects/ukbiobank/original/genetics/imputed/sample/ukb40502_imp_chr1_v3_s487296.sample"
 UKBB_output: "results/UKBB"
 UKBB_exclude: "/mnt/projects/ukbiobank/original/IDs_of_withdrawn_participants_w40502_20210201.csv"
+
+###############
+# Singularity #
+###############
+
+singularity:
+  all: 'containers/singularity/prspipe.sif'
+
+
