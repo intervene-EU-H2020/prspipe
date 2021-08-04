@@ -53,7 +53,13 @@ If running with a local R installation, the following commands will install all 
 
 #### Containers (Docker/Singularity)
 
-Alternatively, we have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe).
+Alternatively, we have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe). 
+
+Creating a singularity image that is able to run the pipeline is as simple as:
+
+```
+singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
+```
 
 > Remo: Docker and Singularity are not fully supported yet (August 4, 2021)
 
