@@ -6,18 +6,13 @@ From: bioconductor/bioconductor_docker:RELEASE_3_13
 %environment
   export TZ="Europe/Berlin"
 
-%files
-  # mount the pipeline bin directory into  the cotainer 
-  ./bin ./bin
-
 %setup
   #Create the .condarc file where the environments/channels from conda are specified, 
   #these are pulled with preference to root
   cd /
   touch .condarc
 
-%post
-  
+%post  
   #Installing miniconda
   wget -O Miniconda_installer.sh -c https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh
   /bin/bash Miniconda_installer.sh -bfp /usr/local
@@ -33,9 +28,11 @@ From: bioconductor/bioconductor_docker:RELEASE_3_13
   mamba install -c conda-forge -c bioconda snakemake=6.2.1
   conda clean --all
 
+  wget https://github.com/tshmak/lassosum/releases/download/v0.4.5/lassosum_0.4.5.tar.gz
   R -e "install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)"
-  R -e "install.packages('bin/lassosum/lassosum_0.4.5.tar.gz', repos=NULL, type='source')"
+  R -e "install.packages('lassosum_0.4.5.tar.gz', repos=NULL, type='source')"
   R -e "BiocManager::install('MungeSumstats')"
+  rm lassosum_0.4.5.tar.gz
 
 %runscript
   bash "$@"
