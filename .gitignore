@@ -10,3 +10,4 @@ logs/
 logs/results/UKBB
 *.ipynb
 results/UKBB/*
+workflow/scripts/PRScs/
