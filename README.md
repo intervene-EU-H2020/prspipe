@@ -25,7 +25,7 @@ Configure the workflow according to your needs via editing the files in the `con
 
 > Note: samples.tsv is currently disabled.
 
-### Step 3: Install Snakemake and other dependencies
+### Step 3: Install Snakemake
 
 Install Snakemake using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
 
@@ -39,15 +39,24 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
     bash ./download_resources.sh
     bash ./install_software.sh
 
-Currently dependency management is left to the user (will change in the future). To run the setup scripts below, the user needs to have R available, and install the following dependencies:
+
+### Step 4: R packages and other dependencies
+
+The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation or and installing packages manually or (2) running the pipeline using singularity containers.
+
+If running with a local R installation, the following commands will install all dependencies:
 
     R
-    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych'), dependencies=TRUE)
-
+    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
+    
     install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
+    
+Alternatively, we have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe).
+
+> Remo: Docker and Singularity are not fully supported yet (August 4, 2021)
 
 
-### Step 4: Execute workflow
+### Step 5: Execute workflow
 
 Activate the conda environment, and use `./run.sh` to launch snakemake with default parameters:
 
@@ -57,7 +66,7 @@ Activate the conda environment, and use `./run.sh` to launch snakemake with defa
 
 See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
-### Step 5: Investigate results
+### Step 6: Investigate results
 
 After successful execution, you can create a self-contained interactive HTML report with all results via:
 
@@ -66,14 +75,14 @@ After successful execution, you can create a self-contained interactive HTML rep
 This report can, e.g., be forwarded to your collaborators.
 An example (using some trivial test data) can be seen [here](https://cdn.rawgit.com/snakemake-workflows/rna-seq-kallisto-sleuth/master/.test/report.html).
 
-### Step 6: Commit changes
+### Step 7: Commit changes
 
 Whenever you change something, don't forget to commit the changes back to your github copy of the repository:
 
     git commit -a
     git push
 
-### Step 7: Obtain updates from upstream
+### Step 8: Obtain updates from upstream
 
 Whenever you want to synchronize your workflow copy with new developments from upstream, do the following.
 
@@ -85,7 +94,7 @@ Whenever you want to synchronize your workflow copy with new developments from u
 6. Carefully check whether you need to update the config files: `git diff HEAD upstream/master config`. If so, do it manually, and only where necessary, since you would otherwise likely overwrite your settings and samples.
 
 
-### Step 8: Contribute back
+### Step 9: Contribute back
 
 In case you have also changed or added steps, please consider contributing them back to the original repository:
 
