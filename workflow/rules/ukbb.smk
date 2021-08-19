@@ -257,7 +257,7 @@ rule dense_thresholding_score_ukbb_ref1kg:
 rule all_dense_thresholding_score_ukbb_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.dense_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.dense_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id )
 
 
 rule sparse_thresholding_score_ukbb_ref1kg:
@@ -291,7 +291,7 @@ rule sparse_thresholding_score_ukbb_ref1kg:
 rule all_sparse_thresholding_score_ukbb_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.sparse_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.sparse_thresholding_score_ukbb_ref1kg.output, zip, study=studies.study_id)
 
 
 ############
@@ -332,7 +332,7 @@ rule lassosum_score_ukbb:
 rule all_lassosum_score_ukbb:
     # run rule above for all studies
     input:
-        expand(rules.lassosum_score_ukbb.output, zip, study=studies.study_id.iloc[0])
+        expand(rules.lassosum_score_ukbb.output, zip, study=studies.study_id)
 
         
         
@@ -406,7 +406,7 @@ rule prscs_score_ukbb_refukbb:
 rule all_prscs_score_ukbb_refukbb:
     # run rule above for all studies
     input:
-        expand(rules.prscs_score_ukbb_refukbb.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.prscs_score_ukbb_refukbb.output, zip, study=studies.study_id)
 
 #########
 # SBLUP #
@@ -443,7 +443,7 @@ rule sblup_score_ukbb_ref1kg:
 rule all_sblup_score_ukbb_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.sblup_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.sblup_score_ukbb_ref1kg.output, zip, study=studies.study_id)
 
 
 ###########
@@ -491,7 +491,7 @@ rule sbayesr_score_ukbb_refukbb_robust:
 rule all_sbayesr_score_ukbb_refukbb_robust:
     # run rule above for all studies
     input:
-        expand(rules.sbayesr_score_ukbb_refukbb_robust.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.sbayesr_score_ukbb_refukbb_robust.output, zip, study=studies.study_id)
 
 
 ##########
@@ -529,7 +529,7 @@ rule ldpred_score_ukbb_ref1kg:
 rule all_ldpred_score_ukbb_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.ldpred_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.ldpred_score_ukbb_ref1kg.output, zip, study=studies.study_id)
 
 
 ############
@@ -573,7 +573,7 @@ rule ldpred2_score_ukbb_refukbb:
 rule all_ldpred2_score_ukbb_refukbb:
     # run rule above for all studies
     input:
-        expand(rules.ldpred2_score_ukbb_refukbb.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.ldpred2_score_ukbb_refukbb.output, zip, study=studies.study_id)
 
 
 ##########
@@ -610,7 +610,7 @@ rule dbslmm_score_ukbb_ref1kg:
 rule all_dbslmm_score_ukbb_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.dbslmm_score_ukbb_ref1kg.output, zip, study=studies.study_id.iloc[0] )
+        expand(rules.dbslmm_score_ukbb_ref1kg.output, zip, study=studies.study_id)
 
 #######
 # ALL #
@@ -675,7 +675,7 @@ rule model_eval_prep:
                 
 rule all_model_eval_prep:
     input:
-        expand(rules.model_eval_prep.output, study=studies.study_id.iloc[0])
+        expand(rules.model_eval_prep.output, study=studies.study_id)
 
 
 rule model_eval:
@@ -684,7 +684,10 @@ rule model_eval:
         pheno_file = lambda wc: config['UKBB_output'] + '/Phenotype/PRS_comp_subset/UKBB.' + studies.name[studies.study_id == wc.study].iloc[0] +'.subsample.txt'
     output:
         # TODO: adjust outputs
-        touch(config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/UKBB.w_hm3.{study}.AllMethodComp.ok')
+        ok=touch(config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/UKBB.w_hm3.{study}.AllMethodComp.ok'),
+        assoc=config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/UKBB.w_hm3.{study}.AllMethodComp.assoc.txt',
+        pred_comp=config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/UKBB.w_hm3.{study}.AllMethodComp.pred_comp.txt',
+        pred_eval=config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/UKBB.w_hm3.{study}.AllMethodComp.pred_eval.txt'
     params:
         prev = lambda wc: prevalence[ studies.name[studies.study_id == wc['study']].iloc[0] ]
     threads:
@@ -701,8 +704,81 @@ rule model_eval:
         "--assoc T "
         "--outcome_pop_prev {params[prev]} "
         "--out {config[UKBB_output]}/PRS_for_comparison/evaluation/{wildcards[study]}/Association_withPRS/UKBB.w_hm3.{wildcards[study]}.AllMethodComp "
+        "--save_group_model T "
         ") &> {log}"
+
 
 rule all_model_eval:
     input:
         expand(rules.model_eval.output, study=studies.study_id)
+
+        
+rule get_best_models:
+    # exctract the best performing models and their performance into a neat TSV
+    input:
+        pred_eval=rules.model_eval.output['pred_eval']
+    output:
+        best_models_tsv= config['UKBB_output'] + '/PRS_for_comparison/evaluation/{study}/Association_withPRS/best_models.tsv'
+    log:
+        'logs/get_best_models/{study}.log'
+    shell:
+        "("
+        "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+        "--pred_eval {input[pred_eval]} "
+        "--drop TRUE "
+        ") &> {log}"
+        
+rule all_get_best_models:
+    input:
+        expand(rules.get_best_models.output, study=studies.study_id)
+
+
+rule model_eval_custom:
+    # Run Model_builder_V2.R for custom group - phenotype combinations
+    input:
+        predictors = 'custom_input/predictor_groups/{group}.predictor_groups',
+        pheno_file = config['UKBB_output'] + '/Phenotype/PRS_comp_subset/UKBB.{pheno}.subsample.txt'
+    output:
+        assoc='results/UKBB/evaluation/{group}/{pheno}/UKBB.w_hm3.AllMethodComp.assoc.txt',
+        pred_comp='results/UKBB/evaluation/{group}/{pheno}/UKBB.w_hm3.AllMethodComp.pred_comp.txt',
+        pred_eval='results/UKBB/evaluation/{group}/{pheno}/UKBB.w_hm3.AllMethodComp.pred_eval.txt'
+    params:
+        prev = lambda wc: prevalence[wc['pheno']]
+    threads:
+        16
+    log:
+        'logs/model_eval_custom/{group}_{pheno}.log'
+    shell:
+        "("
+        "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+        "--pheno {input[pheno_file]} "
+        "--predictors {input[predictors]} "
+        "--n_core {threads} "
+        "--compare_predictors T "
+        "--assoc T "
+        "--outcome_pop_prev {params[prev]} "
+        "--out results/UKBB/evaluation/{wildcards[group]}/{wildcards[pheno]}/UKBB.w_hm3.AllMethodComp "
+        "--save_group_model T "
+        ") &> {log}"
+
+
+rule get_best_models_custom:
+    # exctract the best performing models and their performance into a neat TSV
+    input:
+        pred_eval=rules.model_eval_custom.output['pred_eval']
+    output:
+        best_models_tsv='results/UKBB/evaluation/{group}/{pheno}/best_models.tsv'
+    log:
+        'logs/get_best_models_custom/{group}_{pheno}.log'
+    shell:
+        "("
+        "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+        "--pred_eval {input[pred_eval]} "
+        "--drop TRUE "
+        ") &> {log} "
+    
+
+
+        
+
+
