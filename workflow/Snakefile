@@ -23,7 +23,7 @@ if 'prevalence' in config:
 report: "report/workflow.rst"
 
 # Allow users to fix the underlying OS via singularity.
-singularity: "docker://continuumio/miniconda3"
+singularity: "docker://rmonti/prspipe"
 
 rule all:
     input:
@@ -51,7 +51,8 @@ include: "rules/prs_ldpred2.smk"
 include: "rules/ukbb.smk"
 include: "rules/external_biobanks.smk"
 
-# Master rules that trigger specific steps from the modules:
+# Master rules that trigger specific steps from the modules
+# TODO: add other rules here, or add references to them
 
 rule prs_1kg_precompld:
     # run PRS methods for 1000G using pre-computed reference panels
