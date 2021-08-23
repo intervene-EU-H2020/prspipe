@@ -61,7 +61,7 @@ Creating a singularity image that is able to run the pipeline is as simple as:
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
 ```
 
-> Remo: Docker and Singularity are not fully supported yet (August 4, 2021)
+To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake.
 
 
 ### Step 5: Execute workflow
@@ -71,6 +71,9 @@ Activate the conda environment, and use `./run.sh` to launch snakemake with defa
     conda activate snakemake
     # run all the setup rules (steps 1-3 of GenoPred)
     ./run.sh all_setup
+    
+    # OR, using singularity
+    ./run.sh --use-singularity all_setup
 
 See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
@@ -136,3 +139,23 @@ If summary statistics are not available in the harmonized format, consider using
 ```
 ./run.sh all_QC
 ```
+
+## Pipeline Overview
+
+The pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) evaluation of the adjusted summary statistics including hyper-parameter tuning using cross validation and construction of "multi-PRS" scores that combine sets of adjusted summary statistics together. The second step uses private data e.g. from the UK Biobank or your biobank of interest.
+
+Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks. Replace "{bbid}" with a suitable name. 
+
+1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
+2.  Harmonize your data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink formatted genotype files with the hm3 variants.
+3.  Place per-chromosome plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
+4.  Place phenotype files in `custom_input/genotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the one of the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv). These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)). 
+
+Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data, by running.
+
+```
+# replace {bbid} with the name of your biobank:
+bash run.sh --use-singularity results/{bbid}/PRS_evaluation/all_studies.ok
+```
+
+This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
