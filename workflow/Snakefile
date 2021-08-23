@@ -49,6 +49,7 @@ include: "rules/prs_sbayesr.smk"
 include: "rules/prs_prscs.smk"
 include: "rules/prs_ldpred2.smk"
 include: "rules/ukbb.smk"
+include: "rules/external_biobanks.smk"
 
 # Master rules that trigger specific steps from the modules:
 
