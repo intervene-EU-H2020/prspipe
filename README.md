@@ -42,7 +42,7 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
 
 ### Step 4: R packages and other dependencies
 
-The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation or and installing packages manually or (2) running the pipeline using singularity containers.
+The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation and installing packages manually or (2) running the pipeline using singularity containers.
 
 If running with a local R installation, the following commands will install all dependencies:
 
