@@ -1,5 +1,7 @@
 #!/bin/bash
 
+# RM: TODO - which of these things could be moved to rules instead?
+
 Impute2_1KG_dir="resources/Impute2_1KG"
 HapMap3_snplist_dir="resources/HapMap3_snplist"
 Geno_1KG_dir="resources/Geno_1KG"
