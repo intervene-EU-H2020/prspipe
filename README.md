@@ -146,7 +146,7 @@ The pipeline can roughly be devided into two stages: (1) Download and adjustment
 
 Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks. Replace "{bbid}" with a suitable name. 
 
-1   Clone the repository, and run `./install.sh` and `./download_resources.sh`.
+1.   Clone the repository, and run `./install.sh` and `./download_resources.sh`.
 2.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
 3.  Harmonize your data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink formatted genotype files with the hm3 variants.
 > Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
