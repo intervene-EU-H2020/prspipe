@@ -14,11 +14,26 @@ rule install_software:
         "bash install_software.sh"
 
 
+rule download_integrated_call_samples_v3:
+    output:
+         '{}/integrated_call_samples_v3.20130502.ALL.panel'.format(config['Geno_1KG_dir']),
+         '{}/integrated_call_samples_v3.20130502.ALL.panel_small'.format(config['Geno_1KG_dir'])
+    shell:
+        "("
+        "mkdir -p {config[Geno_1KG_dir]} && "
+        "cd {config[Geno_1KG_dir]} && "
+        "wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel && "
+        "cut -f 1-3 integrated_call_samples_v3.20130502.ALL.panel > integrated_call_samples_v3.20130502.ALL.panel_small "
+        ")"
+
+
 rule create_ancestry:
     # 2.3 1000 Genomes populations
     # https://opain.github.io/GenoPred/Pipeline_prep.html
     # Here we download information on which population each individual in the 1000 Genomes reference is from. Individuals are grouped into ‘populations’ which are typically country specific, and ‘super populations’ which include a collection of ancetrally similar countries. Individuals are grouped into these populations if the last few generations of their family are all from one region. We need this population data so we can select individuals in the 1000 Genomes data to match those in our target samples. This is important for providing accurate information on LD structure and minor allele frequencies.
     # TODO: figure out how to handle logging when using "script" directive for R scripts
+    input:
+        rules.download_integrated_call_samples_v3.output
     output:
         super_pop_keep="{}/super_pop_keep.list".format(config['Geno_1KG_dir']),
         pop_keep="{}/pop_keep.list".format(config['Geno_1KG_dir']),
@@ -81,6 +96,16 @@ rule download_ensembl_variation_vcf:
         "done"
         
 
+rule download_hapmap3_snplist:
+    output:
+        "{}/w_hm3.snplist".format(config['HapMap3_snplist_dir'])
+    shell:
+        "mkdir -p {config[HapMap3_snplist_dir]} && "
+        "cd {config[HapMap3_snplist_dir]} && "
+        "wget https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2 && "
+        "bunzip2 w_hm3.snplist.bz2"
+
+
 rule snp_to_iupac:
     # 2.4 1000 Genomes PLINK files (step 2)
     # https://opain.github.io/GenoPred/Pipeline_prep.html
@@ -88,8 +113,7 @@ rule snp_to_iupac:
     # Note: this script has the ugly side effect of overwriting one of the input .bim files
     input:
         bed_bim_fam=rules.get_plink_files_chr_all.input,
-        hapmap3_snplist='{}/w_hm3.snplist'.format(config['HapMap3_snplist_dir']),
-        # ensembl_vcf=rules.download_ensembl_variation_vcf.output
+        hapmap3_snplist=rules.download_hapmap3_snplist.output
     output:
         extract=expand("{}/1KGPhase3.chr{{chr}}.extract".format(config['Geno_1KG_dir']), chr=range(1,23))
     script:

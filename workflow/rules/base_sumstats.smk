@@ -22,7 +22,8 @@ rule download_sumstats:
 rule QC_sumstats:
     # run the cleaner script for summary statistics QC
     input:
-        "{}/{{study}}.{{ancestry}}.raw".format(config['Base_sumstats_dir'])
+        "{}/{{study}}.{{ancestry}}.raw".format(config['Base_sumstats_dir']),
+        rules.run_allele_freq_superpop.output
     output:
         "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
     log:
