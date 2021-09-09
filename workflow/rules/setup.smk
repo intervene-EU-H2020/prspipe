@@ -40,6 +40,8 @@ rule create_ancestry:
         super_pop_and_pop="{}/super_pop_and_pop_keep.list".format(config['Geno_1KG_dir']),
         create_ancestry_ok=touch("{}/keep_files/create_ancestry.ok".format(config['Geno_1KG_dir'])),
         keep_files=expand("{}/keep_files/{{popul}}_samples.keep".format(config['Geno_1KG_dir']),popul=config['1kg_superpop'])
+    singularity:
+        config['singularity']['all']
     script:
         "../scripts/R/setup/create_ancestry.R"
 
@@ -57,6 +59,8 @@ rule get_plink_files_chr:
         target_name=lambda wc: "ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr'])
     log:
         "logs/get_plink_files_chr/{chr}.log"
+    singularity:
+        config['singularity']['all']
     shell:
         # v5b version does not contain rs ids!
         # "(cd {config[Geno_1KG_dir]} && wget http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{wildcards[chr]}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz); "
@@ -116,6 +120,8 @@ rule snp_to_iupac:
         hapmap3_snplist=rules.download_hapmap3_snplist.output
     output:
         extract=expand("{}/1KGPhase3.chr{{chr}}.extract".format(config['Geno_1KG_dir']), chr=range(1,23))
+    singularity:
+        config['singularity']['all']
     script:
         "../scripts/R/setup/snp_to_iupac.R"
 
@@ -133,6 +139,8 @@ rule extract_hm3:
         fam='{}/1KGPhase3.w_hm3.GW.fam'.format(config['Geno_1KG_dir'])
     log:
         "logs/extract_hm3/extract_hm3.log"
+    singularity:
+        config['singularity']['all']
     shell:
         "("
         "for chr in $(seq 1 22); do "
@@ -161,6 +169,8 @@ rule allele_freq_pop:
         pop='[A-Z]+'
     log:
         "logs/allele_freq_pop/{popul}.log"
+    singularity:
+        config['singularity']['all']
     shell:
         "("
         "for chrom in $(seq 1 22); do "
@@ -197,6 +207,8 @@ rule run_allele_freq_allancestry:
         expand("{}/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr{{chr}}.frq".format(config['Geno_1KG_dir']), chr=range(1, 23))
     log:
         "logs/run_allele_freq_allancestry/run_allele_freq_allancestry.log"
+    singularity:
+        config['singularity']['all']
     shell:
         "("
         "for chr in $(seq 1 22); do "
@@ -236,6 +248,8 @@ rule ancestry_scoring:
         "{}/Score_files_for_ancestry/{{popul}}/1KGPhase3.w_hm3.{{popul}}.log".format(config['Geno_1KG_dir'])
     wildcard_constraints:
         popul='[A-Z]+'
+    singularity:
+        config['singularity']['all']
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
@@ -263,6 +277,8 @@ rule ancestry_scoring_allancestry:
     log:
         # the script is configured to write log files here
         "{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.log".format(config['Geno_1KG_dir'])
+    singularity:
+        config['singularity']['all']
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
