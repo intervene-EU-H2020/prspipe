@@ -67,6 +67,6 @@ UKBB_exclude: "/mnt/projects/ukbiobank/original/IDs_of_withdrawn_participants_w4
 ###############
 
 singularity:
-  all: 'containers/singularity/prspipe.sif'
+  all: 'docker://rmonti/prspipe:0.0.1'
 
 
