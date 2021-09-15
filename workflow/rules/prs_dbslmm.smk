@@ -25,7 +25,7 @@ rule dbslmm_prep:
     log:
         "logs/prs_dbslmm_{study}.{ancestry}.log"
     conda:
-        "../../{}/environment.yml".format(config['LDSC_dir'])
+        "../envs/ldsc.yaml"
     threads:
         1
     shell:

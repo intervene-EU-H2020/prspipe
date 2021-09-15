@@ -8,7 +8,7 @@ rule create_dbslmm_sblup_ld_ref:
     log:
         "logs/ld_matrix/dbslmm.{ancestry}.{chromosome}.log"
     conda:
-        "../../{}/environment.yml".format(config['LDSC_dir'])
+        "../envs/ldsc.yaml"
     shell:
         "python {config[LDSC_dir]}/ldsc.py "
         "--bfile {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr{wildcards[chromosome]} "

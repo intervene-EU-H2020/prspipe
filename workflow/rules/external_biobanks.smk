@@ -103,6 +103,21 @@ rule all_calculate_maf_ancestry_ext:
 # START: Polygenic scoring  #>>
 #############################>>
 
+rule validate_setup_ext:
+    # requests all necessary outputs for the rules below.
+    input:
+        # implemented by Sophie:
+        rules.all_dbslmm_prep.input,
+        rules.all_lassosum_prep.input,
+        rules.all_ldpred_prep.input,
+        rules.all_sblup_prep.input,
+        # implemented by Remo:
+        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
+        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
+        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
+        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
+
+
 ##########################
 # Pruning & Thresholding #
 ##########################
