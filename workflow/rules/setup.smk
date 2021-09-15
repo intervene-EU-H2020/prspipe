@@ -1,5 +1,12 @@
 # An example collection of Snakemake rules imported in the main Snakefile.
 
+rule download_test_data:
+    # rule to download test data from figshare
+    shell:
+        "wget -O {config[Geno_1KG_dir]}/data.tar.gz https://figshare.com/ndownloader/files/30718157?private_link=94afe1b02cf622234566 && "
+        "cd {config[Geno_1KG_dir]} && "
+        "tar -xvf data.tar.gz "
+
 rule install_software:
     # in case ./install_software.sh has not been run yet,
     # this rule can be used to do it automatically

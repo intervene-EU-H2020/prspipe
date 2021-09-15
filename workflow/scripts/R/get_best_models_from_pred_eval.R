@@ -124,6 +124,7 @@ res_pred_eval[,select:=CrossVal_R == max(CrossVal_R),by=list(group,method_type)]
 
 res_eval <- res_pred_eval[(select),]
 res_eval$Method <- res_eval$method
+res_eval$tag <- res_eval$Model
 res_eval$Model<-factor(res_eval$method_type, level=c('MultiPRS','CV','PseudoVal','Inf','All'))
 res_eval$Test <- res_eval$label
 
@@ -134,7 +135,7 @@ cat('writing output to', paste0(outpath, '/best_models.tsv'), '\n')
 
 # export data to TSV
 if (is_categorical){
-    fwrite(res_eval[,list(group, Method, label, method_type, is_multi, CrossVal_R, CrossVal_R_SE, CrossVal_pval, CrossVal_N, IndepVal_R, IndepVal_R_SE, IndepVal_pval, IndepVal_N, CrossVal_OR, CrossVal_LowCI, CrossVal_HighCI, Cross_LiabR2, Cross_AUC, CrossVal_Ncas, CrossVal_Ncon, IndepVal_OR, IndepVal_LowCI, IndepVal_HighCI, Indep_LiabR2, Indep_AUC, IndepVal_Ncas, IndepVal_Ncon)], paste0(outpath, '/best_models.tsv'), sep='\t')
+    fwrite(res_eval[,list(group, Method, label, tag, method_type, is_multi, CrossVal_R, CrossVal_R_SE, CrossVal_pval, CrossVal_N, IndepVal_R, IndepVal_R_SE, IndepVal_pval, IndepVal_N, CrossVal_OR, CrossVal_LowCI, CrossVal_HighCI, Cross_LiabR2, Cross_AUC, CrossVal_Ncas, CrossVal_Ncon, IndepVal_OR, IndepVal_LowCI, IndepVal_HighCI, Indep_LiabR2, Indep_AUC, IndepVal_Ncas, IndepVal_Ncon)], paste0(outpath, '/best_models.tsv'), sep='\t')
 } else {
-    fwrite(res_eval[,list(group, Method, label, method_type, is_multi, CrossVal_R, CrossVal_R_SE, CrossVal_pval, CrossVal_N, IndepVal_R, IndepVal_R_SE, IndepVal_pval, IndepVal_N)], paste0(outpath, '/best_models.tsv'), sep='\t')
+    fwrite(res_eval[,list(group, Method, label, tag, method_type, is_multi, CrossVal_R, CrossVal_R_SE, CrossVal_pval, CrossVal_N, IndepVal_R, IndepVal_R_SE, IndepVal_pval, IndepVal_N)], paste0(outpath, '/best_models.tsv'), sep='\t')
 }
