@@ -3,7 +3,7 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥5.7.0-brightgreen.svg)](https://snakemake.bitbucket.io)
 [![Build Status](https://travis-ci.org/snakemake-workflows/prspipe.svg?branch=master)](https://travis-ci.org/snakemake-workflows/prspipe)
 
-Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods.
+Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods using summary statistics.
 
 ## Authors
 
@@ -14,18 +14,54 @@ Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and 
 
 If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository and, if available, its DOI (see above).
 
+## Quick Start for Collaborators
+
+The full pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) prediction and evaluation of PRS using the adjusted summary statistics, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
+
+Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks.
+
+### Basic Setup
+
+1.  Install conda and [snakemake](#step-2-install-snakemake), if not available already.
+2.  Clone the repository, and run `bash ./install.sh`. This will download necessary software dependencies.
+3.  If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
+4.  Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
+5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
+
+Step 5 should be run on a compute-node.
+
+### Download Pre-adjusted summary statistics
+
+I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast cancer, prostate cancer and HbA1c). Follow the steps below to download them, and set up the pipeline to use them. 
+
+1.  Download data from figshare by running `bash run.sh download_test_data`.
+
+### Set up Genotype and Phenotype data
+
+ Replace "{bbid}" with a suitable name in the steps below. These steps have not yet been automated, but we will work on automating them in the future. 
+
+1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
+3.  Harmonize your genotype data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter).
+> Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
+4.  Place per-chromosome harmonized plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
+5.  Place phenotype files in `custom_input/genotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match one or more of the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv). These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)). 
+
+Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
+
+```
+# replace {bbid} with the name of your biobank:
+bash run.sh --use-singularity results/{bbid}/PRS_evaluation/all_studies.ok
+```
+
+This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
+
+# Documentation
 ### Step 1: Obtain a copy of this workflow
 
 1. Create a new github repository using this workflow [as a template](https://help.github.com/en/articles/creating-a-repository-from-a-template).
 2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the newly created repository to your local system, into the place where you want to perform the data analysis.
 
-### Step 2: Configure workflow
-
-Configure the workflow according to your needs via editing the files in the `config/` folder. Adjust `config.yaml` to configure the workflow execution, and `samples.tsv` to specify your sample setup.
-
-> Note: samples.tsv is currently disabled.
-
-### Step 3: Install Snakemake
+### Step 2: Install Snakemake
 
 Install Snakemake using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
 
@@ -36,15 +72,13 @@ For installation details, see the [instructions in the Snakemake documentation](
 
 Run `download_resources.sh` and `install_software.sh` to set up software.
 
-    bash ./download_resources.sh
     bash ./install_software.sh
 
+### Step 3: R packages and other dependencies
 
-### Step 4: R packages and other dependencies
+The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1, **recommended**) running the pipeline using singularity containers, or (2) running with a local conda and R installation and installing R-packages manually.
 
-The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation and installing packages manually or (2) running the pipeline using singularity containers.
-
-If running with a local R installation, the following commands will install all dependencies:
+If manually installing R-packages, the following commands will install all dependencies:
 
     R
     install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
@@ -53,7 +87,7 @@ If running with a local R installation, the following commands will install all 
 
 #### Containers (Docker/Singularity)
 
-Alternatively, we have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe). 
+We have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe). By default, the pipeline is configured to use the image hosted on dockerhub, and no build is necessary.
 
 Creating a singularity image that is able to run the pipeline is as simple as:
 
@@ -61,12 +95,15 @@ Creating a singularity image that is able to run the pipeline is as simple as:
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
 ```
 
-To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake.
+To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The main singularity image is defined in `config/config.yaml`. The default for rules that don't explicitly define a singularity image is defined in `workflow/rules/common.smk`. Currently, the default is `docker://rmonti/prspipe:0.0.1`.
 
+### Step 4: Configure workflow
+
+Basic parameters and paths are configured within `config/config.yaml`. The most important input files are described below.
 
 ### Step 5: Execute workflow
 
-Activate the conda environment, and use `./run.sh` to launch snakemake with default parameters:
+Activate the snakemake conda environment, and use `./run.sh` to launch snakemake with default parameters:
 
     conda activate snakemake
     # run all the setup rules (steps 1-3 of GenoPred)
@@ -76,48 +113,6 @@ Activate the conda environment, and use `./run.sh` to launch snakemake with defa
     ./run.sh --use-singularity all_setup
 
 See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
-
-### Step 6: Investigate results
-
-After successful execution, you can create a self-contained interactive HTML report with all results via:
-
-    snakemake --report report.html
-
-This report can, e.g., be forwarded to your collaborators.
-An example (using some trivial test data) can be seen [here](https://cdn.rawgit.com/snakemake-workflows/rna-seq-kallisto-sleuth/master/.test/report.html).
-
-### Step 7: Commit changes
-
-Whenever you change something, don't forget to commit the changes back to your github copy of the repository:
-
-    git commit -a
-    git push
-
-### Step 8: Obtain updates from upstream
-
-Whenever you want to synchronize your workflow copy with new developments from upstream, do the following.
-
-1. Once, register the upstream repository in your local copy: `git remote add -f upstream git@github.com:snakemake-workflows/prspipe.git` or `git remote add -f upstream https://github.com/snakemake-workflows/prspipe.git` if you do not have setup ssh keys.
-2. Update the upstream version: `git fetch upstream`.
-3. Create a diff with the current version: `git diff HEAD upstream/master workflow > upstream-changes.diff`.
-4. Investigate the changes: `vim upstream-changes.diff`.
-5. Apply the modified diff via: `git apply upstream-changes.diff`.
-6. Carefully check whether you need to update the config files: `git diff HEAD upstream/master config`. If so, do it manually, and only where necessary, since you would otherwise likely overwrite your settings and samples.
-
-
-### Step 9: Contribute back
-
-In case you have also changed or added steps, please consider contributing them back to the original repository:
-
-1. [Fork](https://help.github.com/en/articles/fork-a-repo) the original repo to a personal or lab account.
-2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the fork to your local system, to a different place than where you ran your analysis.
-3. Copy the modified files from your analysis to the clone of your fork, e.g., `cp -r workflow path/to/fork`. Make sure to **not** accidentally copy config file contents or sample sheets. Instead, manually update the example config files if necessary.
-4. Commit and push your changes to your fork.
-5. Create a [pull request](https://help.github.com/en/articles/creating-a-pull-request) against the original repository.
-
-## Testing
-
-Test cases are in the subfolder `.test`. They are automatically executed via continuous integration with [Github Actions](https://github.com/features/actions).
 
 ## Downloading GWAS summary statistics
 
@@ -139,25 +134,3 @@ If summary statistics are not available in the harmonized format, consider using
 ```
 ./run.sh all_QC
 ```
-
-## Pipeline Overview
-
-The pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) evaluation of the adjusted summary statistics including hyper-parameter tuning using cross validation and construction of "multi-PRS" scores that combine sets of adjusted summary statistics together. The second step uses private data e.g. from the UK Biobank or your biobank of interest.
-
-Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks. Replace "{bbid}" with a suitable name. 
-
-1.   Clone the repository, and run `./install.sh` and `./download_resources.sh`.
-2.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
-3.  Harmonize your data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink formatted genotype files with the hm3 variants.
-> Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
-4.  Place per-chromosome plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
-5.  Place phenotype files in `custom_input/genotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match one or more of the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv). These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)). 
-
-Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data, by running
-
-```
-# replace {bbid} with the name of your biobank:
-bash run.sh --use-singularity results/{bbid}/PRS_evaluation/all_studies.ok
-```
-
-This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
