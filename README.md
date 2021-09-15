@@ -42,7 +42,7 @@ Run `download_resources.sh` and `install_software.sh` to set up software.
 
 ### Step 4: R packages and other dependencies
 
-The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation or and installing packages manually or (2) running the pipeline using singularity containers.
+The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1) running with a local R installation and installing packages manually or (2) running the pipeline using singularity containers.
 
 If running with a local R installation, the following commands will install all dependencies:
 
@@ -61,7 +61,7 @@ Creating a singularity image that is able to run the pipeline is as simple as:
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
 ```
 
-> Remo: Docker and Singularity are not fully supported yet (August 4, 2021)
+To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake.
 
 
 ### Step 5: Execute workflow
@@ -71,6 +71,9 @@ Activate the conda environment, and use `./run.sh` to launch snakemake with defa
     conda activate snakemake
     # run all the setup rules (steps 1-3 of GenoPred)
     ./run.sh all_setup
+    
+    # OR, using singularity
+    ./run.sh --use-singularity all_setup
 
 See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
@@ -127,7 +130,7 @@ To configure and run the code for downloading summary statistics:
 | study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | The study acccession number given in the GWAS catalog | The ancestry abbreviation (we currently support EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name |
-| e.g. GCST000998 | e.g. EUR | e.g. 22233 | e.g. 64762 | e.g. /pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz | e.g. ./munged_ss.tsv.gz | e.g. yes | e.g. CAD_Schunkert |
+| e.g. GCST000998 | e.g. EUR | e.g. 22233 | e.g. 64762 | e.g. /pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz | e.g. ./munged_ss.tsv.gz | e.g. yes | e.g. CAD |
 
 If summary statistics are not available in the harmonized format, consider using [this script](https://github.com/intervene-EU-H2020/prspipe/blob/548640564d81196308cf411b60838d1a6f8a01d6/workflow/scripts/R/munge_sumstats.R) to convert them to munged format.
 
@@ -136,3 +139,25 @@ If summary statistics are not available in the harmonized format, consider using
 ```
 ./run.sh all_QC
 ```
+
+## Pipeline Overview
+
+The pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) evaluation of the adjusted summary statistics including hyper-parameter tuning using cross validation and construction of "multi-PRS" scores that combine sets of adjusted summary statistics together. The second step uses private data e.g. from the UK Biobank or your biobank of interest.
+
+Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks. Replace "{bbid}" with a suitable name. 
+
+1.   Clone the repository, and run `./install.sh` and `./download_resources.sh`.
+2.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
+3.  Harmonize your data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink formatted genotype files with the hm3 variants.
+> Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
+4.  Place per-chromosome plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
+5.  Place phenotype files in `custom_input/genotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match one or more of the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv). These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)). 
+
+Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data, by running
+
+```
+# replace {bbid} with the name of your biobank:
+bash run.sh --use-singularity results/{bbid}/PRS_evaluation/all_studies.ok
+```
+
+This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
