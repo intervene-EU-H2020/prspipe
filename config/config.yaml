@@ -2,7 +2,7 @@
 
 # In case of sample based data, it should be complemented by a samples.tsv file that contains
 # one row per sample. It can be parsed easily via pandas.
-studies: "config/studies_new.tsv"
+studies: "config/studies.tsv"
 prevalence: "config/pop_prevalence.tsv"
 
 GenoPred_dir: "workflow/scripts/GenoPred"
@@ -67,6 +67,6 @@ UKBB_exclude: "/mnt/projects/ukbiobank/original/IDs_of_withdrawn_participants_w4
 ###############
 
 singularity:
-  all: 'containers/singularity/prspipe.sif'
+  all: 'docker://rmonti/prspipe:0.0.1'
 
 
