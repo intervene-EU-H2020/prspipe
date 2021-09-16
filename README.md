@@ -34,11 +34,12 @@ Step 5 should be run on a compute-node.
 
 I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast cancer, prostate cancer and HbA1c). Follow the steps below to download them, and set up the pipeline to use them. 
 
-1.  Download data from figshare by running `bash run.sh download_test_data`.
+1.  Download data from figshare by running `bash run.sh download_test_data`. This might take a while...
+2.  Verify the data is in the correct location by running `bash run.sh -n validate_setup_ext`. You should see a message that says *"Nothing to be done."*.
 
 ### Set up Genotype and Phenotype data
 
- Replace "{bbid}" with a suitable name in the steps below. These steps have not yet been automated, but we will work on automating them in the future. 
+These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below.
 
 1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
 3.  Harmonize your genotype data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter).
@@ -49,8 +50,7 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
 
 ```
-# replace {bbid} with the name of your biobank:
-bash run.sh --use-singularity results/{bbid}/PRS_evaluation/all_studies.ok
+bash run.sh --use-singularity all_get_best_models_ext
 ```
 
 This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
