@@ -12,7 +12,6 @@
 # Phenotypes should be placed in custom_input/phenotypes/{bbid}/{phenotype}.txt
 
 
-
 ####################
 # Ancestry scoring #
 ####################
@@ -103,6 +102,7 @@ rule all_calculate_maf_ancestry_ext:
 # START: Polygenic scoring  #>>
 #############################>>
 
+
 rule validate_setup_ext:
     # requests all necessary outputs for the rules below.
     input:
@@ -112,10 +112,10 @@ rule validate_setup_ext:
         rules.all_ldpred_prep.input,
         rules.all_sblup_prep.input,
         # implemented by Remo:
-        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
-        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
-        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
-        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
+        rules.all_run_prscs_precompld_1kg_refukbb.input,
+        rules.all_run_ldpred2_1kg_precompld_1kg.input,
+        rules.all_sparse_thresholding_1kg.input,
+        rules.all_run_sbayesr_precompld_1kg_refukbb_robust.input
 
 
 ##########################

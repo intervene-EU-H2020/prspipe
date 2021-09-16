@@ -245,3 +245,9 @@ rule run_prscs_precompld_1kg_refukbb:
         "--n_cores {threads} "
         "--phi_param 1e-6,1e-4,1e-2,1,auto "
         ") &> {log} "
+
+
+rule all_run_prscs_precompld_1kg_refukbb:
+    input:
+        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id)
+
