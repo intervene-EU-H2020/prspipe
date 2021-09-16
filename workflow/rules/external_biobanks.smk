@@ -2,6 +2,13 @@
 
 # https://opain.github.io/GenoPred/Genotype-based_scoring_in_target_samples.html
 
+from glob import glob
+try:
+    bbids = [x.split('/')[2] for x in glob('custom_input/genotypes/*/')]
+except IndexError:
+    bbids = None
+    
+
 ############################
 # Harmonization to HapMap3 #
 ############################
@@ -86,9 +93,7 @@ rule all_calculate_maf_ancestry_ext:
     # runs rule above for all ancestries and chromosomes
     # Note: this fails if some ancestries are not represented, which is likely. Use "run.sh --keep-going ..." to force execution for all represented ancestries
     input:
-        expand(rules.calculate_maf_ancestry_ext.output, chr=range(1,23), superpop=config['1kg_superpop'], allow_missing=True)
-    output:
-        'results/{bbid}/Ancestry_idenitfier/AllAncestry.afreq.ok'
+        expand(rules.calculate_maf_ancestry_ext.output, chr=range(1,23), superpop=config['1kg_superpop'], bbid=bbids)
         
 
 #################
@@ -160,9 +165,8 @@ rule nested_sparse_thresholding_score_ext_ref1kg:
 rule all_nested_sparse_thresholding_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.nested_sparse_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id.iloc[0], allow_missing=True)
-    output:
-        touch("results/{bbid}/PRS_for_comparison/pt_clump/all.ok")
+        expand(rules.nested_sparse_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id.iloc[0], bbid=bbids)
+
 
 
 rule sparse_thresholding_score_ext_ref1kg:
@@ -200,7 +204,7 @@ rule sparse_thresholding_score_ext_ref1kg:
 rule all_sparse_thresholding_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.sparse_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id, allow_missing=True)
+        expand(rules.sparse_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id, bbid=bbids)
 
 
 rule dense_thresholding_score_ext_ref1kg:
@@ -208,7 +212,8 @@ rule dense_thresholding_score_ext_ref1kg:
     # P+T clump - dense (note: this one took long to finish according to GenoPred... might skip)
     input:
         score_files=rules.dense_thresholding_1kg.output,
-        harmonised_geno=expand("custom_input/genotypes/{{bbid}}/chr{chr}.bed", chr=range(1,23))
+        harmonised_geno=expand("custom_input/genotypes/{{bbid}}/chr{chr}.bed", chr=range(1,23)),
+        frq = expand(rules.calculate_maf_ancestry_ext.output['afreq'], superpop='EUR', chr=range(1,23), allow_missing=True)
     output:
         profiles = "results/{bbid}/PRS_for_comparison/pt_clump_dense/{study}/{study}.profiles"
     params:
@@ -235,7 +240,7 @@ rule dense_thresholding_score_ext_ref1kg:
 rule all_dense_thresholding_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.dense_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id, allow_missing=True)
+        expand(rules.dense_thresholding_score_ext_ref1kg.output, zip, study=studies.study_id, bbid=bbids)
 
 
 
@@ -284,9 +289,7 @@ rule lassosum_score_ext:
 rule all_lassosum_score_ext:
     # run rule above for all studies
     input:
-        expand(rules.lassosum_score_ext.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch('results/{bbid}/PRS_for_comparison/lassosum/all.ok')
+        expand(rules.lassosum_score_ext.output, zip, study=studies.study_id, allow_missing=True, bbid=bbids)
 
     
 ##########
@@ -335,10 +338,8 @@ rule prscs_score_ext_refukbb:
 rule all_prscs_score_ext_refukbb:
     # run rule above for all studies
     input:
-        expand(rules.prscs_score_ext_refukbb.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch('results/{bbid}/PRS_for_comparison/PRScs/all.ok')
-    
+        expand(rules.prscs_score_ext_refukbb.output, zip, study=studies.study_id, bbid=bbids)
+            
 
 ##########
 ## SBLUP #
@@ -381,9 +382,7 @@ rule sblup_score_ext_ref1kg:
 rule all_sblup_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.sblup_score_ext_ref1kg.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch("results/{bbid}/PRS_for_comparison/SBLUP/all.ok")
+        expand(rules.sblup_score_ext_ref1kg.output, zip, study=studies.study_id, bbid=bbids)
 
 
 ###########
@@ -433,9 +432,7 @@ rule sbayesr_score_ext_refukbb_robust:
 rule all_sbayesr_score_ext_refukbb_robust:
     # run rule above for all studies
     input:
-        expand(rules.sbayesr_score_ext_refukbb_robust.output, zip, study=studies.study_id, allow_missing=True),
-    output:
-        touch("results/{bbid}/PRS_for_comparison/SBayesR/all.ok")
+        expand(rules.sbayesr_score_ext_refukbb_robust.output, zip, study=studies.study_id, bbid=bbids)
 
 
 ##########
@@ -479,9 +476,7 @@ rule ldpred_score_ext_ref1kg:
 rule all_ldpred_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.ldpred_score_ext_ref1kg.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch("results/{bbid}/PRS_for_comparison/LDPred/all.ok")
+        expand(rules.ldpred_score_ext_ref1kg.output, zip, study=studies.study_id, bbid=bbids)
 
 
 ############
@@ -532,9 +527,7 @@ rule ldpred2_score_ext_refukbb:
 rule all_ldpred2_score_ext_refukbb:
     # run rule above for all studies
     input:
-        expand(rules.ldpred2_score_ext_refukbb.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch("results/{bbid}/PRS_for_comparison/LDPred2/all.ok")
+        expand(rules.ldpred2_score_ext_refukbb.output, zip, study=studies.study_id, bbid=bbids)
 
 
 ##########
@@ -576,9 +569,8 @@ rule dbslmm_score_ext_ref1kg:
 rule all_dbslmm_score_ext_ref1kg:
     # run rule above for all studies
     input:
-        expand(rules.dbslmm_score_ext_ref1kg.output, zip, study=studies.study_id, allow_missing=True)
-    output:
-        touch('results/{bbid}/PRS_for_comparison/DBSLMM/all.ok')
+        expand(rules.dbslmm_score_ext_ref1kg.output, zip, study=studies.study_id, bbid=bbids)
+
 
 ########
 ## ALL #
@@ -587,8 +579,8 @@ rule all_dbslmm_score_ext_ref1kg:
 rule all_score_ext:
     # rule that runs all the rules above
     input:
-        rules.all_nested_sparse_thresholding_score_ext_ref1kg.input,
-        rules.all_dense_thresholding_score_ext_ref1kg.input,
+        #rules.all_nested_sparse_thresholding_score_ext_ref1kg.input,
+        #rules.all_dense_thresholding_score_ext_ref1kg.input,
         rules.all_sparse_thresholding_score_ext_ref1kg.input,
         rules.all_lassosum_score_ext.input,
         rules.all_prscs_score_ext_refukbb.input,
@@ -597,8 +589,7 @@ rule all_score_ext:
         rules.all_ldpred_score_ext_ref1kg.input,
         rules.all_ldpred2_score_ext_refukbb.input,
         rules.all_dbslmm_score_ext_ref1kg.input
-    output:
-        touch("results/{bbid}/all_score.ok")
+
         
         
 ###########################
@@ -702,9 +693,7 @@ rule get_best_models_ext:
         
 rule all_get_best_models_ext:
     input:
-        expand(rules.get_best_models_ext.output, study=studies.study_id, allow_missing=True)
-    output:
-        touch("results/{bbid}/PRS_evaluation/all_studies.ok")
+        expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids)
 
 
 rule model_eval_custom_ext:
