@@ -28,7 +28,7 @@ Rules that re-implement the analysis of the UK Biobank data as shown in the Geno
 4.  Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
 5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
 
-Step 5 should be run on a compute-node.
+When running with singularity, make sure to clear environmental variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
 
 ### Download Pre-adjusted summary statistics
 
@@ -42,12 +42,12 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below.
 
 1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
-3.  Harmonize your genotype data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter).
+3.  The pipeline requires genotypes in plink format. Harmonize your genotype data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter).
 > Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
 4.  Place per-chromosome harmonized plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
 5.  Place phenotype files in `custom_input/genotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv), i.e `HbA1c.txt`, `BMI.txt`, `T2D.txt`, `Prostate_cancer.txt` and `Breast_cancer.txt`. These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)).
 
-Assuming you have downloaded pre-adjusted summary statistics, you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
+Assuming you have downloaded pre-adjusted summary statistics (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
 
 ```
 bash run.sh --use-singularity all_get_best_models_ext
@@ -95,7 +95,7 @@ Creating a singularity image that is able to run the pipeline is as simple as:
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
 ```
 
-To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The main singularity image is defined in `config/config.yaml`. The default for rules that don't explicitly define a singularity image is defined in `workflow/rules/common.smk`. Currently, the default is `docker://rmonti/prspipe:0.0.1`.
+To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environmental variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
 
 ### Step 4: Configure workflow
 
