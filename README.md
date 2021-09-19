@@ -87,21 +87,23 @@ If manually installing R-packages, the following commands will install all depen
 
 #### Containers (Docker/Singularity)
 
-We have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe). By default, the pipeline is configured to use the image hosted on dockerhub, and no build is necessary.
+We have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe).
 
 Creating a singularity image that is able to run the pipeline is as simple as:
 
 ```
 # build from the local container definition...
-singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
+singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps.def
 
 # ... or build directly from dockerhub
 singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
 ```
 
+This should work even *without* root access.
+
 To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environment variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
 
-Instead of running with `--use-singularity` the entire pipeline can also be run locally within the container, as the container contains both conda and snakemake.
+Instead of running with `--use-singularity` the entire pipeline can also be run locally within the `docker://rmonti/prspipe:0.0.1`-container, as it contains both conda and snakemake.
 
 ### Step 4: Configure workflow
 
