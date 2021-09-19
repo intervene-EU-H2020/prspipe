@@ -28,7 +28,7 @@ Rules that re-implement the analysis of the UK Biobank data as shown in the Geno
 4.  Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
 5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
 
-When running with singularity, make sure to clear environmental variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
+When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
 
 ### Download Pre-adjusted summary statistics
 
@@ -95,7 +95,7 @@ Creating a singularity image that is able to run the pipeline is as simple as:
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
 ```
 
-To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environmental variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
+To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environment variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
 
 ### Step 4: Configure workflow
 
