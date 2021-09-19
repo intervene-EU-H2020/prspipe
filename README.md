@@ -92,10 +92,16 @@ We have provided [Singularity](https://sylabs.io/) and [Docker](https://www.dock
 Creating a singularity image that is able to run the pipeline is as simple as:
 
 ```
+# build from the local container definition...
 singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps_fromdocker.def
+
+# ... or build directly from dockerhub
+singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
 ```
 
 To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environment variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
+
+Instead of running with `--use-singularity` the entire pipeline can also be run locally within the container, as the container contains both conda and snakemake.
 
 ### Step 4: Configure workflow
 
