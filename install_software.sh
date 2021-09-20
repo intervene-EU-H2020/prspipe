@@ -26,8 +26,9 @@ if [ ! -f ./bin/plink2 ]; then
     >&2 echo "Downloading Plink 2.0 binaries"
     (
     cd bin
-    wget http://s3.amazonaws.com/plink2-assets/alpha2/plink2_linux_avx2.zip
-    unzip plink2_linux_avx2.zip && rm plink2_linux_avx2.zip
+    wget https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20210918.zip
+    # wget http://s3.amazonaws.com/plink2-assets/alpha2/plink2_linux_avx2.zip
+    unzip plink2_linux_avx2_20210918.zip && rm plink2_linux_avx2_20210918.zip
     )
 fi
 
