@@ -69,10 +69,10 @@ The pipeline does not need to be configured to look for files in `custom_input/p
 :rotating_light: Assuming you have downloaded pre-adjusted summary statistics (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before running the step below.
 
 ```
-bash run.sh --use-singularity all_get_best_models_ext
+bash run.sh --use-singularity --keep-going all_get_best_models_ext
 ```
 
-This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
+This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals.
 
 # Documentation
 
