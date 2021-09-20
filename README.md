@@ -41,7 +41,7 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 
 ### Set up Genotype and Phenotype data
 
-These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
+These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" (biobank id) with a name of your choice in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
 
 1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
 2.  :rotating_light: The pipeline requires genotypes in plink format. If you are starting from other formats such as BGEN or VCF, you will first have to convert your data to plink format using [plink v1.9](https://www.cog-genomics.org/plink/1.9/input#oxford). If your plink-formated data is not split by chromosome, you can split the data by chromosome with the following loop on the command-line, assuming your genetic data is called `master.{bed,bim,fam}`:
