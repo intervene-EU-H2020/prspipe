@@ -18,12 +18,12 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 The full pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) prediction and evaluation of PRS using the adjusted summary statistics, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
 
-Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks.
+Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks using rules defined [`workflow/rules/external_biobanks.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/external_biobanks.smk).
 
 ### Basic Setup
 
 1.  Install conda and [snakemake](#step-2-install-snakemake), if not available already.
-2.  Clone the repository, and run `bash ./install.sh`. This will download necessary software dependencies.
+2.  Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies.
 3.  If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
 4.  Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
 5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
@@ -39,13 +39,28 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 
 ### Set up Genotype and Phenotype data
 
-These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below.
+These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
 
 1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
-3.  The pipeline requires genotypes in plink format. Harmonize your genotype data with the HapMap3 (hm3) variants. The GenoPred script [Harmonisation_of_UKBB.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/Harmonisation_of_UKBB/Harmonisation_of_UKBB.R) illustrates these steps for the UK Biobank data. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter).
+2.  The pipeline requires genotypes in plink format. If you are starting from other formats such as BGEN or VCF, you will first have to convert your data to plink format using [plink v1.9](https://www.cog-genomics.org/plink/1.9/input#oxford). If your plink-formated data is not split by chromosome, you can split the data by chromosome with the following loop on the command-line, assuming your genetic data is called `master.{bed,bim,fam}`:
+```
+# replace "master" with the prefix of your data
+# this will generate files tmp_chr{1-22}.{bed,bim,fam}
+for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i}; done
+```
+3.    Harmonize the per-chromosome genotype data with the HapMap3 (hm3) variants. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter). Set the `--targ` parameter to the prefix of your per-chromosome genotype data prefix (for example `tmp_chr` if you used the loop above to generate them).
 > Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
-4.  Place per-chromosome harmonized plink-formated bim/bed/fam-files in  `custom_input/genotypes/{bbid}/`, name them `chr1.bed`,`chr2.bed`,...,`chr22.bed`.
-5.  Place phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv), i.e `HbA1c.txt`, `BMI.txt`, `T2D.txt`, `Prostate_cancer.txt` and `Breast_cancer.txt`. These files should have 3 columns: The family ID, the individual ID, and the Phenotype value (see also [here](https://www.cog-genomics.org/plink/1.9/input#pheno)).
+4.  Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
+5.  Extract the phenotypes of interest. This will be highly specific to the biobank you are working with. Phenotypes should be placed in separate files with three tab-separated columns: The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
+
+| fid_1 | iid_1 | 0 |
+| --- | --- | --- |
+| fid_2 | iid_2 | 1 |
+| ... | ... | ... |
+
+The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This way only a sub-set of individuals can be analysed for each phenotype to save computational time. 
+
+Place the phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv), i.e `HbA1c.txt`, `BMI.txt`, `T2D.txt`, `Prostate_cancer.txt` and `Breast_cancer.txt`.
 
 Assuming you have downloaded pre-adjusted summary statistics (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
 
@@ -56,6 +71,9 @@ bash run.sh --use-singularity all_get_best_models_ext
 This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. 
 
 # Documentation
+
+This part of the documentation will lead you through all steps of the pipeline, including setting it up for new phenotypes.
+
 ### Step 1: Obtain a copy of this workflow
 
 1. Create a new github repository using this workflow [as a template](https://help.github.com/en/articles/creating-a-repository-from-a-template).
