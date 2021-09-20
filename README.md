@@ -36,7 +36,7 @@ When running with singularity, make sure to clear environment variables related 
 
 I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast cancer, prostate cancer and HbA1c). Follow the steps below to download them, and set up the pipeline to use them. 
 
-1.  Download data from figshare by running `bash run.sh download_test_data`. This might take a while... :globe_with_meridians:
+1.  :globe_with_meridians: Download data from figshare by running `bash run.sh download_test_data`. This might take a while...
 2.  Verify the data is in the correct location by running `bash run.sh -n validate_setup_ext`. You should see a message that says *"Nothing to be done."*.
 
 ### Set up Genotype and Phenotype data
@@ -44,16 +44,16 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" with a suitable name in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
 
 1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
-2.  :globe_with_meridians: The pipeline requires genotypes in plink format. If you are starting from other formats such as BGEN or VCF, you will first have to convert your data to plink format using [plink v1.9](https://www.cog-genomics.org/plink/1.9/input#oxford). If your plink-formated data is not split by chromosome, you can split the data by chromosome with the following loop on the command-line, assuming your genetic data is called `master.{bed,bim,fam}`:
+2.  :rotating_light: The pipeline requires genotypes in plink format. If you are starting from other formats such as BGEN or VCF, you will first have to convert your data to plink format using [plink v1.9](https://www.cog-genomics.org/plink/1.9/input#oxford). If your plink-formated data is not split by chromosome, you can split the data by chromosome with the following loop on the command-line, assuming your genetic data is called `master.{bed,bim,fam}`:
 ```
 # replace "master" with the prefix of your data
 # this will generate files tmp_chr{1-22}.{bed,bim,fam}
 for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i}; done
 ```
-3.    :globe_with_meridians: Harmonize the per-chromosome genotype data with the HapMap3 (hm3) variants. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter). Set the `--targ` parameter to the prefix of your per-chromosome genotype data prefix (for example `tmp_chr` if you used the loop above to generate them).
+3.    :rotating_light: Harmonize the per-chromosome genotype data with the HapMap3 (hm3) variants. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter). Set the `--targ` parameter to the prefix of your per-chromosome genotype data prefix (for example `tmp_chr` if you used the loop above to generate them).
 > Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
-4.  :globe_with_meridians: Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
-5.  :globe_with_meridians: Extract the phenotypes of interest. This will be highly specific to the biobank you are working with. Phenotypes should be placed in separate files with three tab-separated columns: The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
+4.  :rotating_light: Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
+5.  :rotating_light: Extract the phenotypes of interest. This will be highly specific to the biobank you are working with. Phenotypes should be placed in separate files with three tab-separated columns: The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
 
 | fid_1 | iid_1 | 0 |
 | --- | --- | --- |
@@ -64,7 +64,7 @@ The IDs should have matches in the plink `.fam`-files generated above, but it is
 
 Place the phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/091a9184130a05942840fab6bb3dc5ede59beb6e/config/studies_new.tsv), i.e `HbA1c.txt`, `BMI.txt`, `T2D.txt`, `Prostate_cancer.txt` and `Breast_cancer.txt`.
 
-:globe_with_meridians: Assuming you have downloaded pre-adjusted summary statistics (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
+:rotating_light: Assuming you have downloaded pre-adjusted summary statistics (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. Contact me (remo.monti@hpi.de) before trying to run the step below.
 
 ```
 bash run.sh --use-singularity all_get_best_models_ext
