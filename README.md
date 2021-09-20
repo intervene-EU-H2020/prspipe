@@ -119,7 +119,7 @@ singularity build containers/singularity/prspipe.sif containers/singularity/prsp
 singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
 ```
 
-This should work even *without* root access.
+the latter should work even *without* root access.
 
 To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environment variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
 
