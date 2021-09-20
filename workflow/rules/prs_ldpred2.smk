@@ -75,9 +75,8 @@ rule run_ldpred2_precompld_1kg:
     output:
         # score_grid=expand('{geno1kg}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{s1}_{s2}_{sparse}.SCORE', geno1kg=config['Geno_1KG_dir'], s1=suff1, s2=suff2, sparse=['sparse','nosparse']),
         # score_inf='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.beta_inf.SCORE'.format(config['Geno_1KG_dir']),
-        log='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log'.format(config['Geno_1KG_dir']),
+        #log='{}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.log'.format(config['Geno_1KG_dir']),
         scale=expand('{geno1kg}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{{study}}/1KGPhase3.w_hm3.{{study}}.{superpop}.scale', geno1kg=config['Geno_1KG_dir'], superpop=config['1kg_superpop'])
-        # touch('run_ldpred2_precompld_1kg_{study}.ok')
     log:
         "logs/run_ldpred2_precompld_1kg_{study}.log"
     threads:
@@ -142,3 +141,8 @@ rule all_run_ldpred2_1kg:
     input:
         expand(rules.run_ldpred2_1kg.output, study=studies.study_id),
         expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id)
+
+rule all_run_ldpred2_1kg_precompld_1kg:
+    input:
+        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id)
+

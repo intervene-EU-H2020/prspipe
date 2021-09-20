@@ -3,9 +3,11 @@
 rule download_test_data:
     # rule to download test data from figshare
     shell:
-        "wget -O {config[Geno_1KG_dir]}/data.tar.gz https://figshare.com/ndownloader/files/30718157?private_link=94afe1b02cf622234566 && "
+        "wget -O {config[Geno_1KG_dir]}/PRS.tar.gz https://figshare.com/ndownloader/files/30799843?private_link=94afe1b02cf622234566 && "
         "cd {config[Geno_1KG_dir]} && "
-        "tar -xvf data.tar.gz "
+        "tar -xvf PRS.tar.gz && "
+        "find ./Score_files_for_polygenic -type f -exec touch {{}} +" # touching the extracted files so the snakemake timestamp checks work
+
 
 rule install_software:
     # in case ./install_software.sh has not been run yet,
