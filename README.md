@@ -55,46 +55,46 @@ for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i};
 4.  :rotating_light: Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
 5.  :rotating_light: Extract the phenotypes of interest, in this case BMI, HbA1c, prostate cancer, breast cancer and Type 2 Diabetes. This will be highly specific to the biobank you are working with and may include self-reported endpoints or data scraped from patient records. Phenotypes should be placed in separate files with three tab-separated columns: The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
 
-| fid_1 | iid_1 | 0 |
-| --- | --- | --- |
-| fid_2 | iid_2 | 1 |
-| ... | ... | ... |
+    | fid_1 | iid_1 | 0 |
+    | --- | --- | --- |
+    | fid_2 | iid_2 | 1 |
+    | ... | ... | ... |
 
-The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This way only a sub-set of individuals can be analysed for each phenotype to save computational time. Also, if you do not want to analyse a specific phenotype, you can delete the row corresponding to that phenotype from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
+    The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This   way only a sub-set of individuals can be analysed for each phenotype to save computational time. Also, if you do not want to analyse a specific phenotype, you can delete the row corresponding to that phenotype from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
 
-Place the phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv), i.e `./custom_input/phenotypes/{bbid}/HbA1c.txt`, `./custom_input/phenotypes/{bbid}/BMI.txt` and so on.
+    Place the phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv), i.e `./custom_input/phenotypes/{bbid}/HbA1c.txt`, `./custom_input/phenotypes/{bbid}/BMI.txt` and so on.
 
-The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/` and `custom_input/genotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
+    The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/` and `custom_input/genotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
 
-:rotating_light: Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
+    6.  :rotating_light: Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
+    
+    ```
+    bash run.sh --use-singularity --dryrun --keep-going all_get_best_models_ext
+    ```
 
-```
-bash run.sh --use-singularity --dryrun --keep-going all_get_best_models_ext
-```
+    the output should look something like this
 
-the output should look something like this
-
-```
-[...]
-Job counts:
-        count   jobs
-        1       all_get_best_models_ext
-        1       ancestry_scoring_ext
-        22      calculate_maf_ancestry_ext
-        5       dbslmm_score_ext_ref1kg
-        5       get_best_models_ext
-        5       lassosum_score_ext
-        5       ldpred2_score_ext_refukbb
-        5       ldpred_score_ext_ref1kg
-        5       model_eval_ext
-        5       model_eval_ext_prep
-        5       prscs_score_ext_refukbb
-        5       sbayesr_score_ext_refukbb_robust
-        5       sblup_score_ext_ref1kg
-        5       sparse_thresholding_score_ext_ref1kg
-        79
-```
-if you see significantly more jobs listed, your pipeline is misconfigured. Please contact me in this case (remo.monti@hpi.de).
+    ```
+    [...]
+    Job counts:
+            count   jobs
+            1       all_get_best_models_ext
+            1       ancestry_scoring_ext
+            22      calculate_maf_ancestry_ext
+            5       dbslmm_score_ext_ref1kg
+            5       get_best_models_ext
+            5       lassosum_score_ext
+            5       ldpred2_score_ext_refukbb
+            5       ldpred_score_ext_ref1kg
+            5       model_eval_ext
+            5       model_eval_ext_prep
+            5       prscs_score_ext_refukbb
+            5       sbayesr_score_ext_refukbb_robust
+            5       sblup_score_ext_ref1kg
+            5       sparse_thresholding_score_ext_ref1kg
+            79
+    ```
+    if you see significantly more jobs listed, your pipeline is misconfigured. Please contact me in this case (remo.monti@hpi.de).
 
 This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. You can now run these steps with `bash run.sh --use-singularity --keep-going all_get_best_models_ext`.
 
