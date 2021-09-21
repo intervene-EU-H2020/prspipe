@@ -66,7 +66,7 @@ for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i};
 
     The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/` and `custom_input/genotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
 
-    6.  :rotating_light: Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
+6.  :rotating_light: Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
     
     ```
     bash run.sh --use-singularity --dryrun --keep-going all_get_best_models_ext
