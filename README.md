@@ -25,7 +25,7 @@ Steps that need internet access are marked with :globe_with_meridians: and steps
 ### Basic Setup
 
 1.  :globe_with_meridians: Install conda and [snakemake](#step-2-install-snakemake), if not available already.
-2.  :globe_with_meridians: Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies.
+2.  :globe_with_meridians: Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies. Make sure you have access to https://github.com/intervene-EU-H2020/GenoPred, otherwise this will not work!
 3.  :globe_with_meridians: If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
 4.  :globe_with_meridians: Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
 5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
