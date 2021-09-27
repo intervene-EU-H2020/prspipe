@@ -25,10 +25,11 @@ Steps that need internet access are marked with :globe_with_meridians: and steps
 ### Basic Setup
 
 1.  :globe_with_meridians: Install conda and [snakemake](#step-2-install-snakemake), if not available already.
-2.  :globe_with_meridians: Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies. Make sure you have access to https://github.com/intervene-EU-H2020/GenoPred, otherwise this will not work!
-3.  :globe_with_meridians: If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
-4.  :globe_with_meridians: Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
-5.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
+2.  :globe_with_meridians: Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies. Make sure you have access to https://github.com/intervene-EU-H2020/GenoPred and your git is configured with ssh, otherwise this will not work!
+    1.  If `workflow/scripts/GenoPred` does not exist after running this step, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is configured to use ssh!
+4.  :globe_with_meridians: If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
+5.  :globe_with_meridians: Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
+6.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
 
 When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
 
