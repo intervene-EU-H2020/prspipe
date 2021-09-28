@@ -131,7 +131,7 @@ if [ ! -d ./workflow/scripts/PRScs ]; then
     >&2 echo "Downloading PRScs"
     (
     cd workflow/scripts
-    git clone https://github.com/getian107/PRScs.git && git checkout ${PRSCS_VERSION}
+    git clone https://github.com/getian107/PRScs.git && cd PRScs && git checkout ${PRSCS_VERSION}
     )
 else
     (
