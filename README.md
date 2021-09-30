@@ -159,7 +159,8 @@ For example:
 singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
 
 # run pipeline commands inside the container
-singularity run ./run.sh -n all_setup
+# for example, a dry-run of the setup rules:
+singularity run containers/singularity/prspipe.sif ./run.sh -n all_setup
 ```
 
 ### Step 4: Configure workflow
