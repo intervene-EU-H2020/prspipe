@@ -30,6 +30,8 @@ Steps that need internet access are marked with :globe_with_meridians: and steps
 4.  :globe_with_meridians: If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
 5.  :globe_with_meridians: Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
 6.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
+    > Careful, this will need quite some disk space (almost 90G)
+7.  If step 6 completed successfully, you can clear up space by running `bash run.sh cleanup_after_setup`, which will remove many intermediate files.
 
 When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
 
