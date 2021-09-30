@@ -309,7 +309,7 @@ rule all_setup:
         rules.run_allele_freq_all.output
         
         
-rule setup_cleanup:
+rule cleanup_after_setup:
     # removes unnecessary intermediate output files
     log:
         "logs/cleanup.log"
