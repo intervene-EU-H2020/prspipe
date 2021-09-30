@@ -152,6 +152,17 @@ To run the pipeline with singulartiy, use the `--use-singularity` flag with snak
 
 Instead of running with `--use-singularity` the entire pipeline can also be run locally within the `docker://rmonti/prspipe:0.0.1`-container, as it contains both conda and snakemake.
 
+For example:
+
+```
+# build container directly from dockerhub
+singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
+
+# run pipeline commands inside the container
+# for example, a dry-run of the setup rules:
+singularity run containers/singularity/prspipe.sif ./run.sh -n all_setup
+```
+
 ### Step 4: Configure workflow
 
 Basic parameters and paths are configured within `config/config.yaml`. The most important input files are described below.
