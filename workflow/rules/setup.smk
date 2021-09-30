@@ -307,3 +307,24 @@ rule all_setup:
         '{}/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var'.format(config['Geno_1KG_dir']),
         '{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var'.format(config['Geno_1KG_dir']),
         rules.run_allele_freq_all.output
+        
+        
+rule setup_cleanup:
+    # removes unnecessary intermediate output files
+    log:
+        "logs/cleanup.log"
+    shell:
+        "("
+        "rm -f {config[Geno_1KG_dir]}/ALL.chr*.phase3_shapeit2_mvncall_integrated_v*.*.genotypes.vcf.gz ; "
+        "rm -f {config[Geno_1KG_dir]}/merge_list.txt ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.bed ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.bim ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.fam ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.nosex ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.log ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.chr*.extract ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr*.nosex ; "
+        "rm -f {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr*.log ; "
+        "rm -f {config[Geno_1KG_dir]}/freq_files/*/*log ; "
+        "rm -f {config[Geno_1KG_dir]}/freq_files/*/*noseq ; "
+        ") &> {log}"
