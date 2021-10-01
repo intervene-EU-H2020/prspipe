@@ -42,7 +42,7 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 1.  :globe_with_meridians: Download data from figshare by running `bash run.sh download_test_data`. This might take a while...
 2.  Verify the data is in the correct location by running `bash run.sh -n validate_setup_ext`. You should see a message that says *"Nothing to be done."*.
 
-All the steps that require internet access are done. If you have to move to a private environment and have to ship the pipeline somewhere else, run `bash run.sh --conda-cleanup-envs && cd ../ && `
+All the steps that require internet access are done. 
 
 ### Set up Genotype and Phenotype data
 
