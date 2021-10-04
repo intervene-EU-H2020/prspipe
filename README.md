@@ -58,10 +58,11 @@ for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i};
 3.    :rotating_light: Harmonize the per-chromosome genotype data with the HapMap3 (hm3) variants. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter). Set the `--target` parameter to the prefix of your per-chromosome genotype data prefix (for example `tmp_chr` if you used the loop above to generate them).
 > Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
 4.  :rotating_light: Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
-5.  :rotating_light: Extract the phenotypes of interest, in this case BMI, HbA1c, prostate cancer, breast cancer and Type 2 Diabetes. This will be highly specific to the biobank you are working with and may include self-reported endpoints or data scraped from patient records. Phenotypes should be placed in separate files with three tab-separated columns: The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
+5.  :rotating_light: Extract the phenotypes of interest, in this case BMI, HbA1c, prostate cancer, breast cancer and Type 2 Diabetes. This will be highly specific to the biobank you are working with and may include self-reported endpoints or data scraped from patient records. Phenotypes should be placed in separate files with three tab-separated columns (no header): The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
 
-    | fid_1 | iid_1 | 0 |
+    |  |  |  |
     | --- | --- | --- |
+    | fid_1 | iid_1 | 0 |
     | fid_2 | iid_2 | 1 |
     | ... | ... | ... |
 
