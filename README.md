@@ -185,7 +185,7 @@ Activate the snakemake conda environment, and use `./run.sh` to launch snakemake
 
 See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
-## Downloading GWAS summary statistics
+## Incorporating new GWAS summary statistics
 
 The code implements rules for automatically downloading and pre-processing summary statistics from the [GWAS catalog](https://www.ebi.ac.uk/gwas/home).
 
@@ -205,3 +205,7 @@ If summary statistics are not available in the harmonized format, consider using
 ```
 ./run.sh all_QC
 ```
+
+## Disease prevalence estimates
+Model evaluation requires an estimate of disease prevalence in the general population for dichotomous traits. These can be found in the [`pop_prevalence.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/pop_prevalence.tsv). Make sure to add a corresponding row in that file when adding new endpoints. 
+
