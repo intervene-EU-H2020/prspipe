@@ -55,6 +55,7 @@ rule create_ancestry:
         "../scripts/R/setup/create_ancestry.R"
 
 
+# this rule is broken (?)
 rule get_plink_files_chr:
     # 2.4 1000 Genomes PLINK files (step 1)
     # https://opain.github.io/GenoPred/Pipeline_prep.html
