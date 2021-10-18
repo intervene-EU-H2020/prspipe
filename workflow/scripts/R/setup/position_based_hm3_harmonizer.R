@@ -5,7 +5,7 @@ option_list = list(
     make_option("--bim", action="store", default=NA, type='character', help="Path to bim file"),
     make_option("--out_prefix", action="store", default=NA, type='character', help='Output file prefix'),
     make_option("--genome_build", action="store", default="infer", type="character", help="Genome build, one of [hg19, hg38, infer], default: infer"),
-    make_option("--mapping", action="store", default="resources/hapmap3/hapmap3_mapping.tsv.gz", type="character", help="mapping file."),
+    make_option("--mapping", action="store", default=NA, type="character", help="mapping file."),
     make_option("--plink2", action="store", default="plink2", type="character", help="path to plink2 binary")
 )
 
@@ -29,6 +29,10 @@ bim[ (a1 == 'G' & a2 =='T') | (a1 == 'T' & a2 =='G'), IUPAC:='K']
 bim[ (a1 == 'A' & a2 =='C') | (a1 == 'C' & a2 =='A'), IUPAC:='M']
 
 mapping <- fread(opt$mapping, sep='\t')
+
+if ('rsid_mrg' %in% colnames(mapping)){
+    setnames(mapping,'rsid_mrg','rsid')
+}
 
 if (opt$genome_build == 'infer'){
     l1 = nrow(merge(bim[,list(chr,pos,IUPAC)], mapping[,list(chr, pos_hg19, IUPAC)], by.x = c('chr','pos','IUPAC'), by.y=c('chr','pos_hg19','IUPAC'), suffixes=c('_target', '_ref'), all.x = FALSE, all.y = FALSE))
@@ -64,7 +68,7 @@ tmp_keepfile <- paste0(opt$out_prefix,'.keep')
 
 fwrite(merged[rsid_target!='.',list(rsid_target),], scipen = 50, row.names = F, col.names = F, file = tmp_keepfile)
 
-rc <- system2('bin/plink2', c('--bfile', gsub('\\.bed$','',tmp_bed),'--extract',tmp_keepfile,'--make-bed','--out',opt$out_prefix))
+rc <- system2(opt$plink2, c('--bfile', gsub('\\.bed$','',tmp_bed),'--extract',tmp_keepfile,'--make-bed','--out',opt$out_prefix))
 
 if (rc != 0){
     file.remove(tmp_fam, tmp_bed, tmp_bim, tmp_keepfile)

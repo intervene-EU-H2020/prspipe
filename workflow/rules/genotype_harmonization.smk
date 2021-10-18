@@ -109,29 +109,57 @@ rule liftover_hapmap3_to_hg38:
         ") &> {log}"
 
 
+# this parameter sets the version of the dbSNP R-package used by the two rules below.
+dbsnp_v = '151'
+
+rule install_bioconductor_dbsnp:
+    params:
+        # version of dbSNP package to use, see https://bioconductor.org/packages/release/data/annotation/html/SNPlocs.Hsapiens.dbSNP151.GRCh38.html
+        dbsnp_version=dbsnp_v
+    output:
+        touch('R/install_dbsnp.ok'),
+        'R/local/SNPlocs.Hsapiens.dbSNP{}.GRCh38/R/SNPlocs.Hsapiens.dbSNP{}.GRCh38'.format(dbsnp_v, dbsnp_v)
+    log:
+        'logs/install_bioconductor_dbsnp.log'
+    shell:
+        "("
+        "mkdir -p R/local && "
+        "R -e 'if (!requireNamespace(\"BiocManager\", quietly = TRUE)){{install.packages(\"BiocManager\", repos=\"https://cloud.r-project.org/\")}}; BiocManager::install(\"SNPlocs.Hsapiens.dbSNP151.GRCh38\", lib=\"R/local/\");' "
+        ") &> {log}"
+        
+
 rule merge_hapmap3_liftover_output:
-    # requires R data.table
+    # requires R data.table and installation of SNPlocs.Hsapiens.dbSNP (see rule above)
     # the output of this step is stored, so the previous steps can be skipped.
+    # Note: peaks at about 11G of memory usage
     input:
         hmhg19=rules.liftover_hapmap3_to_hg19.output['hapmap_hg19'],
         hmhg38=rules.liftover_hapmap3_to_hg38.output['hapmap_hg38'],
         hmhg18_bim=rules.make_hapmap3_bim.output
     output:
-        "resources/hapmap3/hapmap3_mapping.tsv.gz"
+        "resources/hapmap3/hapmap3_mapping_chr{chr}.tsv.gz"
+    params:
+        dbsnp_version = dbsnp_v
     log:
-        "logs/merge_hapmap3_liftover_output.log"
+        "logs/merge_hapmap3_liftover_output_chr{chr}.log"
     singularity:
         config['singularity']['all']
     shell:
         "("
         "Rscript workflow/scripts/R/setup/merge_hapmap3_positions.R "
         "{input.hmhg18_bim} "
-        "{hmhg19} "
-        "{hmhg38} "
+        "{input.hmhg19} "
+        "{input.hmhg38} "
+        "{wildcards[chr]} "
+        "{params[dbsnp_version]} "
         "{output} "
         ") &> {log}"
 
 
+rule all_merge_mapmap3_liftover_output:
+    input:
+        expand(rules.merge_hapmap3_liftover_output.output, chr=range(1,23))
+        
 
 #######################################################
 # The part below should be run in the single biobanks #
