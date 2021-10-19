@@ -1,6 +1,6 @@
 #!/usr/bin/env Rscript
 
-library(data.table)
+suppressMessages(library(data.table))
 
 args = commandArgs(trailingOnly=TRUE)
 
@@ -18,10 +18,12 @@ dbsnp_version = args[5]
 # the output file
 outfile = args[6]
 
+match_IUPAC <- FALSE
+
 # load dbSNP from the custom location
 .libPaths(c(.libPaths(), "R/local/"))
-library('GenomicRanges')
-library(paste0("SNPlocs.Hsapiens.dbSNP",dbsnp_version,".GRCh38"),character.only = TRUE)
+suppressMessages(library('GenomicRanges'))
+suppressMessages(library(paste0("SNPlocs.Hsapiens.dbSNP",dbsnp_version,".GRCh38"),character.only = TRUE))
 
 matchtable <- fread(hg18_bim, sep = '\t', col.names = c('chr_hg18','rsid','dst','pos_hg18','a1','a2'))
 
@@ -76,30 +78,53 @@ snp_overlaps[,strand:=NULL]
 matchtable$chr <- as.character(matchtable$chr)
 snp_overlaps$chr <- as.character(snp_overlaps$chr)
 
-matchtable <- merge(matchtable, snp_overlaps, by = c('chr','pos_hg38','IUPAC'), suffixes = c('_hm3','_dbSNP'), all.x = TRUE)
-stopifnot(nrow(matchtable) > 0) # the intersection is empty. Something is wrong...
+if (match_IUPAC){
+    matchtable <- merge(matchtable, snp_overlaps, by = c('chr','pos_hg38','IUPAC'), suffixes = c('_hm3','_dbSNP'), all.x = TRUE)
+} else {
+    matchtable <- merge(matchtable, snp_overlaps, by = c('chr','pos_hg38'), suffixes = c('_hm3','_dbSNP'), all.x = TRUE)
+}
+stopifnot(nrow(matchtable) > 0) # if the intersection is empty. Something is wrong...
 
 # get rid of ambiguous SNPs, and replace IDs with latest versions...
 matchtable[,keep:=FALSE]
 matchtable[,rsid_mrg:='.']
 
-# duplicated, but at least one ID matches with dbSNP -> keep the one with matching ID
-matchtable[(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), rsid_mrg:=rsid_dbSNP]
-matchtable[(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), keep:=TRUE]
-
-# not duplicated -> assign the new ID
-matchtable[!(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (!is.na(rsid_dbSNP)), rsid_mrg:=rsid_dbSNP]
-matchtable[!(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (!is.na(rsid_dbSNP)), keep:=TRUE]
-
-# ID not listed in dbSNP (see restriction of variants in the R-package...) -> assign ID given in HapMap3 (might be old...)
-matchtable[is.na(rsid_dbSNP),rsid_mrg:=rsid_hm3]
-matchtable[is.na(rsid_dbSNP),keep:=TRUE]
+if (match_IUPAC){
+    # match position AND IUPAC codes (this is not recommended.)
+    # duplicated, but at least one ID matches with dbSNP -> keep the one with matching ID
+    matchtable[(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), rsid_mrg:=rsid_dbSNP]
+    matchtable[(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), keep:=TRUE]
+    
+    # not duplicated -> assign the new ID
+    matchtable[!(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (!is.na(rsid_dbSNP)), rsid_mrg:=rsid_dbSNP]
+    matchtable[!(duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38, IUPAC)], fromLast = F)) & (!is.na(rsid_dbSNP)), keep:=TRUE]
+    
+    # ID not listed in dbSNP (see restriction of variants in the R-package...) -> assign ID given in HapMap3 (might be old...)
+    matchtable[is.na(rsid_dbSNP),rsid_mrg:=rsid_hm3]
+    matchtable[is.na(rsid_dbSNP),keep:=TRUE]    
+} else {
+    # match only position
+    # duplicated, but at least one ID matches with dbSNP -> keep the one with matching ID
+    matchtable[(duplicated(matchtable[,list(chr, pos_hg38)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), rsid_mrg:=rsid_dbSNP]
+    matchtable[(duplicated(matchtable[,list(chr, pos_hg38)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38)], fromLast = F)) & (rsid_hm3 == rsid_dbSNP), keep:=TRUE]
+    
+    # not duplicated -> assign the new ID
+    matchtable[!(duplicated(matchtable[,list(chr, pos_hg38)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38)], fromLast = F)) & (!is.na(rsid_dbSNP)), rsid_mrg:=rsid_dbSNP]
+    matchtable[!(duplicated(matchtable[,list(chr, pos_hg38)], fromLast = T) | duplicated(matchtable[,list(chr, pos_hg38)], fromLast = F)) & (!is.na(rsid_dbSNP)), keep:=TRUE]
+    
+    # ID not listed in dbSNP (see restriction of variants in the R-package...) -> assign ID given in HapMap3 (might be old...)
+    matchtable[is.na(rsid_dbSNP),rsid_mrg:=rsid_hm3]
+    matchtable[is.na(rsid_dbSNP),keep:=TRUE]   
+}
 
 # remove rows not marked with "keep", and drop unnecessary columns
-cat(paste0('Removing ',sum(!matchtable$keep),' matches because of conflicts.'))
+matchtable[,dst:=NULL]
+cat(paste0('Removing ',sum(!matchtable$keep),' matches because of conflicts.\n'))
+
+fwrite(matchtable[!(keep)], gsub('\\.tsv\\.gz$','_removed.tsv.gz', outfile), sep='\t', scipen=50, na='.', quote=FALSE)
+
 matchtable <- matchtable[(keep)]
 matchtable[,keep:=NULL]
-matchtable[,dst:=NULL]
                                
 # export
 fwrite(matchtable, outfile, sep='\t', scipen=50, na='.', quote=FALSE)
