@@ -170,11 +170,12 @@ rule download_1kg:
     # generate 1000 Genomes PLINK files
     # Download vcf file, convert to plink
     output:
-         bed="resources/1kg/1KGPhase3.chr{{chr}}.bed".format(config['Geno_1KG_dir']),
-         fam="resources/1kg/1KGPhase3.chr{{chr}}.fam".format(config['Geno_1KG_dir']),
-         bim="resources/1kg/1KGPhase3.chr{{chr}}.bim".format(config['Geno_1KG_dir'])
+         bed=temp("resources/1kg/1KGPhase3.chr{chr}.bed"),
+         fam=temp("resources/1kg/1KGPhase3.chr{chr}.fam"),
+         bim=temp("resources/1kg/1KGPhase3.chr{chr}.bim")
     params:
-        ftp_path=lambda wc: "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz".format(wc['chr'])
+        ftp_path=lambda wc: "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz".format(wc['chr']),
+        out = lambda wc, output: output['bed'][:-4]
     log:
         "logs/download_1kg/{chr}.log"
     singularity:
@@ -185,8 +186,9 @@ rule download_1kg:
         "gunzip resources/1kg/chr{wildcards[chr]}.vcf.gz && "
         "{config[plink1_9]} --vcf resources/1kg/chr{wildcards[chr]}.vcf "
         "--make-bed "
-        "--out resources/1kg/1KGPhase3.chr{wildcards[chr]} && "
-        "rm resources/1kg/chr{wildcards[chr]}.vcf"
+        "--out {params[out]} && "
+        "rm resources/1kg/chr{wildcards[chr]}.vcf && "
+        "rm {params[out]}.log "
         ") &> {log} "
         
         
@@ -196,9 +198,9 @@ rule intersect_1kg_hm3:
         bim=rules.download_1kg.output['bim'],
         mapping=rules.merge_hapmap3_liftover_output.output
     output:
-        bed='resources/1kg/1KGPhase3.chr{chr}.w_hm3.bed',
-        bim='resources/1kg/1KGPhase3.chr{chr}.w_hm3.bim',
-        fam='resources/1kg/1KGPhase3.chr{chr}.w_hm3.fam'
+        bed='resources/1kg/1KGPhase3.w_hm3.chr{chr}.bed',
+        bim='resources/1kg/1KGPhase3.w_hm3.chr{chr}.bim',
+        fam='resources/1kg/1KGPhase3.w_hm3.chr{chr}.fam'
     params:
         # output prefix
         out=lambda wc, output: output['bed'][:-4] 
@@ -213,7 +215,8 @@ rule intersect_1kg_hm3:
         "--genome_build hg19 "
         "--mapping {input.mapping} "
         "--plink2 {config[plink2]} "
-        "--out_prefix {params[out]} "
+        "--out_prefix {params[out]} && "
+        "rm {params[out]}.log "
         ") &> {log}"
 
 rule all_intersect_1kg_hm3:
@@ -225,17 +228,56 @@ rule merge_1kg_hm3_gw:
     input:
         expand(rules.intersect_1kg_hm3.output, chr=range(1,23))
     output:
-        bed='resources/1kg/1KGPhase3.GW.w_hm3.bed',
-        bim='resources/1kg/1KGPhase3.GW.w_hm3.bim',
-        fam='resources/1kg/1KGPhase3.GW.w_hm3.fam'
+        bed='resources/1kg/1KGPhase3.w_hm3.GW.bed',
+        bim='resources/1kg/1KGPhase3.w_hm3.GW.bim',
+        fam='resources/1kg/1KGPhase3.w_hm3.GW.fam'
     log:
         'logs/merge_1kg_hm3_gw.log'
     shell:
         "("
         "ls resources/1kg/1KGPhase3.w_hm3.chr*.bed | sed -e 's/\.bed//g' > resources/1kg/merge_list.txt ;"
-        "{config[plink2]} --merge-list resources/1kg/merge_list.txt "
+        "{config[plink1_9]} --merge-list resources/1kg/merge_list.txt "
         "--make-bed "
-        "--out {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
+        "--out resources/1kg/1KGPhase3.w_hm3.GW "
         ") &> {log}"
     
-    
+
+# TODO: think if we want to re-write the setup rules and include an allele frequency threshold. 
+# rule download_integrated_call_samples_1kg_v3:
+#     output:
+#          'resources/1kg/integrated_call_samples_v3.20130502.ALL.panel',
+#          'resources/1kg/integrated_call_samples_v3.20130502.ALL.panel_small'
+#     shell:
+#         "("
+#         "mkdir -p resources/1kg && "
+#         "cd resources/1kg && "
+#         "wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel && "
+#         "cut -f 1-3 integrated_call_samples_v3.20130502.ALL.panel > integrated_call_samples_v3.20130502.ALL.panel_small "
+#         ")"
+#         
+# 
+# rule create_ancestry_keep_files_1kg:
+#     # 2.3 1000 Genomes populations
+#     # https://opain.github.io/GenoPred/Pipeline_prep.html
+#     # Here we download information on which population each individual in the 1000 Genomes reference is from. Individuals are grouped into ‘populations’ which are typically country specific, and ‘super populations’ which include a collection of ancetrally similar countries. Individuals are grouped into these populations if the last few generations of their family are all from one region. We need this population data so we can select individuals in the 1000 Genomes data to match those in our target samples. This is important for providing accurate information on LD structure and minor allele frequencies.
+#     # TODO: figure out how to handle logging when using "script" directive for R scripts
+#     input:
+#         rules.download_integrated_call_samples_v3.output
+#     output:
+#         super_pop_keep="resources/1kg/super_pop_keep.list",
+#         pop_keep="resources/1kg/pop_keep.list",
+#         super_pop_and_pop="resources/1kg/super_pop_and_pop_keep.list",
+#         create_ancestry_ok=touch("resources/1kg/keep_files/create_ancestry.ok"),
+#         keep_files=expand("resources/1kg/keep_files/{popul}_samples.keep",popul=config['1kg_superpop'])
+#     singularity:
+#         config['singularity']['all']
+#     script:
+#         "../scripts/R/setup/create_ancestry_hm3_hardcoded.R"
+#         
+# 
+# rules 1kg_hm3_allele_freq:
+#     input:
+#         rules.create_ancestry.output,
+#         rules.merge_1kg_hm3_gw.output
+#     
+#     
