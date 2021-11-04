@@ -37,9 +37,13 @@ rule test_R:
      script:
         "scripts/R/source_config.R"
 
+# setup and 1000G harmonization
 include: "rules/common.smk"
 include: "rules/setup.smk"
+include: "rules/genotype_harmonization.smk"
 include: "rules/base_sumstats.smk"
+
+# 1000G baselines
 include: "rules/prs_ptclump.smk"
 include: "rules/prs_lassosum.smk"
 include: "rules/prs_sblup.smk"
@@ -49,8 +53,11 @@ include: "rules/ld_matrix.smk"
 include: "rules/prs_sbayesr.smk"
 include: "rules/prs_prscs.smk"
 include: "rules/prs_ldpred2.smk"
+
+# UKBB analysis (deprecated, replaced by "external biobanks" below)
 include: "rules/ukbb.smk"
-include: "rules/genotype_harmonization.smk"
+
+# external biobanks
 include: "rules/external_biobanks.smk"
 
 # Master rules that trigger specific steps from the modules
