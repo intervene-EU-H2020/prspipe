@@ -433,7 +433,7 @@ rule allele_freq_pop:
     # Here we create files containing ancestry specific minor allele frequency estimates for the HapMap3 SNPs based on the 1000 Genomes Phase 3 data. This information is mainly used for mean-imputation of missing SNPs during genotype-based scoring. This avoids target sample specific minor allele frequencies being used for mean imputation which may not be available, and will vary between target samples.
     input:
         rules.create_ancestry.output,
-        rules.extract_hm3.output
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
     params:
         keep_file=lambda wc: "{}/keep_files/{}_samples.keep".format(config['Geno_1KG_dir'], wc['popul'])
     output:
@@ -475,7 +475,7 @@ rule run_allele_freq_superpop:
 rule run_allele_freq_allancestry:
     # runs 2.5 for all ancestries combined
     input:
-        rules.extract_hm3.output
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
     output:
         expand("{}/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr{{chr}}.frq".format(config['Geno_1KG_dir']), chr=range(1, 23))
     log:
@@ -506,11 +506,10 @@ rule ancestry_scoring:
     # 3 Ancestry scoring
     # https://opain.github.io/GenoPred/Pipeline_prep.html
     # In this section we perform principal components analysis of genotypic data in the 1000 Genomes reference to identify the main axes of population structure, which typically correspond to ancestral differences. We calculate these principal components (PCs) of ancestry across the full reference, and within super populations to detect broad and ancestry-specific axes of variance. After PCA, we idenitfy which variants are associated with the PCs (SNP-weights) to calculate ancestry scores on the same axes of variance in future target samples. This can be used to infer the ancestry of an individual which is an important factor to consider when performing genotype-baed prediction.
-    #TODO: add depedency handling: install.packages(c('data.table','caret','pROC','verification','optparse'))
     # The script will always create .eigenvec and .eigenvec.var files. These contain the PCs score for individuals in the reference dataset, and the SNP-weights for the PCs respectively.
     input:
         rules.create_ancestry.output,
-        rules.extract_hm3.output
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
     output:
         # pop_enet_model="{}/Score_files_for_ancestry/{{popul}}/1KGPhase3.w_hm3.{{popul}}.pop_enet_model.rds".format(config['Geno_1KG_dir']),
         eigenvec="{}/Score_files_for_ancestry/{{popul}}/1KGPhase3.w_hm3.{{popul}}.eigenvec".format(config['Geno_1KG_dir']),
@@ -541,7 +540,7 @@ rule ancestry_scoring_allancestry:
     # If --ref_pop_scale is specified, the script will also creates files stating the mean and standard deviation of the PCs for each group. Furthermore, it will derive an elastic net model predicting each group, and report the accuracy of the derived models.
     input:
         rules.create_ancestry.output,
-        rules.extract_hm3.output
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
     output:
         pop_enet_model="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.pop_enet_model.rds".format(config['Geno_1KG_dir']),
         eigenvec="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec".format(config['Geno_1KG_dir']),
