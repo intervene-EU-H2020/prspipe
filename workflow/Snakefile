@@ -8,6 +8,7 @@ from collections import defaultdict
 configfile: "config/config.yaml"
 
 studies = pd.read_csv(config["studies"], dtype=str, sep='\t').set_index(["study_id", "ancestry"], drop=False)
+target_list = pd.read_csv(config["target_list"], dtype=str, sep='\t').set_index(["name"], drop=False)
 
 def nan():
     return 'NA'

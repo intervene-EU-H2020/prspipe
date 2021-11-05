@@ -13,7 +13,7 @@ rule install_software:
     # in case ./install_software.sh has not been run yet,
     # this rule can be used to do it automatically
     # this should only be used for binaries or software that can not
-    # be downloaded through conda
+    # be downloaded through conda, or where using docker/singularity is not necessary
     output:
         "bin/plink",
         "bin/plink2",
@@ -56,13 +56,23 @@ rule create_ancestry:
 
 
 rule download_hapmap3_snplist:
+    input:
+        'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
     output:
         "{}/w_hm3.snplist".format(config['HapMap3_snplist_dir'])
+    log:
+        "logs/download_hapmap3_snplist.log"
     shell:
+        "("
         "mkdir -p {config[HapMap3_snplist_dir]} && "
-        "cd {config[HapMap3_snplist_dir]} && "
-        "wget https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2 && "
-        "bunzip2 w_hm3.snplist.bz2"
+        "zcat {input} | cut -f2-4 | "
+        ' awk \'BEGIN{{OFS="\t"; print "SNP", "A1", "A2"}}{{if(NR > 1){{print $0}}}}\' > {output} '
+        ") &> {log}"
+        
+        # old version: use the LDSC list
+        # "cd {config[HapMap3_snplist_dir]} && "
+        # "wget https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2 && "
+        # "bunzip2 w_hm3.snplist.bz2"
 
         
         

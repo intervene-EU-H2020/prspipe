@@ -6,7 +6,6 @@
 wildcard_constraints:
     chr="[0-9]+"
 
-
 ######################################
 # Download the 1000Genomes reference #
 ######################################
@@ -39,17 +38,8 @@ rule download_1kg:
         ") &> {log} "
 
 
-
-##############################################
-# harmonizing the HapMap3 variants - skipped #
-##############################################
-
-# Remo: these rules are here for documentation purposes only
-#       these rules will be skipped, because we distibute their output with the pipeline.
-
 rule download_liftover:
     # Note: won't be necessary if run with singularity
-    # skipped.
     output:
         liftover="liftover/liftOver",
         hg18_to_hg19_chain="liftover/hg18ToHg19.over.chain",
@@ -70,6 +60,14 @@ rule download_liftover:
         "wget https://hgdownload.cse.ucsc.edu/goldenpath/hg19/liftOver/hg19ToHg38.over.chain.gz && "
         "gunzip hg19ToHg38.over.chain.gz "
         ") &> {log} "
+
+
+##############################################
+# harmonizing the HapMap3 variants - skipped #
+##############################################
+
+# Remo: these rules are here for documentation purposes only
+#       these rules will be skipped, because we distibute their output with the pipeline.
 
 
 rule download_hapmap3_r3:
@@ -387,7 +385,7 @@ rule merge_1kg_hm3_mapping_with_maf:
         
 rule extract_hm3:
     # the second and final filtering pass
-    # the output of this should replace the output of rule "extract_hm3" in the future. 
+    # replaces the output of the original "extract_hm3"
     input:
         mapping=rules.merge_1kg_hm3_mapping_with_maf.output,
         bed=rules.download_1kg.output['bed'],
@@ -453,6 +451,7 @@ rule allele_freq_pop:
         "--out {config[Geno_1KG_dir]}/freq_files/{wildcards[popul]}/1KGPhase3.w_hm3.{wildcards[popul]}.chr${{chrom}}; "
         "done "
         ") &> {log} "
+
 
 rule run_allele_freq_pop:
     # runs 2.5 for populations
@@ -545,7 +544,7 @@ rule ancestry_scoring_allancestry:
         pop_enet_model="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.pop_enet_model.rds".format(config['Geno_1KG_dir']),
         eigenvec="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec".format(config['Geno_1KG_dir']),
         pc_scale="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.scale".format(config['Geno_1KG_dir']),
-        eigenvec_var="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var".format(config['Geno_1KG_dir']),
+        eigenvec_var="{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var".format(config['Geno_1KG_dir'])
     log:
         # the script is configured to write log files here
         "{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.log".format(config['Geno_1KG_dir'])
@@ -565,8 +564,87 @@ rule ancestry_scoring_allancestry:
 
 rule all_setup:
     # this triggers all the steps 1-3 (all "setup" steps)
-    # the Polygenic scoring steps (>=4) that follow are implemented in a different module
+    # the Polygenic scoring steps (>=4) that follow are implemented in different modules
     input:
         '{}/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var'.format(config['Geno_1KG_dir']),
         '{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var'.format(config['Geno_1KG_dir']),
-        rules.run_allele_freq_all.output
+        rules.run_allele_freq_all.output,
+        rules.download_liftover.output
+        
+        
+#########################################
+# harmonization of target genotype data #
+#########################################
+
+
+def get_input_file_from_type(prefix, chr, type):
+    # get an input file to check for based on prefix, chromosome, and input file type
+    if type == 'samp_imp_plink1':
+        return(prefix + str(chr) + '.bim')
+    elif type == 'samp_imp_vcf':
+        return(prefix + str(chr) + '.vcf')
+    else:
+        if 'samp_imp_bgen' in type:
+            return(prefix + str(chr) + '.bgen')
+        else:
+            raise NotImplementedError('Error: type {} not implemented (check your target_list: {})'.format(type, config['target_list']))
+
+def type_to_arg_geno_to_plink(type):
+    # return the correct arguments for geno_to_plink.R
+    try:
+        return {
+            'samp_imp_bgen_ref_first':('samp_imp_bgen', 'ref-first'),
+            'samp_imp_bgen_ref_last':('samp_imp_bgen', 'ref-last'),
+            'samp_imp_bgen':('samp_imp_bgen','ref-unknown')}[type]
+    except KeyError:
+        return (type, 'ref-last')
+        
+
+rule harmonize_target_genotypes:
+    # target sample harmonization using Ollie's script
+    input:
+        bim=rules.extract_hm3.output['bim'],
+        fam=rules.extract_hm3.output['fam'],
+        bed=rules.extract_hm3.output['bed'],
+        geno = lambda wc: get_input_file_from_type(target_list.loc[wc['bbid'], 'path'],wc['chr'],target_list.loc[wc['bbid'], 'type']),
+        liftover=rules.download_liftover.output['liftover'],
+        chain=rules.download_liftover.output['hg19_to_hg38_chain'],
+        plink2=config['plink2'],
+        plink19=config['plink1_9']
+    output:
+        bim='custom_input/{bbid}/genotypes/chr{chr}.bim',
+        bed='custom_input/{bbid}/genotypes/chr{chr}.bed',
+        fam='custom_input/{bbid}/genotypes/chr{chr}.fam'
+    params:
+        in_prefix_target = lambda wc, input: ''.join(input['geno'].split('.')[:-1]),
+        in_prefix_ref = lambda wc, input: input['bim'][:-4],
+        out_prefix=lambda wc, output: output['bim'][:-4],
+        arg = lambda wc: type_to_arg_geno_to_plink(target_list.loc[wc['bbid'], 'type'])
+    threads:
+        4
+    resources:
+        mem_mb=8000
+    log:
+        'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
+    shell:
+        '('
+        'Rscript workflow/scripts/GenoPred/Scripts/geno_to_plink/geno_to_plink.R '
+        '--target {params[in_prefix_target]} '
+        '--ref {params[in_prefix_ref]} '
+        '--format {params[arg][0]} '
+        '--plink {config[plink1_9]} '
+        '--plink2 {config[plink2]} '
+        '--qctool2 {config[qctool2]} '
+        '--liftover {input[liftover]} '
+        '--liftover_track {input[chain]} '
+        '--out {params[out_prefix]} '
+        '--bgen_ref {params[arg][1]} '
+        '--threads {threads} '
+        '--mem_mb {resources[mem_mb]} '
+        '--keep resources/ukbb/keep_file_500.txt '
+        ') &> {log} '
+        
+        
+rule all_harmonize_target_genotypes:
+    input:
+        expand(rules.harmonize_target_genotypes.output, bbid=target_list.index.tolist(), chr=range(1,22))

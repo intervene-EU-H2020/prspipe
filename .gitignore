@@ -13,3 +13,4 @@ results/UKBB/*
 workflow/scripts/PRScs/
 lifover/
 R/
+config/target_list.tsv

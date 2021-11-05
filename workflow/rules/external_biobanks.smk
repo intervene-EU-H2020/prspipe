@@ -2,21 +2,19 @@
 
 # https://opain.github.io/GenoPred/Genotype-based_scoring_in_target_samples.html
 
-from glob import glob
-try:
-    bbids = [x.split('/')[2] for x in glob('custom_input/genotypes/*/')]
-except IndexError:
-    bbids = None
-    
+#from glob import glob
+#try:
+#    bbids = [x.split('/')[2] for x in glob('custom_input/genotypes/*/')]
+#except IndexError:
+#    bbids = None
+ 
+bbids = target_list['name'].values
 
 ############################
 # Harmonization to HapMap3 #
 ############################
 
-# Genotypes have to be harmonized manually to the HapMap3 SNPs
-
-# Genotypes should be placed in custom_input/genotypes/{bbid}/chr{chr}.bim/.bed/.fam
-# Phenotypes should be placed in custom_input/phenotypes/{bbid}/{phenotype}.txt
+# See rules in genotype_harmonizatin.smk (harmonize_target_genotypes)
 
 
 ####################
@@ -110,6 +108,7 @@ rule all_calculate_maf_ancestry_ext:
 
 rule validate_setup_ext:
     # requests all necessary outputs for the rules below.
+    # TODO: replace these with the plink2 counterparts
     input:
         # implemented by Sophie:
         rules.all_dbslmm_prep.input,
@@ -127,7 +126,8 @@ rule validate_setup_ext:
 # Pruning & Thresholding #
 ##########################
 
-       
+# TODO: replace the rules below with the plink2-based counterparts
+
 rule nested_sparse_thresholding_score_ext_ref1kg:
     # P+T clump - nested sparse
     # TODO: other ancestries 
