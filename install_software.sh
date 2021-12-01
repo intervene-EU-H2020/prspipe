@@ -21,18 +21,20 @@ if [ ! -d ./bin ]; then
     mkdir bin
 fi
 
+
 # Install Plink 2.0s
 if [ ! -f ./bin/plink2 ]; then
     >&2 echo "Downloading Plink 2.0 binaries"
     (
     cd bin
     avx_support="$(grep avx /proc/cpuinfo | wc -l)"
+    # if this fails, check https://www.cog-genomics.org/plink/2.0/ for the latest download links
     if [ $avx_support -gt 0 ]; then
-	wget https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20210920.zip
-    	unzip plink2_linux_avx2_20210920.zip && rm plink2_linux_avx2_20210920.zip
+        wget https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20211125.zip
+        unzip plink2_linux_avx2_20211125.zip && rm plink2_linux_avx2_20211125.zip
     else
         wget https://s3.amazonaws.com/plink2-assets/plink2_linux_x86_64_20210920.zip
-        unzip plink2_linux_x86_64_20210920.zip && rm plink2_linux_x86_64_20210920.zip
+        unzip plink2_linux_x86_64_20211125.zip && rm plink2_linux_x86_64_20211125.zip
     fi
     )
 fi
@@ -42,10 +44,12 @@ if [ ! -f ./bin/plink ]; then
     >&2 echo "Downloading Plink 1.9 binaries"
     (
     cd bin
+    # if this fails, check https://www.cog-genomics.org/plink/1.9/ for the latest download links
     wget http://s3.amazonaws.com/plink1-assets/plink_linux_x86_64_20201019.zip
     unzip plink_linux_x86_64_20201019.zip && rm plink_linux_x86_64_20201019.zip
     )
 fi
+
 
 # Install GCTA
 # TODO: add links to the binaries, or move binaries to ./bin
