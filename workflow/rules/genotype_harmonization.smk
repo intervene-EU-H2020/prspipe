@@ -356,7 +356,9 @@ rule run_allele_freq_1kg_allancestry:
         "done "
         ") &> {log} "
         
-        
+       
+ruleorder: merge_1kg_hm3_mapping_with_maf_cached > merge_1kg_hm3_mapping_with_maf
+ 
 rule merge_1kg_hm3_mapping_with_maf:
     # the maf threshold is applied here!
     # skipped.
@@ -378,6 +380,15 @@ rule merge_1kg_hm3_mapping_with_maf:
         "--min_maf 0.01 "
         ") &> {log}"
         
+rule merge_1kg_hm3_mapping_with_maf_cached:
+    # skip the rules above and instead use the "cached" output
+    input:
+        ancient('resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping_cached.tsv.gz') 
+    output:
+        'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
+    shell:
+        'ln -s -r {input} {output}'
+
         
 #########################################
 # filtering the 1000 Genomes genotypes  #
@@ -387,7 +398,7 @@ rule extract_hm3:
     # the second and final filtering pass
     # replaces the output of the original "extract_hm3"
     input:
-        mapping=rules.merge_1kg_hm3_mapping_with_maf.output,
+        mapping='resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz',
         bed=rules.download_1kg.output['bed'],
         fam=rules.download_1kg.output['fam'],
         bim=rules.download_1kg.output['bim']
