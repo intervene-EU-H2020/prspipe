@@ -18,8 +18,8 @@ fi
 
 conda activate ${SNAKEMAKE_ENV}
 
-snakemake --snakefile Snakefile \
-          --configfile conf/config.yaml \
+snakemake --snakefile workflow/Snakefile \
+          --configfile config/config.yaml \
 	  --profile ./slurm \
           --directory "${PWD}" \
 	  "${@}"

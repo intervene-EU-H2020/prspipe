@@ -51,6 +51,10 @@ rule create_ancestry:
         keep_files=expand("{}/keep_files/{{popul}}_samples.keep".format(config['Geno_1KG_dir']),popul=config['1kg_superpop'])
     singularity:
         config['singularity']['all']
+    resources:
+    	threads=1,
+        mem_mb=4000,
+        misc='--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh'
     script:
         "../scripts/R/setup/create_ancestry.R"
 
@@ -64,7 +68,6 @@ rule download_hapmap3_snplist:
         "logs/download_hapmap3_snplist.log"
     shell:
         "("
-        "mkdir -p {config[HapMap3_snplist_dir]} && "
         "zcat {input} | cut -f2-4 | "
         ' awk \'BEGIN{{OFS="\t"; print "SNP", "A1", "A2"}}{{if(NR > 1){{print $0}}}}\' > {output} '
         ") &> {log}"
