@@ -1,7 +1,5 @@
 #!/bin/bash
 
-SNAKEMAKE_ENV='snakemake'
-
 #SBATCH --job-name=controljob_%j
 #SBATCH --output=snakemake_%j.log
 #SBATCH --partition=vcpu
@@ -9,13 +7,11 @@ SNAKEMAKE_ENV='snakemake'
 #SBATCH -c 1
 #SBATCH --mem 2000
 
+SNAKEMAKE_ENV='snakemake'
+
 # Initialize conda:
 eval "$(conda shell.bash hook)"
-
-if [ ! -d $snakemake_env ]; then
-    ./install.sh
-fi
-
+# activate snakemake environment 
 conda activate ${SNAKEMAKE_ENV}
 
 snakemake --snakefile workflow/Snakefile \
