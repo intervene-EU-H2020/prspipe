@@ -192,6 +192,8 @@ rule intersect_1kg_hm3:
     params:
         dbsnp_version=dbsnp_v_GRCh37,
         bim_hm3 = lambda wc, input: ','.join(input['bim_hm3'])
+    resources:
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         "logs/intersect_1kg_hm3/{chr}.log"
     shell:
@@ -237,6 +239,8 @@ rule generate_1kg_hm3_hg19_hg38_mapping:
     params:
         v_dbsnp_hg38=dbsnp_v_GRCh38,
         v_dbsnp_hg37=dbsnp_v_GRCh37
+    resources:
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         "logs/generate_1kg_hm3_hg19_hg38_mapping/{chr}.log"
     shell:
@@ -277,6 +281,8 @@ rule filter_1kg_firstpass:
         fam=temp('resources/1kg/tmp/1KGPhase3.chr{chr}.tmp.fam')
     params:
         out_prefix=lambda wc, output: output['bed'][:-4]
+    resources:
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/filter_1kg_firstpass/{chr}.log'
     shell:
@@ -369,6 +375,8 @@ rule merge_1kg_hm3_mapping_with_maf:
         expand(rules.generate_1kg_hm3_hg19_hg38_mapping.output, chr=range(1,23))
     output:
         'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
+    resources:
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/merge_1kg_hm3_mapping_with_maf.log'
     shell:
@@ -408,6 +416,11 @@ rule extract_hm3:
         fam='resources/1kg/1KGPhase3.w_hm3.chr{chr}.fam'
     params:
         out_prefix=lambda wc, output: output['bed'][:-4]
+    resources:
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home",
+        tmpdir="temp",
+        time="03:00:00",
+        mem_mb=8000
     log:
         'logs/filter_1kg_secondpass/{chr}.log'
     shell:
@@ -530,6 +543,10 @@ rule ancestry_scoring:
         "{}/Score_files_for_ancestry/{{popul}}/1KGPhase3.w_hm3.{{popul}}.log".format(config['Geno_1KG_dir'])
     wildcard_constraints:
         popul='[A-Z]+'
+    resources:
+        time="08:00:00",
+        mem_mb=16000,
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -559,6 +576,10 @@ rule ancestry_scoring_allancestry:
     log:
         # the script is configured to write log files here
         "{}/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.log".format(config['Geno_1KG_dir'])
+    resources:
+        time="08:00:00",
+        mem_mb=32000,
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -634,7 +655,8 @@ rule harmonize_target_genotypes:
     threads:
         4
     resources:
-        mem_mb=8000
+        mem_mb=8000,
+        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
     shell:
