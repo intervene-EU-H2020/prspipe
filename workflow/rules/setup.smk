@@ -54,7 +54,8 @@ rule create_ancestry:
     resources:
     	threads=1,
         mem_mb=4000,
-        misc='--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh'
+        misc='--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh',
+        time="04:00:00"
     script:
         "../scripts/R/setup/create_ancestry.R"
 
