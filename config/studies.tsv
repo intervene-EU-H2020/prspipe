@@ -1,2 +1,2 @@
 study_id	ancestry	n_cases	n_controls	ftp_address	local_path	binary	name
-GCST90012877	EUR	53042	355900	http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90012001-GCST90013000/GCST90012877/harmonised/33589840-GCST90012877-EFO_0000249.h.tsv.gz 	/dhc/projects/intervene/shafayet/intervene/prspipe/33589840-GCST90012877-EFO_0000249.h.tsv.gz	no	Alzheimers_disease
+GCST90012877	EUR	53042	355900	http://ftp.ebi.ac.uk/pub/databases/gwas/summary_statistics/GCST90012001-GCST90013000/GCST90012877/harmonised/33589840-GCST90012877-EFO_0000249.h.tsv.gz 	/dhc/projects/intervene/shafayet/intervene/prspipe/33589840-GCST90012877-EFO_0000249.h.tsv.gz	yes	Alzheimers_disease
