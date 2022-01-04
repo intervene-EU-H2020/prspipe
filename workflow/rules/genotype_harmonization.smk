@@ -1,4 +1,3 @@
-
 # Remo:
 # rules related to genotype harmonization including pre-processing of HapMap3 variants and intersection with 1000 Genomes.
 # this module should eventually replace the standard pre-processing based on the the ldsc-hapmap3 list (which uses rsIDs only...)
