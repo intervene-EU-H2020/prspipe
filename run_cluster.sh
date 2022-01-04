@@ -5,7 +5,7 @@
 #SBATCH --partition=vcpu
 #SBATCH --time=48:00:00
 #SBATCH -c 1
-#SBATCH --mem 2000
+#SBATCH --mem 4000
 
 SNAKEMAKE_ENV='snakemake'
 
@@ -16,8 +16,7 @@ conda activate ${SNAKEMAKE_ENV}
 
 snakemake --snakefile workflow/Snakefile \
           --configfile config/config.yaml \
-	  --profile ./slurm \
+	        --profile ./slurm \
           --directory "${PWD}" \
-	  "${@}"
-
+          "${@}"
 
