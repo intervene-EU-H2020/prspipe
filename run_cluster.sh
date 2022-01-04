@@ -19,4 +19,3 @@ snakemake --snakefile workflow/Snakefile \
           --profile ./slurm \
           --directory "${PWD}" \
           "${@}"
-
