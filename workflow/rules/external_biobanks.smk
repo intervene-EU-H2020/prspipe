@@ -131,7 +131,8 @@ rule run_scaled_polygenic_scorer:
         target_plink=expand('custom_input/{{bbid}}/genotypes/chr{chr}.{suffix}', chr=range(1,23), suffix=['bed','bim','fam']),
         target_keep="results/{bbid}/Ancestry_idenitfier/AllAncestry.model_pred.{superpop}.keep"
     output:
-        ok=touch('results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.done')
+        ok=touch('results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.done'),
+        profiles='results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.profiles'
     params:
         geno_prefix=lambda wc, input: input['target_plink'][0][:-5],
         freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-5],
@@ -156,11 +157,12 @@ rule all_run_scaled_polygenic_scorer:
         expand(rules.run_scaled_polygenic_scorer.output, bbid=target_list.name, study=studies.study_id.values, superpop=['EUR'], score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values], method=['pt_clump'])
 
 
+
 ##########################
 # Pruning & Thresholding #
 ##########################
 
-# TODO: replace the rules below with the plink2-based counterparts
+# Deprecated rules. Use run_scaled_polygenic_scorer with method = "pt_clump" instead.
 
 rule nested_sparse_thresholding_score_ext_ref1kg:
     # P+T clump - nested sparse
