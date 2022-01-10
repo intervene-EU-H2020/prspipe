@@ -2,9 +2,6 @@
 # rules related to genotype harmonization including pre-processing of HapMap3 variants and intersection with 1000 Genomes.
 # this module should eventually replace the standard pre-processing based on the the ldsc-hapmap3 list (which uses rsIDs only...)
 
-wildcard_constraints:
-    chr="[0-9]+"
-
 ######################################
 # Download the 1000Genomes reference #
 ######################################
@@ -192,7 +189,7 @@ rule intersect_1kg_hm3:
         dbsnp_version=dbsnp_v_GRCh37,
         bim_hm3 = lambda wc, input: ','.join(input['bim_hm3'])
     resources:
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         "logs/intersect_1kg_hm3/{chr}.log"
     shell:
@@ -239,7 +236,7 @@ rule generate_1kg_hm3_hg19_hg38_mapping:
         v_dbsnp_hg38=dbsnp_v_GRCh38,
         v_dbsnp_hg37=dbsnp_v_GRCh37
     resources:
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         "logs/generate_1kg_hm3_hg19_hg38_mapping/{chr}.log"
     shell:
@@ -281,7 +278,7 @@ rule filter_1kg_firstpass:
     params:
         out_prefix=lambda wc, output: output['bed'][:-4]
     resources:
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/filter_1kg_firstpass/{chr}.log'
     shell:
@@ -375,7 +372,7 @@ rule merge_1kg_hm3_mapping_with_maf:
     output:
         'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
     resources:
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/merge_1kg_hm3_mapping_with_maf.log'
     shell:
@@ -416,10 +413,9 @@ rule extract_hm3:
     params:
         out_prefix=lambda wc, output: output['bed'][:-4]
     resources:
-        tmpdir="temp",
         time="03:00:00",
         mem_mb=8000,
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/filter_1kg_secondpass/{chr}.log'
     shell:
@@ -545,7 +541,7 @@ rule ancestry_scoring:
     resources:
         time="08:00:00",
         mem_mb=16000,
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -578,7 +574,7 @@ rule ancestry_scoring_allancestry:
     resources:
         time="08:00:00",
         mem_mb=32000,
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -655,7 +651,7 @@ rule harmonize_target_genotypes:
         4
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
     shell:
@@ -673,10 +669,9 @@ rule harmonize_target_genotypes:
         '--bgen_ref {params[arg][1]} '
         '--threads {threads} '
         '--mem_mb {resources[mem_mb]} '
-        '--keep resources/ukbb/keep_file_500.txt '
         ') &> {log} '
         
         
 rule all_harmonize_target_genotypes:
     input:
-        expand(rules.harmonize_target_genotypes.output, bbid=target_list.index.tolist(), chr=range(1,22))
+        expand(rules.harmonize_target_genotypes.output, bbid=target_list.index.tolist(), chr=range(1,23))

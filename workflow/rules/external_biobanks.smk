@@ -1,12 +1,5 @@
 
-
 # https://opain.github.io/GenoPred/Genotype-based_scoring_in_target_samples.html
-
-#from glob import glob
-#try:
-#    bbids = [x.split('/')[2] for x in glob('custom_input/genotypes/*/')]
-#except IndexError:
-#    bbids = None
  
 bbids = target_list['name'].values
 
@@ -21,7 +14,6 @@ bbids = target_list['name'].values
 # Ancestry scoring #
 ####################
 
-
 # needs: 1000G genotypes, keep files, and integrated_call_samples_v3.20130502.ALL.panel_small
 
 rule ancestry_scoring_ext:
@@ -29,7 +21,7 @@ rule ancestry_scoring_ext:
     # recommended 15G of RAM
     input:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
-        harmonised_geno=expand("custom_input/genotypes/{bbid}/chr{chr}.bed", chr=range(1,23), allow_missing=True)
+        harmonised_geno=expand("custom_input/{bbid}/genotypes/chr{chr}.bed", chr=range(1,23), allow_missing=True)
     output:
         eigenvec_sp=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.{superpop}.eigenvec', superpop=config['1kg_superpop']),
         keep_sp=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.{superpop}.keep', superpop=config['1kg_superpop']),
@@ -46,10 +38,14 @@ rule ancestry_scoring_ext:
         "logs/ancestry_scoring_ext/{bbid}.log"
     singularity:
         config['singularity']['all']
+    resources:
+        mem_mb=32000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home",
+        time="03:00:00"
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/Ancestry_identifier/Ancestry_identifier.R "
-        "--target_plink_chr custom_input/genotypes/{wildcards[bbid]}/chr "
+        "--target_plink_chr custom_input/{wildcards[bbid]}/genotypes/chr "
         "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
         "--n_pcs 100 "
         "--plink {config[plink1_9]} "
@@ -120,6 +116,44 @@ rule validate_setup_ext:
         rules.all_run_ldpred2_1kg_precompld_1kg.input,
         rules.all_sparse_thresholding_1kg.input,
         rules.all_run_sbayesr_precompld_1kg_refukbb_robust.input
+
+
+wildcard_constraints:
+    score_id="[A-Za-z\\.0-9_\\-]+"
+
+    
+rule run_scaled_polygenic_scorer:
+    # general purpose rule to run scaled_polygenic_scorer
+    input:
+        score='prs/{method}/{study}/{score_id}.score.gz',
+        scale='prs/{method}/{study}/{score_id}.{superpop}.scale',
+        ref_freq_chr=expand('resources/1kg/freq_files/{{superpop}}/1KGPhase3.w_hm3.{{superpop}}.chr{chr}.frq', chr=range(1,23)),
+        target_plink=expand('custom_input/{{bbid}}/genotypes/chr{chr}.{suffix}', chr=range(1,23), suffix=['bed','bim','fam']),
+        target_keep="results/{bbid}/Ancestry_idenitfier/AllAncestry.model_pred.{superpop}.keep"
+    output:
+        ok=touch('results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.done')
+    params:
+        geno_prefix=lambda wc, input: input['target_plink'][0][:-5],
+        freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-5],
+        out_prefix=lambda wc, output: output['ok'].replace('.done','')
+    resources:
+        mem_mb=8000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home",
+        time="03:00:00"
+    shell:
+        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer_plink2.R "
+        "--target_plink_chr {params.geno_prefix} "
+        "--target_keep {input.target_keep} "
+        "--ref_score {input.score} "
+        "--ref_scale {input.scale} "
+        "--ref_freq_chr {params.freq_prefix} "
+        "--plink2 {config[plink2]} "
+        "--pheno_name {wildcards.study} "
+        "--output {params[out_prefix]} "
+        
+rule all_run_scaled_polygenic_scorer:
+    input:
+        expand(rules.run_scaled_polygenic_scorer.output, bbid=target_list.name, study=studies.study_id.values, superpop=['EUR'], score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values], method=['pt_clump'])
 
 
 ##########################
@@ -579,8 +613,6 @@ rule all_dbslmm_score_ext_ref1kg:
 rule all_score_ext:
     # rule that runs all the rules above
     input:
-        #rules.all_nested_sparse_thresholding_score_ext_ref1kg.input,
-        #rules.all_dense_thresholding_score_ext_ref1kg.input,
         rules.all_sparse_thresholding_score_ext_ref1kg.input,
         rules.all_lassosum_score_ext.input,
         rules.all_prscs_score_ext_refukbb.input,

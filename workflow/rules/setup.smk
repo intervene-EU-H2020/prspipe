@@ -1,5 +1,7 @@
 # An example collection of Snakemake rules imported in the main Snakefile.
 
+
+# TODO: phase out this rule
 rule download_test_data:
     # rule to download test data from figshare
     shell:
@@ -52,10 +54,10 @@ rule create_ancestry:
     singularity:
         config['singularity']['all']
     resources:
-    	threads=1,
+        threads=1,
         time="04:00:00",
         mem_mb=4000,
-        misc='--container-image=/dhc/projects/intervene/prspipe_0_0_1.sqsh'
+        misc='--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh'
     script:
         "../scripts/R/setup/create_ancestry.R"
 
@@ -78,8 +80,20 @@ rule download_hapmap3_snplist:
         # "wget https://data.broadinstitute.org/alkesgroup/LDSCORE/w_hm3.snplist.bz2 && "
         # "bunzip2 w_hm3.snplist.bz2"
 
+
+rule initialize_synthetic:
+    # unszip the synthetic data
+    # rename the columns in the sumstats file
+    output:
+        bed=expand('resources/synthetic_data/synthetic250_chr{chr}.bed', chr=range(1,23)),
+        bim=expand('resources/synthetic_data/synthetic250_chr{chr}.bim', chr=range(1,23)),
+        fam=expand('resources/synthetic_data/synthetic250_chr{chr}.fam', chr=range(1,23)),
+        ss='resources/synthetic_data/Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz'
+    shell:
+        "cd resources/synthetic_data/ && unzip synthetic_genotypes_250.zip && "
+        "zcat Herr0.3_pPoly0.005.PHENO1.glm.linear.gz | awk 'BEGIN{{OFS=\"\t\"; print \"CHR\", \"POS\", \"SNP\", \"A2\", \"A1\", \"N\", \"BETA\", \"SE\", \"P\"}}{{if(NR>1){{print $1, $2, $3, $4, $5, $8, $9, $10, $14}}}}' | gzip > Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz"
         
-        
+
 rule cleanup_after_setup:
     # removes unnecessary intermediate output files
     log:

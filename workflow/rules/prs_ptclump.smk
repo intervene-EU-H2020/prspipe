@@ -12,8 +12,8 @@ rule nested_sparse_thresholding_1kg:
     params:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
     output:
-        scale=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale", geno1kdir=[config['Geno_1KG_dir']], ancestry=config['1kg_superpop']),
-        score=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.score", geno1kdir=[config['Geno_1KG_dir']], chr_id=range(1,23)),
+        scale=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump_deprecated/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale", geno1kdir=[config['Geno_1KG_dir']], ancestry=config['1kg_superpop']),
+        score=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump_deprecated/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.score", geno1kdir=[config['Geno_1KG_dir']], chr_id=range(1,23)),
         range_values=expand("{geno1kdir}/Score_files_for_polygenic/pt_clump/{{study}}/1KGPhase3.w_hm3.{{study}}.chr{chr_id}.range_values", geno1kdir=[config['Geno_1KG_dir']], chr_id = range(1,23))
     log:
         "logs/nested_sparse_thresholding_1kg/{study}.log"
@@ -38,7 +38,7 @@ rule all_nested_sparse_thresholding_1kg:
         expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id)
 
 
-rule sparse_thresholding_1kg:
+rule sparse_thresholding_1kg_deprecated:
     # 4.2.2 Sparse thresholding (not nested)
     # Here we will only use 8 p-value thresholds.
     # This section uses an R script called ‘polygenic_score_file_creator.R’
@@ -69,10 +69,10 @@ rule sparse_thresholding_1kg:
         ") &> {log} "
 
 
-rule all_sparse_thresholding_1kg:
+rule all_sparse_thresholding_1kg_deprecated:
     # runs rule above for all studies
     input:
-        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id)
+        expand(rules.sparse_thresholding_1kg_deprecated.output, study=studies.study_id)
 
 
 rule dense_thresholding_1kg:

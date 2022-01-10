@@ -1,2 +1,2 @@
 name	path	type
-ukbb	resources/ukbb/genotypes/ukb_imp_chr	samp_imp_bgen_ref_first
+synth	resources/synthetic_data/synthetic250_chr	samp_imp_plink1

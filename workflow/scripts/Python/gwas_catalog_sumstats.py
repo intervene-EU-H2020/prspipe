@@ -21,6 +21,7 @@ given study id supports API access (you can check this at the GWAS catalog websi
 import requests
 import argparse
 import pandas as pd
+import numpy as np
 
 import re
 import os
@@ -32,12 +33,6 @@ import time
 
 import gzip
 import shutil
-
-from progressbar import AnimatedMarker, Bar, BouncingBar, Counter, ETA, \
-    AdaptiveETA, FileTransferSpeed, FormatLabel, Percentage, \
-    ProgressBar, ReverseBar, RotatingMarker, \
-    SimpleProgress, Timer, UnknownLength
-
 
 parser = argparse.ArgumentParser()
 
@@ -140,10 +135,8 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
     return df
 
 
-def file_write(data, file, pbar):
-    file.write(data) 
-    pbar += len(data)
-
+def file_write(data, file):
+    file.write(data)
 
 def download_ftp_sumstats(local_path, remote_path):
     """
@@ -157,22 +150,8 @@ def download_ftp_sumstats(local_path, remote_path):
     ftp = ftplib.FTP('ftp.ebi.ac.uk')
     ftp.login()
 
-    size = ftp.size(remote_path)
-
-    widgets = ['Downloading: ', Percentage(), ' ',
-                        Bar(marker='#',left='[',right=']'),
-                        ' ', ETA(), ' ', FileTransferSpeed()]
-
-    pbar = ProgressBar(widgets=widgets, maxval=size)
-    pbar.start()
-
     with open(local_path, 'wb') as outfile:
-        ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, outfile, pbar))
-
-    # unzip the file
-    #with gzip.open(local_path, 'rb') as f_in:
-    #    with open(local_path[:-3], 'wb') as f_out:
-    #        shutil.copyfileobj(f_in, f_out)
+        ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, outfile))
 
     sumstats_df = pd.read_csv(local_path, sep='\t')
     return sumstats_df
@@ -193,7 +172,18 @@ def download_sumstats(args, p=True):
         print(f'downloading summary statistics for {args.study_id}')
         sumstats = download_ftp_sumstats(local_path, ftp_path)
     
-    n_gwas = int(studies.loc[args.study_id]['n_cases']) + int(studies.loc[args.study_id]['n_controls'])
+    try:
+        n_cases = int(studies.loc[args.study_id]['n_cases'])
+    except ValueError:
+        n_cases = 0
+    try:
+        n_controls = int(studies.loc[args.study_id]['n_controls'])
+    except ValueError:
+        n_controls = 0
+    
+    n_gwas = n_cases + n_controls
+    
+    assert n_gwas > 0, 'Error: GWAS sample size is 0'
     
     cleaned_sumstats = cleanup_summary_statistics(sumstats, args.study_id, n_gwas)
     cleaned_sumstats.to_csv(args.out, index=None)

@@ -1,7 +1,2 @@
 study_id	ancestry	n_cases	n_controls	ftp_address	local_path	binary	name
-GCST90012877	EUR	53042	355900	pub/databases/gwas/summary_statistics/GCST90012001-GCST90013000/GCST90012877/harmonised/33589840-GCST90012877-EFO_0000249.h.tsv.gz 33589840-GCST90012877-EFO_0000249.h.tsv.gz yes	Alzheimers_disease
-GCST007954	EUR	88355	0		resources/Base_sumstats/HbA1c_METAL_European.munged.txt.gz	no	HbA1c
-GCST002783	EUR	236781	0	/pub/databases/gwas/summary_statistics/GCST002001-GCST003000/GCST002783/harmonised/25673413-GCST002783-EFO_0004340.h.tsv.gz		no	BMI
-GCST004773	EUR	26676	132532		resources/Base_sumstats/METAANALYSIS_DIAGRAM_SE1_reformat.munged.txt.gz	yes	T2D
-GCST004988	EUR	76192	63082	/pub/databases/gwas/summary_statistics/GCST004001-GCST005000/GCST004988/harmonised/29059683-GCST004988-EFO_0000305.h.tsv.gz		yes	Breast_cancer
-GCST006085	EUR	79148	61106	/pub/databases/gwas/summary_statistics/GCST006001-GCST007000/GCST006085/harmonised/29892016-GCST006085-EFO_0001663.h.tsv.gz		yes	Prostate_cancer
+synth01	EUR	50000			resources/synthetic_data/Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz	no	synthetic01
