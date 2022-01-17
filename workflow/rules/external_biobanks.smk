@@ -151,10 +151,16 @@ rule run_scaled_polygenic_scorer:
         "--plink2 {config[plink2]} "
         "--pheno_name {wildcards.study} "
         "--output {params[out_prefix]} "
+
         
 rule all_run_scaled_polygenic_scorer:
     input:
-        expand(rules.run_scaled_polygenic_scorer.output, bbid=target_list.name, study=studies.study_id.values, superpop=['EUR'], score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values], method=['pt_clump'])
+        expand(rules.run_scaled_polygenic_scorer.output,
+               bbid=target_list.name,
+               study=studies.study_id.values,
+               superpop=['EUR'],
+               score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
+               method=['pt_clump','dbslmm'])
 
 
 

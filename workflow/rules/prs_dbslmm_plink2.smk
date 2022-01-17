@@ -31,7 +31,7 @@ rule dbslmm_prep:
         geno=expand(rules.extract_hm3.output.bim, chr=range(1,23))
     output:
         touch('prs/dbslmm/{study}/ok'),
-        score='prs/dbslmm/{study}/1KGPhase3.w_hm3.{study}.score',
+        score='prs/dbslmm/{study}/1KGPhase3.w_hm3.{study}.score.gz',
         scale=expand('prs/dbslmm/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop'])
     params:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
@@ -64,7 +64,8 @@ rule dbslmm_prep:
         "--pop_prev NA " # TODO
         "--output prs/dbslmm/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input.super_pop_keep} "
-        "--ignore OR " # TODO -> should this always be OR, or can it also be BETA?
+        "--ignore OR && " # TODO -> should this always be OR, or can it also be BETA?
+        "gzip prs/dbslmm/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.score "
         ") &> {log}"
 
 rule all_dbslmm_prep:
