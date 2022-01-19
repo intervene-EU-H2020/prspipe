@@ -102,20 +102,23 @@ rule all_calculate_maf_ancestry_ext:
 #############################>>
 
 
-rule validate_setup_ext:
-    # requests all necessary outputs for the rules below.
-    # TODO: replace these with the plink2 counterparts
-    input:
-        # implemented by Sophie:
-        rules.all_dbslmm_prep.input,
-        rules.all_lassosum_prep.input,
-        rules.all_ldpred_prep.input,
-        rules.all_sblup_prep.input,
-        # implemented by Remo:
-        rules.all_run_prscs_precompld_1kg_refukbb.input,
-        rules.all_run_ldpred2_1kg_precompld_1kg.input,
-        rules.all_sparse_thresholding_1kg.input,
-        rules.all_run_sbayesr_precompld_1kg_refukbb_robust.input
+# TODO:
+# update this and make it use plink2 rules
+
+# rule validate_setup_ext:
+#     # requests all necessary outputs for the rules below.
+#     # TODO: replace these with the plink2 counterparts
+#     input:
+#         # implemented by Sophie:
+#         rules.all_dbslmm_prep.input,
+#         rules.all_lassosum_prep.input,
+#         rules.all_ldpred_prep.input,
+#         rules.all_sblup_prep.input,
+#         # implemented by Remo:
+#         rules.all_run_prscs_precompld_1kg_refukbb.input,
+#         # rules.all_run_ldpred2_1kg_precompld_1kg_.input
+#         rules.all_sparse_thresholding_1kg.input,
+#         rules.all_run_sbayesr_precompld_1kg_refukbb_robust.input
 
 
 wildcard_constraints:
@@ -525,52 +528,52 @@ rule all_ldpred_score_ext_ref1kg:
 # LDpred 2 #
 ############
 
-rule ldpred2_score_ext_refukbb:
-    # LDpred 2
-    # scoring using the pre-computed UKBB reference
-    # note: won't work for non-EUR
-    # note: this is different from the original GenoPred
-    # the scores are still normalized to 1000G
-    # however, the LD reference is the pre-computed UKBB reference
-    # TODO: make this work for all target ancestries
-    # TODO: move input files to different location (?)
-    input:
-        rules.run_ldpred2_precompld_1kg.output,
-        harmonised_geno=expand("custom_input/genotypes/{{bbid}}/chr{chr}.bed", chr=range(1,23)),
-        frq=expand(rules.calculate_maf_ancestry_ext.output['afreq'], superpop='EUR', chr=range(1,23), allow_missing=True)
-    output:
-        profiles = "results/{bbid}/PRS_for_comparison/LDPred2/{study}/{study}.LDPred_profiles"
-    params:
-        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
-        pheno=lambda wc: studies.name[studies.study_id == wc.study ].iloc[0],
-        target_plink_chr=lambda wc, input: input['harmonised_geno'][0].replace('1.bed',''),
-        ref_freq_chr=lambda wc, input: input['frq'][0][:-5],
-        out_prefix=lambda wc, output: output['profiles'].replace('.LDPred_profiles','')
-    log:
-        "logs/ldpred2_score_ext_refukbb/{bbid}/{study}.log"
-    singularity:
-        config['singularity']['all']
-    threads:
-        6
-    shell:
-        "( "
-        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_LDPred2/Scaled_polygenic_scorer_LDPred2.R "
-        "--target_plink_chr {params[target_plink_chr]} "
-        "--target_keep results/{wildcards[bbid]}/Ancestry_idenitfier/AllAncestry.EUR.keep "
-        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
-        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
-        "--ref_freq_chr {params[ref_freq_chr]} "
-        "--plink {config[plink1_9]} "
-        "--n_cores {threads} "
-        "--pheno_name {wildcards[study]} "
-        "--output {params[out_prefix]} "
-        ") &> {log} "
-        
-rule all_ldpred2_score_ext_refukbb:
-    # run rule above for all studies
-    input:
-        expand(rules.ldpred2_score_ext_refukbb.output, zip, study=studies.study_id, bbid=bbids)
-
+#rule ldpred2_score_ext_refukbb:
+#    # LDpred 2
+#    # scoring using the pre-computed UKBB reference
+#    # note: won't work for non-EUR
+#    # note: this is different from the original GenoPred
+#    # the scores are still normalized to 1000G
+#    # however, the LD reference is the pre-computed UKBB reference
+#    # TODO: make this work for all target ancestries
+#    # TODO: move input files to different location (?)
+#    input:
+#        rules.run_ldpred2_precompld_1kg.output,
+#        harmonised_geno=expand("custom_input/genotypes/{{bbid}}/chr{chr}.bed", chr=range(1,23)),
+#        frq=expand(rules.calculate_maf_ancestry_ext.output['afreq'], superpop='EUR', chr=range(1,23), allow_missing=True)
+#    output:
+#        profiles = "results/{bbid}/PRS_for_comparison/LDPred2/{study}/{study}.LDPred_profiles"
+#    params:
+#        study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
+#        pheno=lambda wc: studies.name[studies.study_id == wc.study ].iloc[0],
+#        target_plink_chr=lambda wc, input: input['harmonised_geno'][0].replace('1.bed',''),
+#        ref_freq_chr=lambda wc, input: input['frq'][0][:-5],
+#        out_prefix=lambda wc, output: output['profiles'].replace('.LDPred_profiles','')
+#    log:
+#        "logs/ldpred2_score_ext_refukbb/{bbid}/{study}.log"
+#    singularity:
+#        config['singularity']['all']
+#    threads:
+#        6
+#    shell:
+#        "( "
+#        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer_LDPred2/Scaled_polygenic_scorer_LDPred2.R "
+#        "--target_plink_chr {params[target_plink_chr]} "
+#        "--target_keep results/{wildcards[bbid]}/Ancestry_idenitfier/AllAncestry.EUR.keep "
+#        "--ref_score {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+#        "--ref_scale {config[Geno_1KG_dir]}/Score_files_for_polygenic/LDPred2_precompld_ukbb/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.{params[study_ancestry]}.scale "
+#        "--ref_freq_chr {params[ref_freq_chr]} "
+#        "--plink {config[plink1_9]} "
+#        "--n_cores {threads} "
+#        "--pheno_name {wildcards[study]} "
+#        "--output {params[out_prefix]} "
+#        ") &> {log} "
+#        
+#rule all_ldpred2_score_ext_refukbb:
+#    # run rule above for all studies
+#    input:
+#        expand(rules.ldpred2_score_ext_refukbb.output, zip, study=studies.study_id, bbid=bbids)
+#
 
 ##########
 # DBSLMM #
@@ -618,18 +621,18 @@ rule all_dbslmm_score_ext_ref1kg:
 ## ALL #
 ########
 
-rule all_score_ext:
-    # rule that runs all the rules above
-    input:
-        rules.all_sparse_thresholding_score_ext_ref1kg.input,
-        rules.all_lassosum_score_ext.input,
-        rules.all_prscs_score_ext_refukbb.input,
-        rules.all_sblup_score_ext_ref1kg.input,
-        rules.all_sbayesr_score_ext_refukbb_robust.input,
-        rules.all_ldpred_score_ext_ref1kg.input,
-        rules.all_ldpred2_score_ext_refukbb.input,
-        rules.all_dbslmm_score_ext_ref1kg.input
-
+# rule all_score_ext:
+#     # rule that runs all the rules above
+#     input:
+#         rules.all_sparse_thresholding_score_ext_ref1kg.input,
+#         rules.all_lassosum_score_ext.input,
+#         rules.all_prscs_score_ext_refukbb.input,
+#         rules.all_sblup_score_ext_ref1kg.input,
+#         rules.all_sbayesr_score_ext_refukbb_robust.input,
+#         rules.all_ldpred_score_ext_ref1kg.input,
+#         rules.all_ldpred2_score_ext_refukbb.input,
+#         rules.all_dbslmm_score_ext_ref1kg.input
+# 
         
         
 ###########################
@@ -652,136 +655,136 @@ rule all_score_ext:
 # Other #
 #########
 
-rule model_eval_ext_prep:
-    # methods are evaluated *together*
-    # phenotypes are evaluated *separately*
-    input:
-        pt_clump = rules.sparse_thresholding_score_ext_ref1kg.output['profiles'],
-        lassosum = rules.lassosum_score_ext.output['profiles'],
-        prscs = rules.prscs_score_ext_refukbb.output['profiles'],
-        sblup = rules.sblup_score_ext_ref1kg.output['profiles'],
-        sbayesr = rules.sbayesr_score_ext_refukbb_robust.output['profiles'],
-        dbslmm = rules.dbslmm_score_ext_ref1kg.output['profiles'],
-        ldpred = rules.ldpred_score_ext_ref1kg.output['profiles'],
-        ldpred2 = rules.ldpred2_score_ext_refukbb.output['profiles']
-    output:
-        predictors = 'results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.predictor_groups'
-    run:
-        # prepare a file with predictors, grouped by method
-        with open(output[0], 'w') as outfile:
-            outfile.write('predictors group\n')
-            for k, v in input.items():
-                outfile.write('{} {}\n'.format(v, k))
+#rule model_eval_ext_prep:
+#    # methods are evaluated *together*
+#    # phenotypes are evaluated *separately*
+#    input:
+#        pt_clump = rules.sparse_thresholding_score_ext_ref1kg.output['profiles'],
+#        lassosum = rules.lassosum_score_ext.output['profiles'],
+#        prscs = rules.prscs_score_ext_refukbb.output['profiles'],
+#        sblup = rules.sblup_score_ext_ref1kg.output['profiles'],
+#        sbayesr = rules.sbayesr_score_ext_refukbb_robust.output['profiles'],
+#        dbslmm = rules.dbslmm_score_ext_ref1kg.output['profiles'],
+#        ldpred = rules.ldpred_score_ext_ref1kg.output['profiles'],
+#        ldpred2 = rules.ldpred2_score_ext_refukbb.output['profiles']
+#    output:
+#        predictors = 'results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.predictor_groups'
+#    run:
+#        # prepare a file with predictors, grouped by method
+#        with open(output[0], 'w') as outfile:
+#            outfile.write('predictors group\n')
+#            for k, v in input.items():
+#                outfile.write('{} {}\n'.format(v, k))
                 
-rule all_model_eval_ext_prep:
-    input:
-        expand(rules.model_eval_ext_prep.output, study=studies.study_id, allow_missing=True)
+#rule all_model_eval_ext_prep:
+#    input:
+#        expand(rules.model_eval_ext_prep.output, study=studies.study_id, allow_missing=True)
+#
+#
+#rule model_eval_ext:
+#    input:
+#        predictors = rules.model_eval_ext_prep.output.predictors,
+#        pheno_file = lambda wc: 'custom_input/phenotypes/{bbid}/' + studies.name[studies.study_id == wc.study].iloc[0] +'.txt'
+#    output:
+#        assoc='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.assoc.txt',
+#        pred_comp='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_comp.txt',
+#        pred_eval='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_eval.txt'
+#    params:
+#        prev = lambda wc: prevalence[ studies.name[studies.study_id == wc['study']].iloc[0] ],
+#        out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
+#    threads:
+#        8
+#    log:
+#        'logs/model_eval_ext/{bbid}/{study}.log'
+#    singularity:
+#        config['singularity']['all']
+#    shell:
+#        "("
+#        "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+#        "--pheno {input[pheno_file]} "
+#        "--predictors {input[predictors]} "
+#        "--n_core {threads} "
+#        "--compare_predictors T "
+#        "--assoc T "
+#        "--outcome_pop_prev {params[prev]} "
+#        "--out {params[out_prefix]} "
+#        "--save_group_model T "
+#        ") &> {log}"
 
 
-rule model_eval_ext:
-    input:
-        predictors = rules.model_eval_ext_prep.output.predictors,
-        pheno_file = lambda wc: 'custom_input/phenotypes/{bbid}/' + studies.name[studies.study_id == wc.study].iloc[0] +'.txt'
-    output:
-        assoc='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.assoc.txt',
-        pred_comp='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_comp.txt',
-        pred_eval='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_eval.txt'
-    params:
-        prev = lambda wc: prevalence[ studies.name[studies.study_id == wc['study']].iloc[0] ],
-        out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
-    threads:
-        8
-    log:
-        'logs/model_eval_ext/{bbid}/{study}.log'
-    singularity:
-        config['singularity']['all']
-    shell:
-        "("
-        "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
-        "--pheno {input[pheno_file]} "
-        "--predictors {input[predictors]} "
-        "--n_core {threads} "
-        "--compare_predictors T "
-        "--assoc T "
-        "--outcome_pop_prev {params[prev]} "
-        "--out {params[out_prefix]} "
-        "--save_group_model T "
-        ") &> {log}"
-
-
-rule all_model_eval_ext:
-    input:
-        expand(rules.model_eval_ext.output, study=studies.study_id, allow_missing=True)
-
+# rule all_model_eval_ext:
+#     input:
+#         expand(rules.model_eval_ext.output, study=studies.study_id, allow_missing=True)
+# 
         
-rule get_best_models_ext:
-    # exctract the best performing models and their performance into a neat TSV
-    input:
-        pred_eval=rules.model_eval_ext.output['pred_eval']
-    output:
-        best_models_tsv='results/{bbid}/PRS_evaluation/{study}/best_models.tsv'
-    log:
-        'logs/get_best_models_ext/{bbid}/{study}.log'
-    singularity:
-        config['singularity']['all']
-    shell:
-        "("
-        "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
-        "--pred_eval {input[pred_eval]} "
-        "--drop TRUE "
-        ") &> {log}"
+# rule get_best_models_ext:
+#     # exctract the best performing models and their performance into a neat TSV
+#     input:
+#         pred_eval=rules.model_eval_ext.output['pred_eval']
+#     output:
+#         best_models_tsv='results/{bbid}/PRS_evaluation/{study}/best_models.tsv'
+#     log:
+#         'logs/get_best_models_ext/{bbid}/{study}.log'
+#     singularity:
+#         config['singularity']['all']
+#     shell:
+#         "("
+#         "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+#         "--pred_eval {input[pred_eval]} "
+#         "--drop TRUE "
+#         ") &> {log}"
         
-rule all_get_best_models_ext:
-    input:
-        expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids)
+# rule all_get_best_models_ext:
+#     input:
+#         expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids)
 
 
-rule model_eval_custom_ext:
-    # Run Model_builder_V2.R for custom group - phenotype combinations
-    input:
-        predictors = 'custom_input/{bbid}/predictor_groups/{group}.predictor_groups',
-        pheno_file = 'custom_input/{bbid}/phenotypes/{pheno}.txt'
-    output:
-        assoc='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.assoc.txt',
-        pred_comp='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.pred_comp.txt',
-        pred_eval='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.pred_eval.txt'
-    params:
-        prev = lambda wc: prevalence[wc['pheno']],
-        out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
-    threads:
-        16
-    log:
-        'logs/model_eval_custom_ext/{bbid}/{group}_{pheno}.log'
-    singularity:
-        config['singularity']['all']
-    shell:
-        "("
-        "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
-        "--pheno {input[pheno_file]} "
-        "--predictors {input[predictors]} "
-        "--n_core {threads} "
-        "--compare_predictors T "
-        "--assoc T "
-        "--outcome_pop_prev {params[prev]} "
-        "--out {params[out_prefix]} "
-        "--save_group_model T "
-        ") &> {log}"
+# rule model_eval_custom_ext:
+#     # Run Model_builder_V2.R for custom group - phenotype combinations
+#     input:
+#         predictors = 'custom_input/{bbid}/predictor_groups/{group}.predictor_groups',
+#         pheno_file = 'custom_input/{bbid}/phenotypes/{pheno}.txt'
+#     output:
+#         assoc='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.assoc.txt',
+#         pred_comp='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.pred_comp.txt',
+#         pred_eval='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/AllMethodComp.pred_eval.txt'
+#     params:
+#         prev = lambda wc: prevalence[wc['pheno']],
+#         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
+#     threads:
+#         16
+#     log:
+#         'logs/model_eval_custom_ext/{bbid}/{group}_{pheno}.log'
+#     singularity:
+#         config['singularity']['all']
+#     shell:
+#         "("
+#         "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+#         "--pheno {input[pheno_file]} "
+#         "--predictors {input[predictors]} "
+#         "--n_core {threads} "
+#         "--compare_predictors T "
+#         "--assoc T "
+#         "--outcome_pop_prev {params[prev]} "
+#         "--out {params[out_prefix]} "
+#         "--save_group_model T "
+#         ") &> {log}"
+# 
 
-
-rule get_best_models_custom_ext:
-    # exctract the best performing models and their performance into a neat TSV
-    input:
-        pred_eval=rules.model_eval_custom_ext.output['pred_eval']
-    output:
-        best_models_tsv='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/best_models.tsv'
-    log:
-        'logs/get_best_models_custom/{bbid}/{group}_{pheno}.log'
-    singularity:
-        config['singularity']['all']
-    shell:
-        "("
-        "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
-        "--pred_eval {input[pred_eval]} "
-        "--drop TRUE "
-        ") &> {log} "
-    
+# rule get_best_models_custom_ext:
+#     # exctract the best performing models and their performance into a neat TSV
+#     input:
+#         pred_eval=rules.model_eval_custom_ext.output['pred_eval']
+#     output:
+#         best_models_tsv='results/{bbid}/PRS_evaluation_custom/{group}/{pheno}/best_models.tsv'
+#     log:
+#         'logs/get_best_models_custom/{bbid}/{group}_{pheno}.log'
+#     singularity:
+#         config['singularity']['all']
+#     shell:
+#         "("
+#         "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+#         "--pred_eval {input[pred_eval]} "
+#         "--drop TRUE "
+#         ") &> {log} "
+#     

@@ -544,7 +544,7 @@ rule ldpred2_score_ukbb_refukbb:
     # the scores are still normalized to 1000G
     # however, the LD reference is the pre-computed UKBB reference + MAF calculated on the 10K subset
     input:
-        rules.run_ldpred2_precompld_1kg.output,
+        rules.run_ldpred2_precompld_1kg_deprecated.output,
         harmonised_geno=expand(rules.harmonize_ukbb.output, chr=range(1,23)),
         frq=rules.extract_ukbb10k.output.frq
     output:

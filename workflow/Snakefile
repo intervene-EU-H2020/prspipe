@@ -62,6 +62,8 @@ include: "rules/ld_matrix.smk"
 include: "rules/prs_sbayesr.smk"
 include: "rules/prs_prscs.smk"
 include: "rules/prs_ldpred2.smk"
+include: "rules/prs_ldpred2_plink2.smk"
+
 
 # UKBB analysis (deprecated, replaced by "external biobanks" below)
 include: "rules/ukbb.smk"
@@ -72,20 +74,20 @@ include: "rules/external_biobanks.smk"
 # Master rules that trigger specific steps from the modules
 # TODO: add other rules here, or add references to them
 
-rule prs_1kg_precompld:
-    # run PRS methods for 1000G using pre-computed reference panels
-    # the predictions are used as baselines for the different ancestries
-    input:
-        # implemented by Sophie:
-        rules.all_dbslmm_prep.input,
-        rules.all_lassosum_prep.input,
-        rules.all_ldpred_prep.input,
-        rules.all_sblup_prep.input,
-        # implemented by Remo:
-        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
-        expand(rules.run_prscs_precompld_1kg.output, study=studies.study_id),
-        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
-        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
-        expand(rules.dense_thresholding_1kg.output, study=studies.study_id),
-        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id),
-        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
+#rule prs_1kg_precompld:
+#    # run PRS methods for 1000G using pre-computed reference panels
+#    # the predictions are used as baselines for the different ancestries
+#    input:
+#        # implemented by Sophie:
+#        rules.all_dbslmm_prep.input,
+#        rules.all_lassosum_prep.input,
+#        rules.all_ldpred_prep.input,
+#        rules.all_sblup_prep.input,
+#        # implemented by Remo:
+#        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
+#        expand(rules.run_prscs_precompld_1kg.output, study=studies.study_id),
+#        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
+#        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
+#        expand(rules.dense_thresholding_1kg.output, study=studies.study_id),
+#        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id),
+#        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
