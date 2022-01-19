@@ -88,8 +88,7 @@ rule run_ldpred2_precompld_1kg_plink2:
         "--n_cores {threads} "
         "--output prs/ldpred2/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
-        "--binary {params[is_binary]} && "
-        "rm prs/ldpred2/{wildcards[study]}/*bk prs/ldpred2/{wildcards[study]}/*rds || "
+        "--binary {params[is_binary]} || "
         "rm prs/ldpred2/{wildcards[study]}/*bk prs/ldpred2/{wildcards[study]}/*rds "
         ") &> {log} "
         
