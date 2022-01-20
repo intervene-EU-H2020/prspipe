@@ -16,11 +16,73 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 ## Quick Start for Collaborators
 
-The full pipeline can roughly be devided into two stages: (1) Download and adjustment of summary statistics using pre-computed LD reference panels where available and data from the 1000 Genomes project (publica data), and (2) prediction and evaluation of PRS using the adjusted summary statistics, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
+The full pipeline can roughly be devided into two stages: (1) Download of summary statistics, running PRS methods and predicting on the 1000 Genomes data (public stage), and (2) prediction and evaluation using the scores from step 1, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
 
-Rules that re-implement the analysis of the UK Biobank data as shown in the GenoPred paper can be found in [`workflow/rules/ukbb.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/ukbb.smk). Follow the steps below in order to work with data from other biobanks using rules defined [`workflow/rules/external_biobanks.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/external_biobanks.smk).
+Follow the steps below to make the pipeline work with your data (i.e., the target data) [`workflow/rules/external_biobanks.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/external_biobanks.smk). For collaborators, we distribute pre-computed scoring files from the different PRS methods, which means most of the pipeline can be skipped. However, the rules to run the different PRS methods are available to everyone - feel free to try!
+
+In the steps below, we will install all the dependencies to run polygenic scoring for your target data. We will then harmonize the target genotype data. Finally, we will run polygenic scoring and score evaluation. Evaluation requires the target phenotype data.
 
 Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.
+
+## Preface on Singularity and Docker
+
+Genopred, i.e., the repository this pipeline depends on, heavily relies on R and dependency management with conda (i.e., python). The pipeline itself is run with [snakemake](https://snakemake.bitbucket.io). Snakemake comes with built-in support for Singularity containers. In theory, different steps of the pipeline (correspinding to different snakemake *rules*), can be run in different containers. However, this pipeline only relies on a single container [available on dockerhub](https://hub.docker.com/r/rmonti/prspipe). This container works both with Docker and Singularity.
+
+```
+# get the container with docker
+docker pull rmonti/prspipe:0.0.1
+
+# ... or with singularity
+singularity pull docker://rmonti/prspipe:0.0.1
+```
+
+## Preface on Snakemake
+
+Snakemake reproducibly manages large workflows. Basically, it will handle all the steps to get from a set of input files (typically defined in a *samplesheet* or *config-file*) to a set of outout files. The user defines a set of output files, and snakemake will figure out how to produce them given previously defined *rules*. Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
+
+However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, these instructions will handle the interactive case.
+
+To run steps of the pipeline, the user can request specific output files on the command-line. For example
+
+```
+snakemake --cores 1 --snakefile workflow/Snakefile resources/HapMap3_snplist/w_hm3.snplist
+```
+
+will request `resources/HapMap3_snplist/w_hm3.snplist`. There are many parameters that can be configured (see `snakemake --help`).
+
+If the output file does not contain any *wildcards* (i.e., it is always called the same, no matter how the pipeline is configured), the user can also request to run specific *rules*. Rules are the different steps defining the snakemake workflow, and are located in `workflow/Snakefile` and `workflow/rules/`.
+
+For example, the file above could also be requested by the rule-name:
+
+```
+snakemake --cores 1 --snakefile workflow/Snakefile download_hapmap3_snplist
+```
+
+the corresponding rule looks like this (located in `workflow/rules/setup.smk`):
+
+```
+rule download_hapmap3_snplist:
+    input:
+        'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
+    output:
+        "resources/HapMap3_snplist/w_hm3.snplist"
+    log:
+        "logs/download_hapmap3_snplist.log"
+    shell:
+        "("
+        "zcat {input} | cut -f2-4 | "
+        ' awk \'BEGIN{{OFS="\t"; print "SNP", "A1", "A2"}}{{if(NR > 1){{print $0}}}}\' > {output} '
+        ") &> {log}"
+```
+
+As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output, and the log file!
+
+In order to not have to type a long command with snakemake parameters every time you run snakemake, the shell script `run.sh` in the main workflow directory can be used to wrap default parameters, i.e.
+
+```
+bash run.sh workflow/Snakefile download_hapmap3_snplist
+```
+is equivalent to the commands above. 
 
 ### Basic Setup
 
