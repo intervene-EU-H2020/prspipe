@@ -28,8 +28,8 @@ rule prs_scoring_ptclump_sparse:
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator_plink2.R "
-        "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
-        "--ref_keep {config[Geno_1KG_dir]}/keep_files/{params[study_ancestry]}_samples.keep "
+        "--ref_plink_chr results/1kg/1KGPhase3.w_hm3.chr "
+        "--ref_keep results/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--sumstats {input[qc_stats]} "
         "--plink1 {config[plink1_9]} "
         "--plink2 {config[plink2]} "

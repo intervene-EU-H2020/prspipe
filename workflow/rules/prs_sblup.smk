@@ -30,8 +30,8 @@ rule prs_scoring_sblup:
     shell:
         "("
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBLUP/polygenic_score_file_creator_SBLUP.R "
-        "--ref_plink {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.GW "
-        "--ref_keep {config[Geno_1KG_dir]}/keep_files/{wildcards[ancestry]}_samples.keep "
+        "--ref_plink resources/1kg/1KGPhase3.w_hm3.GW "
+        "--ref_keep resources/1kg/keep_files/{wildcards[ancestry]}_samples.keep "
         "--sumstats {input.qc_stats} "
         "--plink {config[plink1_9]} "
         "--gcta {config[gcta]} "
