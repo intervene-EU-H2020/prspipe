@@ -5,7 +5,7 @@
 
 # plink2 version should replace plink1 version.
 
-rule sparse_thresholding_1kg:
+rule prs_scoring_ptclump_sparse:
     # 4.2.2 Sparse thresholding (not nested)
     # Here we will only use 8 p-value thresholds.
     # This section uses an R script called ‘polygenic_score_file_creator.R’
@@ -40,7 +40,7 @@ rule sparse_thresholding_1kg:
         ") &> {log} "
 
 
-rule all_sparse_thresholding_1kg:
+rule all_prs_scoring_ptclump_sparse:
     # runs rule above for all studies
     input:
-        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id)
+        expand(rules.prs_scoring_ptclump_sparse.output, study=studies.study_id)

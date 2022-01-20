@@ -9,8 +9,11 @@ workflow/scripts/DBSLMM
 logs/
 logs/results/UKBB
 *.ipynb
-results/UKBB/*
 workflow/scripts/PRScs/
 lifover/
 R/
 config/target_list.tsv
+config/pop_prevalence.tsv
+config/studies.tsv
+workflow/scripts/ldak
+prs/

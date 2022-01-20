@@ -4,31 +4,37 @@
 #############################################################
 
 # Rules for preparing score and scale files for polygenic scoring using dbslmm
-# plink2 version should replace plink1 version.
+
+rule install_dbslmm:
+    # TODO: define specific version
+    output:
+        directory('workflow/scripts/DBSLMM')
+    shell:
+        "mkdir -p workflow/scripts/DBSLMM && "
+        "git clone https://github.com/intervene-EU-H2020/DBSLMM.git workflow/scripts/DBSLMM"
+    
 
 rule download_dbslmm_ld_block:
     # Download the LD block data for the given ancestry (note that it currently only supports AFR, ASN and EUR)
     output:
-        ld_block="resources/ldetect-data/{ancestry}/fourier_ls-all.bed"
+        ld_block=expand("resources/ldetect-data/{ancestry}/fourier_ls-all.bed", ancestry=['AFR','ASN','EUR'])
     shell:
         "cd resources && "
         "git clone https://bitbucket.org/nygcresearch/ldetect-data.git"
 
 
-# because the rule uses both R and ldsc + dbslmm, this makes it hard to handle... maybe create a separate image (?)
-
-rule dbslmm_prep:
+rule prs_scoring_dbslmm:
     # Implements the dbslmm method
-    # Note that LDSC requires python 2 so Snakemake will setup this environment using the given .yml file
     # Uses the precomputed LD ref (based on 1000G) by default.
     # TODO: DBSLMM has a "threads" argument, which is not used in polygenic_score_file_creator_DBSLMM.R (?) -> could potentially be used to speed things up
     input:
-        ld_ref=lambda wc: expand("{ldrefdir}/sblup_dbslmm/1000G/precomputed/{ancestry}/{chr}.l2.ldscore.gz", ldrefdir = config['LD_ref_dir'], ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0], chr=range(1,23)),
-        ld_block=lambda wc: expand(rules.download_dbslmm_ld_block.output.ld_block, ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0]),
+        ld_ref=lambda wc: expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{ancestry}/{chr}.l2.ldscore.gz", ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0], chr=range(1,23)),
+        ld_block=rules.download_dbslmm_ld_block.output,
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study].iloc[0], allow_missing=True),
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         hm3_snplist=rules.download_hapmap3_snplist.output,
-        geno=expand(rules.extract_hm3.output.bim, chr=range(1,23))
+        geno=expand(rules.extract_hm3.output.bim, chr=range(1,23)),
+        dbslmm=rules.install_dbslmm.output
     output:
         touch('prs/dbslmm/{study}/ok'),
         score='prs/dbslmm/{study}/1KGPhase3.w_hm3.{study}.score.gz',
@@ -37,7 +43,7 @@ rule dbslmm_prep:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
         ld_ref_dir=lambda wc, input: '/'.join(input['ld_ref'][0].split('/')[-1])
     log:
-        "logs/prs_dbslmm_{study}.log"
+        "logs/prs_scoring_dbslmm/{study}.log"
     conda:
         "../envs/ldsc.yaml"
     threads:
@@ -55,10 +61,10 @@ rule dbslmm_prep:
         "--memory {resources[mem_mb]} "
         "--ld_blocks resources/ldetect-data/{params[study_ancestry]}/ "
         "--rscript Rscript "
-        "--dbslmm ./{config[DBSLMM_dir]}/software "
+        "--dbslmm workflow/scripts/software "
         "--munge_sumstats {config[LDSC_dir]}/munge_sumstats.py "
         "--ldsc {config[LDSC_dir]}/ldsc.py "
-        "--ldsc_ref {config[LD_ref_dir]}/sblup_dbslmm/1000G/precomputed/{params[study_ancestry]} "
+        "--ldsc_ref resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{params[study_ancestry]} "
         "--hm3_snplist {input.hm3_snplist} "
         "--sample_prev NA " # TODO
         "--pop_prev NA " # TODO
@@ -68,7 +74,8 @@ rule dbslmm_prep:
         "gzip prs/dbslmm/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]}.score "
         ") &> {log}"
 
-rule all_dbslmm_prep:
+
+rule all_prs_scoring_dbslmm:
     # Run this rule to run the dbslmm method
     input: 
-        expand(rules.dbslmm_prep.output, study=studies.study_id)
+        expand(rules.prs_scoring_dbslmm.output, study=studies.study_id)

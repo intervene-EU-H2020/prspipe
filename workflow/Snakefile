@@ -6,31 +6,39 @@ from snakemake.utils import validate
 from collections import defaultdict
 
 configfile: "config/config.yaml"
+validate(config, schema="schemas/config.schema.yaml")
 
-studies = pd.read_csv(config["studies"], dtype=str, sep='\t').set_index(["study_id", "ancestry"], drop=False)
+# the sample sheet for the different GWAS summary statistics
+studies = pd.read_csv(config["studies"], dtype={'study_id':str}, sep='\t').set_index(["study_id"], drop=False)
+validate(studies, schema="schemas/studies.schema.yaml")
+
+# the sample sheet for the different target genotypes
 target_list = pd.read_csv(config["target_list"], dtype=str, sep='\t').set_index(["name"], drop=False)
+validate(target_list, schema="schemas/target_list.schema.yaml")
+
+
+
+# disease prevalences, if present (needed for evaluation)
 
 def nan():
     return 'NA'
     
-# store disease prevalences, if present (needed for evaluation)
 prevalence = defaultdict(nan)
 if 'prevalence' in config:
     with open(config['prevalence'], 'r') as infile:
         for line in infile:
             d, n = line.rstrip().split('\t')
-            prevalence[d] = n
+            try:
+                prevalence[d] = float(n)
+                assert prevalence[d] > 0. and prevalence[d] <= 1., 'Error: invalid prevalence for phenotype "{}", found: "{}"'.format(d, prevalence[n])
+            except ValueError:
+                assert n == 'NA', 'Error: invalid prevalence for phenotype "{}", found: "{}". If prevalence is unknown, use "NA" or remove the phenotype from the prevalence list.'.format(d, prevalence[n])
 
 report: "report/workflow.rst"
 
-# Allow users to fix the underlying OS via singularity.
+# Allow users to fix the underlying OS via singularity (default singularity container to use)
 singularity: 'docker://rmonti/prspipe:0.0.1'
 
-
-rule all:
-    input:
-        # The first rule should define the default target files
-        # Subsequent target rules can be specified below. They should start with all_*.
 
 rule test_R:
      output:
@@ -45,49 +53,42 @@ wildcard_constraints:
     superpop="[A-Z]+"
 
 # setup and 1000G harmonization
-include: "rules/common.smk"
+include: "rules/1kg_hm3_processing.smk"
 include: "rules/setup.smk"
-include: "rules/genotype_harmonization.smk"
 include: "rules/base_sumstats.smk"
 
-# 1000G baselines
-include: "rules/prs_ptclump.smk"
-include: "rules/prs_ptclump_plink2.smk"
-include: "rules/prs_lassosum.smk"
-include: "rules/prs_sblup.smk"
-include: "rules/prs_ldpred.smk"
-# include: "rules/prs_dbslmm.smk"
-include: "rules/prs_dbslmm_plink2.smk"
+
+# running prs methods and predicting on 1000G
 include: "rules/ld_matrix.smk"
-include: "rules/prs_sbayesr.smk"
-include: "rules/prs_prscs.smk"
-include: "rules/prs_ldpred2.smk"
+include: "rules/prs_ptclump_plink2.smk"
+include: "rules/prs_lassosum_plink2.smk"
+include: "rules/prs_dbslmm_plink2.smk"
+include: "rules/prs_sbayesr_plink2.smk"
+include: "rules/prs_prscs_plink2.smk"
 include: "rules/prs_ldpred2_plink2.smk"
+include: "rules/prs_megaprs_plink2.smk"
 
-
-# UKBB analysis (deprecated, replaced by "external biobanks" below)
-include: "rules/ukbb.smk"
+rule all_setup:
+    # this triggers pre-processing of 1000G
+    input:
+        'resources/1kg/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var',
+        'resources/1kg/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var',
+        rules.run_allele_freq_all.output,
+        rules.download_liftover.output
+        
 
 # external biobanks
+include: "rules/genotype_harmonization.smk"
 include: "rules/external_biobanks.smk"
 
-# Master rules that trigger specific steps from the modules
-# TODO: add other rules here, or add references to them
 
-#rule prs_1kg_precompld:
-#    # run PRS methods for 1000G using pre-computed reference panels
-#    # the predictions are used as baselines for the different ancestries
-#    input:
-#        # implemented by Sophie:
-#        rules.all_dbslmm_prep.input,
-#        rules.all_lassosum_prep.input,
-#        rules.all_ldpred_prep.input,
-#        rules.all_sblup_prep.input,
-#        # implemented by Remo:
-#        expand(rules.run_ldpred2_precompld_1kg.output, study=studies.study_id),
-#        expand(rules.run_prscs_precompld_1kg.output, study=studies.study_id),
-#        expand(rules.run_prscs_precompld_1kg_refukbb.output, study=studies.study_id),
-#        expand(rules.nested_sparse_thresholding_1kg.output, study=studies.study_id),
-#        expand(rules.dense_thresholding_1kg.output, study=studies.study_id),
-#        expand(rules.sparse_thresholding_1kg.output, study=studies.study_id),
-#        expand(rules.run_sbayesr_precompld_1kg_refukbb_robust.output, study=studies.study_id)
+rule prs_1kg_precompld:
+    # run PRS methods and predict for 1000G using pre-computed reference panels
+    # the predictions are used as baselines for the different ancestries
+    input:
+        expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id)
+
+# default rule
+rule all:
+    input:
+        rules.validate_setup_ext.input
