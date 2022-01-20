@@ -74,7 +74,8 @@ rule all_setup:
         'resources/1kg/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var',
         'resources/1kg/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var',
         rules.run_allele_freq_all.output,
-        rules.download_liftover.output
+        rules.download_liftover.output,
+        rules.extract_hm3_gw.output
         
 
 # external biobanks
