@@ -1,18 +1,28 @@
 # Rules for preparing score and scale files for polygenic scoring using sblup
 
-rule sblup_prep:
-    # Implements the sblup method
-    # Note that LDSC requires python 2 so Snakemake will setup this environment using the given .yml file
-    # Uses the precomputed LD ref (based on 1000G) by default - 
-    # If you want to compute the LD ref from scratch, replace ld_ref with expand("{}/sblup_dbslmm/1000G/fromscratch/{{study.ancestry}}/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples())
-    input: 
-        ld_ref=expand("{}/sblup_dbslmm/1000G/precomputed/{{study.ancestry}}/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples()),
-        qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
-        super_pop_keep=rules.create_ancestry.output['super_pop_keep']
+rule install_gcta:
+    # install GCTA to the default location
     output:
-        "{}/Score_files_for_polygenic/sblup/{{study}}/1KGPhase3.w_hm3.{{study}}.{{ancestry}}.scale".format(config['Geno_1KG_dir'])
+        "bin/gcta/gcta64"
+    shell:
+        "cd bin && "
+        "wget https://cnsgenomics.com/software/gcta/bin/gcta_1.93.2beta.zip && "
+        "unzip gcta_1.93.2beta.zip && "
+        "rm gcta_1.93.2beta.zip && "
+        "mv gcta_1.93.2beta/* ./gcta"
+
+rule prs_scoring_sblup:
+    # Implements the sblup method
+/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples())
+    input: 
+        ld_ref=expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{{ancestry}}/{chr}.l2.ldscore.gz", chr=range(1,23)),
+        qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
+        super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
+        gcta=config['gcta']
+    output:
+        "prs/sblup/{study}/1KGPhase3.w_hm3.{study}.{ancestry}.scale"
     log:
-        "logs/prs_sblup_{study}.{ancestry}.log"
+        "logs/prs_scoring_sblup/{study}_{ancestry}.log"
     conda:
         "../envs/ldsc.yaml"
     threads:
@@ -28,15 +38,15 @@ rule sblup_prep:
         "--munge_sumstats {config[LDSC_dir]}/munge_sumstats.py "
         "--ldsc {config[LDSC_dir]}/ldsc.py "
         "--ldsc_ref {config[LD_ref_dir]}/sblup_dbslmm/1000G/precomputed/{wildcards[ancestry]} "
-        "--hm3_snplist {config[HapMap3_snplist_dir]}/w_hm3.snplist "
+        "--hm3_snplist resources/HapMap3_snplist/w_hm3.snplist "
         "--memory 50000 "
         "--n_cores {threads} "
-        "--output {config[Geno_1KG_dir]}/Score_files_for_polygenic/sblup/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
+        "--output prs/sblup/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input.super_pop_keep} "
         ") &> {log}"
 
 
-rule all_sblup_prep:
+rule all_prs_scoring_sblup:
     # Run this rule to run the sblup method
     input: 
-        expand("{}/Score_files_for_polygenic/sblup/{{study.study_id}}/1KGPhase3.w_hm3.{{study.study_id}}.{{study.ancestry}}.scale".format(config['Geno_1KG_dir']), study=studies.itertuples())
+        expand(rules.prs_scoring_sblup.output, zip, study=studies.study_id, ancestry=studies.ancestry)

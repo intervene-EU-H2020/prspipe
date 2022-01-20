@@ -6,11 +6,11 @@ rule download_sumstats:
     # for the studies specified in the studies.tsv file
     # and puts them in a format suitable for the QC script
     output:
-        "{}/{{study}}.{{ancestry}}.raw".format(config['Base_sumstats_dir']),
+        "resources/sumstats/{study}.{ancestry}.raw",
     log:
-        "logs/base_sumstats/download_{study}.{ancestry}.log"
+        "logs/download_sumstats/{study}_{ancestry}.log"
     shell:
-        "python {config[Python_scr_dir]}/gwas_catalog_sumstats.py "
+        "python workflow/scripts/Python/gwas_catalog_sumstats.py "
         "--study-id {wildcards[study]} "
         "--out {output} "
         "--studies {config[studies]} "
@@ -20,12 +20,12 @@ rule download_sumstats:
 rule QC_sumstats:
     # run the cleaner script for summary statistics QC
     input:
-        sumstats="{}/{{study}}.{{ancestry}}.raw".format(config['Base_sumstats_dir']),
+        sumstats="resources/sumstats/{study}.{ancestry}.raw",
         other=rules.run_allele_freq_superpop.output
     output:
-        "{}/{{study}}.{{ancestry}}.cleaned.gz".format(config['Base_sumstats_dir'])
+        "resources/sumstats/{study}.{ancestry}.cleaned.gz"
     log:
-        "logs/base_sumstats/qc_{study}.{ancestry}.log"
+        "logs/QC_sumstats/{study}_{ancestry}.log"
     singularity:
         config['singularity']['all']
     resources:
@@ -35,8 +35,8 @@ rule QC_sumstats:
         "Rscript {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "
         "--sumstats {input[sumstats]} "
         "--ss_freq_col FRQ "
-        "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
-        "--ref_freq_chr {config[Geno_1KG_dir]}/freq_files/{wildcards[ancestry]}/1KGPhase3.w_hm3.{wildcards[ancestry]}.chr "
+        "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
+        "--ref_freq_chr resources/1kg/freq_files/{wildcards[ancestry]}/1KGPhase3.w_hm3.{wildcards[ancestry]}.chr "
         "--output {output}"
         ") &> {log}"
 
@@ -44,4 +44,4 @@ rule QC_sumstats:
 rule all_QC:
     # download summary statistics and run all QC
     input: 
-        expand("{}/{{study.study_id}}.{{study.ancestry}}.cleaned.gz".format(config['Base_sumstats_dir']), study=studies.itertuples())
+        expand("resources/sumstats/{study}.{ancestry}.cleaned.gz", zip, study=studies.study_id, ancestry=studies.ancestry)

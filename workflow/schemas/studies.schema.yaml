@@ -1,0 +1,35 @@
+$schema: "http://json-schema.org/draft-04/schema#"
+
+description: an entry in the sample sheet
+
+# columns that the config/studies.tsv file can have and which type they should be
+properties:
+  study_id:
+    type: string
+    description: GWAS study name/identifier
+  ancestry:
+    type: string
+    description: GWAS ancestry (AFR, AMR, EAS, EUR or SAS)
+  n_cases:
+    type: number
+    minumum: 1
+    description: GWAS sample number of cases (or total sample size if trait is continuous)
+  n_controls:
+    type: number
+    minumum: 0
+    description: GWAS sample number of controls (can be missing or 0 if trait is continuous)
+  binary:
+    type: string
+    enum: ['yes', 'no']
+    description: indicator if trait is binary ("yes" or "no")
+  name:
+    type: string
+    description: trait name (can be repeated if multiple studies use the same trait)
+
+# columns that the config/samples.tsv file must have to pass schema validation
+required:
+  - study_id
+  - ancestry
+  - n_cases
+  - binary
+  - name

@@ -1,0 +1,22 @@
+$schema: "http://json-schema.org/draft-04/schema#"
+
+description: an entry in the target list sheet
+
+# columns that the config/studies.tsv file can have and which type they should be
+properties:
+  name:
+    type: string
+    description: biobank name/identifier
+  path:
+    type: string
+    description: Prefix to the per-chromosome genotype files (see readme for details)
+  type:
+    type: string
+    enum: ['samp_imp_plink1', 'samp_imp_bgen_ref_first', 'samp_imp_bgen_ref_last', 'samp_imp_bgen_ref_unknown', 'samp_imp_vcf']
+    description: File type 
+
+# columns that the config/samples.tsv file must have to pass schema validation
+required:
+  - name
+  - type
+  - path
