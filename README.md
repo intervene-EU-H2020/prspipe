@@ -169,10 +169,10 @@ You can now create polygenic scores using plink and summary statistics from a GW
 
 ```
 # first, check what will be executed:
-bash run_cluster.sh -n prs/pt_clump/synth01/ok
+bash run_cluster.sh -n -q prs/pt_clump/synth01/ok
 
 # second, run the rule
-bash run_cluster.sh -n prs/pt_clump/synth01/ok
+bash run_cluster.sh prs/pt_clump/synth01/ok
 ```
 
 `config/studies.tsv` is the sample-sheet that contains all the information on available summary statistics:
