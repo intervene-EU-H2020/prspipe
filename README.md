@@ -193,25 +193,25 @@ Check out the polygenic scoring files created by the rule above:
 ls -1 prs/pt_clump/synth01/
 ```
 
->Output:
+>Output (only showing those that are common between methods):
 >```
->**1KGPhase3.w_hm3.synth01.AFR.scale**
->**1KGPhase3.w_hm3.synth01.AMR.scale**
->**1KGPhase3.w_hm3.synth01.EAS.scale**
->**1KGPhase3.w_hm3.synth01.EUR.scale**
->1KGPhase3.w_hm3.synth01.NSNP_per_pT
->**1KGPhase3.w_hm3.synth01.SAS.scale**
+>1KGPhase3.w_hm3.synth01.AFR.scale
+>1KGPhase3.w_hm3.synth01.AMR.scale
+>1KGPhase3.w_hm3.synth01.EAS.scale
+>1KGPhase3.w_hm3.synth01.EUR.scale
+>1KGPhase3.w_hm3.synth01.SAS.scale
 >1KGPhase3.w_hm3.synth01.log
->1KGPhase3.w_hm3.synth01.range_list
->**1KGPhase3.w_hm3.synth01.score.gz**
->**ok**
+>1KGPhase3.w_hm3.synth01.score.gz
+>ok
 >```
->The output files that are common between the different PRS-methods are shown in **bold**. While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the `*.scale` files contain the mean and standard deviation of the scores, which are used for normalization within ancestries later. 
+>While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the scale-files contain the mean and standard deviation of the scores for the different ancestries, which are used for normalization later. 
 
 To predict all *available* scores for all ancestries and target data, run:
 
 ```
 # dryrun
+# this should only trigger scoring for the scores we just created:
+
 bash run.sh -n -q all_target_prs_available
 ```
 
@@ -219,8 +219,6 @@ bash run.sh -n -q all_target_prs_available
 # run the scoring
 bash run.sh all_target_prs_available
 ```
-
-
 
 
 # :globe_with_meridians: Everything below is under (re-)construction :building_construction:. Ignore! 
