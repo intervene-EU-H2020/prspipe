@@ -141,7 +141,7 @@ Assuming you have snakemake running, you can now download and pre-process the 10
 
 ```
 export SNAKEMAKE_CORES=1
-bash run.sh -n -q extract_hm3_gw
+bash run.sh -n -q all_setup
 ```
 
 The command above will display a summary of what will be done. To then actually run these steps:
@@ -156,6 +156,71 @@ One you have successfully completed these steps, you can clear up space by runni
 ```
 bash run.sh cleanup_after_setup
 ```
+
+### Test your setup by running pruning & thresholding on synthetic data
+
+The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics). By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
+
+```
+bash run.sh initialize_synthetic
+```
+
+You can now create polygenic scores using plink and summary statistics from a GWAS run on synthetic data:
+
+```
+# first, check what will be executed:
+bash run_cluster.sh -n prs/pt_clump/synth01/ok
+
+# second, run the rule
+bash run_cluster.sh -n prs/pt_clump/synth01/ok
+```
+
+`config/studies.tsv` is the sample-sheet that contains all the information on available summary statistics:
+
+| study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name |
+
+[`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) is configured to work with summary statistics generated from synthetic data. In order to create scores with a specific PRS method "`{method}`" and GWAS stummary statistics `"{study}"`, the user can request output files which follow the pattern: `prs/{method}/{study}/ok`. Available methods are `dbslmm`,`lassosum`,`ldpred2`,`megaprs`,`prscs`,`pt_clump`.
+
+>:warning:Note: Collaborators don't have to run all these methods. **Their outputs will be distributed.** See steps below.
+
+### Predict polygenic scores for synthetic dataset 
+
+Check out the polygenic scoring files created by the rule above:
+
+```
+ls -1 prs/pt_clump/synth01/
+```
+>```
+>Output:
+>**1KGPhase3.w_hm3.synth01.AFR.scale**
+>**1KGPhase3.w_hm3.synth01.AMR.scale**
+>**1KGPhase3.w_hm3.synth01.EAS.scale**
+>**1KGPhase3.w_hm3.synth01.EUR.scale**
+>1KGPhase3.w_hm3.synth01.NSNP_per_pT
+>**1KGPhase3.w_hm3.synth01.SAS.scale**
+>1KGPhase3.w_hm3.synth01.log
+>1KGPhase3.w_hm3.synth01.range_list
+>**1KGPhase3.w_hm3.synth01.score.gz**
+>**ok**
+>The output files that are common between the different PRS-methods are shown in **bold**. While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the `*.scale` files contain the mean and standard deviation of the scores, which are used for normalization within ancestries later. 
+>```
+
+To predict all *available* scores for all ancestries and target data, run:
+
+```
+# dryrun
+bash run.sh -n -q all_target_prs_available
+```
+
+```
+# run the scoring
+bash run.sh all_target_prs_available
+```
+
+
+
 
 # :globe_with_meridians: Everything below is under (re-)construction :building_construction:. Ignore! 
 
