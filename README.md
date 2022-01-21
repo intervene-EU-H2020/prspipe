@@ -24,7 +24,7 @@ In the steps below, we will install all the dependencies to run polygenic scorin
 
 Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.
 
-## Preface on Singularity and Docker
+## Preface on Singularity and Docker :takeout_box:
 
 Genopred, i.e., the repository this pipeline depends on, heavily relies on R and dependency management with conda (i.e., python). The pipeline itself is run with [snakemake](https://snakemake.bitbucket.io). Snakemake comes with built-in support for Singularity containers. In theory, different steps of the pipeline (correspinding to different snakemake *rules*), can be run in different containers. However, this pipeline only relies on a single container [available on dockerhub](https://hub.docker.com/r/rmonti/prspipe). This container works both with Docker and Singularity.
 
@@ -36,9 +36,9 @@ docker pull rmonti/prspipe:0.0.1
 singularity pull docker://rmonti/prspipe:0.0.1
 ```
 
-## Preface on Snakemake
+## Preface on Snakemake :snake:
 
-Snakemake reproducibly manages large workflows. Basically, it will handle all the steps to get from a set of input files (typically defined in a *samplesheet* or *config-file*) to a set of outout files. The user defines a set of output files, and snakemake will figure out how to produce them given previously defined *rules*. Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
+Snakemake reproducibly manages large workflows. Basically, it will handle all the steps to get from a set of input files (typically defined in a *samplesheet* or *config-file*) to a set of outout files. The user requests a set of output files, and snakemake will figure out how to produce them given previously defined *rules*. Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
 
 However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, these instructions will handle the interactive case.
 
@@ -50,9 +50,9 @@ snakemake --cores 1 --snakefile workflow/Snakefile resources/HapMap3_snplist/w_h
 
 will request `resources/HapMap3_snplist/w_hm3.snplist`. There are many parameters that can be configured (see `snakemake --help`).
 
-If the output file does not contain any *wildcards* (i.e., it is always called the same, no matter how the pipeline is configured), the user can also request to run specific *rules*. Rules are the different steps defining the snakemake workflow, and are located in `workflow/Snakefile` and `workflow/rules/`.
+If the output file does not contain any *wildcards* (i.e., it is always called the same, no matter how the pipeline is configured), the user can also request to run specific *rules* using their name directly. Rules are the different steps defining the snakemake workflow and are located in `workflow/Snakefile` and `workflow/rules/...smk`.
 
-For example, the file above could also be requested by the rule-name:
+For example, the file above could also be requested by the rule name:
 
 ```
 snakemake --cores 1 --snakefile workflow/Snakefile download_hapmap3_snplist
@@ -75,29 +75,91 @@ rule download_hapmap3_snplist:
         ") &> {log}"
 ```
 
-As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output, and the log file!
+As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output and the log file!
 
 In order to not have to type a long command with snakemake parameters every time you run snakemake, the shell script `run.sh` in the main workflow directory can be used to wrap default parameters, i.e.
 
 ```
 bash run.sh workflow/Snakefile download_hapmap3_snplist
 ```
-is equivalent to the commands above. 
+is equivalent to the two commands in the examples above. 
 
-### Basic Setup
+### :globe_with_meridians: Basic Setup
 
-1.  :globe_with_meridians: Install conda and [snakemake](#step-2-install-snakemake), if not available already.
-2.  :globe_with_meridians: Clone the repository, and run `bash ./install_software.sh`. This will download necessary software dependencies. Make sure you have access to https://github.com/intervene-EU-H2020/GenoPred and your git is configured with ssh, otherwise this will not work!
-    1.  If `workflow/scripts/GenoPred` does not exist after running this step, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
-4.  :globe_with_meridians: If singularity is **not** available, [install R-packages](#step-3-r-packages-and-other-dependencies).
-5.  :globe_with_meridians: Download resources by running `bash run.sh --use-singularity get_plink_files_chr_all download_hapmap3_snplist`.
-6.  Process the 1000 Genomes data by running `bash run.sh --use-singularity all_setup`
-    > Careful, this will need quite some disk space (almost 90G)
-7.  If step 6 completed successfully, you can clear up space by running `bash run.sh cleanup_after_setup`, which will remove many intermediate files.
+Clone the repository. The base directory of the repository will be your working directory.
 
-When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`. Step 5 should be run on a compute-node.
+```
+git clone git@github.com:intervene-EU-H2020/prspipe.git && cd prspipe
+```
 
-### Download Pre-adjusted summary statistics
+Harmonizing target genotype data and performing polygenic scoring require a number of software dependencies, which can be installed by running the `install_basics.sh`-script.
+
+```
+bash install_basics.sh
+```
+
+This will clone our fork of the GenoPred repository download `qctool2` latest versions of `plink1` and `plink2`. If you already have these tools installed, you can also change the paths in `config/config.yaml`. However, if you don't have an up-to-date version, this can lead to bugs :cockroach:, so be careful.
+
+If `workflow/scripts/GenoPred` does not exist after running this step, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
+
+### :globe_with_meridians: Set up snakemake
+
+While you still have access to the internet, you can [install snakemake using conda/mamba](#step-2-install-snakemake). If you will have access to the internet *and* singularity even while working with sensitive data later on, this will typically be the easiest way to go forward.
+
+The other way is to run snakemake using only the prspipe container. When working with singularity, you can create a local container image which will be able to run the pipeline locally (at least the polygenic scoring and genotype harmonization steps).
+
+```
+# this will create a local image called prspipe.sif
+singularity pull prspipe.sif docker://rmonti/prspipe:0.0.1
+```
+
+After that, you can run snakemake interactively by first starting an [interactive shell inside the container](https://sylabs.io/guides/3.7/user-guide/cli/singularity_shell.html), and then running snakemake:
+
+```
+# on the host, in the working directory:
+singularity shell -c prspipe.sif
+
+# inside the container:
+snakemake --help
+
+# should be the container's R:
+which R
+RScript --version
+
+# to exit the container
+exit
+```
+> :warning: Note: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
+
+> :warning: Note: When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`.
+
+> Note: If you do **not** have singularity, you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
+
+### :globe_with_meridians: Download and process the 1000 Genomes data
+
+Assuming you have snakemake running, you can now download and pre-process the 1000 Genomes data. This data will serve as an external reference throughout the analysis, and is used for ancestry scoring. First we perform a "quiet" (`-q`) "dry-run" (`-n`).
+
+```
+export SNAKEMAKE_CORES=1
+bash run.sh -n -q extract_hm3_gw
+```
+
+The command above will display a summary of what will be done. To then actually run these steps:
+
+```
+bash run.sh all_setup
+```
+> :warning: Note: depending on your download speed and how many cores you have available, this can take several hours. It will also require a lot of disk-space (~90G).
+
+One you have successfully completed these steps, you can clear up space by running
+
+```
+bash run.sh cleanup_after_setup
+```
+
+# :globe_with_meridians: Everything below is under (re-)construction :building_construction:. Ignore! 
+
+~~### Download Pre-adjusted summary statistics~~
 
 I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast cancer, prostate cancer and HbA1c). Follow the steps below to download them, and set up the pipeline to use them. 
 
@@ -106,7 +168,7 @@ I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast can
 
 All the steps that require internet access are done. 
 
-### Set up Genotype and Phenotype data
+~~### Set up Genotype and Phenotype data~~
 
 These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" (biobank id) with a name of your choice in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
 
@@ -166,6 +228,8 @@ for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i};
 
 This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. You can now run these steps with `bash run.sh --use-singularity --keep-going all_get_best_models_ext`.
 
+
+    
 # Documentation
 
 This part of the documentation will lead you through all steps of the pipeline, including setting it up for new phenotypes.
