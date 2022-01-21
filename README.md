@@ -192,8 +192,9 @@ Check out the polygenic scoring files created by the rule above:
 ```
 ls -1 prs/pt_clump/synth01/
 ```
->```
+
 >Output:
+>```
 >**1KGPhase3.w_hm3.synth01.AFR.scale**
 >**1KGPhase3.w_hm3.synth01.AMR.scale**
 >**1KGPhase3.w_hm3.synth01.EAS.scale**
@@ -204,8 +205,8 @@ ls -1 prs/pt_clump/synth01/
 >1KGPhase3.w_hm3.synth01.range_list
 >**1KGPhase3.w_hm3.synth01.score.gz**
 >**ok**
->The output files that are common between the different PRS-methods are shown in **bold**. While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the `*.scale` files contain the mean and standard deviation of the scores, which are used for normalization within ancestries later. 
 >```
+>The output files that are common between the different PRS-methods are shown in **bold**. While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the `*.scale` files contain the mean and standard deviation of the scores, which are used for normalization within ancestries later. 
 
 To predict all *available* scores for all ancestries and target data, run:
 
