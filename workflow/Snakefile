@@ -50,7 +50,8 @@ wildcard_constraints:
     chr="[0-9]+",
     pop="[A-Z]+",
     popul="[A-Z]+",
-    superpop="[A-Z]+"
+    superpop="[A-Z]+",
+    study="[A-Za-z\\.0-9_\\-]+"
 
 # setup and 1000G harmonization
 include: "rules/1kg_hm3_processing.smk"

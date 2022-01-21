@@ -22,14 +22,14 @@ rule prs_scoring_ptclump_sparse:
     resources:
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     log:
-        "logs/sparse_thresholding_1kg/{study}.log"
+        "logs/prs_scoring_ptclump_sparse/{study}.log"
     threads:
         1
     shell:
         "( "
         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator_plink2.R "
-        "--ref_plink_chr results/1kg/1KGPhase3.w_hm3.chr "
-        "--ref_keep results/1kg/keep_files/{params[study_ancestry]}_samples.keep "
+        "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
+        "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--sumstats {input[qc_stats]} "
         "--plink1 {config[plink1_9]} "
         "--plink2 {config[plink2]} "

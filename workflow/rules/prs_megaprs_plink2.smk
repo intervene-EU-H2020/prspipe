@@ -52,7 +52,12 @@ rule prs_scoring_megaprs:
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
         super_pop_keep=rules.create_ancestry.output['super_pop_keep']
     output:
-        touch('prs/megaprs/{study}/ok')
+        touch('prs/megaprs/{study}/ok'),
+        scale=expand('prs/megaprs/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop']),
+        score='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.score.gz',
+        model_param='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.model_param.txt',
+        pseudoval='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.pseudoval',
+        log='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.log'
     params:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc['study']].iloc[0]
     resources: 
