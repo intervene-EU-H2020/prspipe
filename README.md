@@ -129,9 +129,11 @@ RScript --version
 # to exit the container
 exit
 ```
-> :warning: Note: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
-
 > :warning: Note: When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`.
+
+Beware, if the version of R above is *not* `R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"`, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L21) to force using the container's R (see the comment in that file).
+
+> :warning: Note: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
 
 > Note: If you do **not** have singularity, you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
 
