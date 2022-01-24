@@ -91,7 +91,7 @@ rc <- system2(opt$plink2, plink2_args)
 
 if (rc != 0){
     file.remove(tmp_fam, tmp_bed, tmp_bim, tmp_keepfile)
-    stop('Error: call to plink2 had exit status',rc)
+    stop('Error: call to plink2 had exit status ',rc)
 } else {
     file.remove(tmp_fam, tmp_bed, tmp_bim, tmp_keepfile)
 }
