@@ -20,8 +20,10 @@ prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
 R: "R" 
 Rscript: "Rscript"
 
-# names are identical to those used in GenoPred
-# only change if you really know what you are doing
+# Note: Software paths are relative to the main working directory
+#       If running sing the pipeline container the container, software at locations like "/bin/" or "/usr/" will not be found, unless these directories are explicitly mounted, which might cause other problems...
+
+# only change the paths below if you really know what you are doing
 # plink2 has to be up-to-date in order to perform polygenic scoring!
 # tested with PLINK v2.00a3LM AVX2 Intel (20 Sep 2021)
 
@@ -40,6 +42,8 @@ PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 ###############
 # Singularity #
 ###############
+
+# if running snakemake with the --use-singularity, the main container to run in:
 
 singularity:
   all: 'docker://rmonti/prspipe:0.0.1'
