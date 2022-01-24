@@ -84,7 +84,7 @@ bash run.sh workflow/Snakefile download_hapmap3_snplist
 ```
 is equivalent to the two commands in the examples above. 
 
-### :globe_with_meridians: Basic Setup
+## :globe_with_meridians: Basic Setup
 
 Clone the repository. The base directory of the repository will be your working directory.
 
@@ -102,7 +102,7 @@ This will clone our fork of the GenoPred repository download `qctool2` latest ve
 
 If `workflow/scripts/GenoPred` does not exist after running this step, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
 
-### :globe_with_meridians: Set up snakemake
+## :globe_with_meridians: Set up snakemake
 
 While you still have access to the internet, you can [install snakemake using conda/mamba](#step-2-install-snakemake). If you will have access to the internet *and* singularity even while working with sensitive data later on, this will typically be the easiest way to go forward.
 
@@ -133,9 +133,12 @@ exit
 
 Beware, if the version of R above is *not* `R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"`, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L21) to force using the container's R (see the comment in that file).
 
-> :warning: Note: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
-
 > Note: If you do **not** have singularity, you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
+
+## Container mounts
+
+:warning: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container. If you are running snakemake with the `--singularity` flag (not covered in this tutorial), you have to use the corresponding snakemake parameter, e.g., `--singularity-args "-B /some/random/"`.
+
 
 ### :globe_with_meridians: Download and process the 1000 Genomes data
 
