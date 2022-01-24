@@ -14,7 +14,7 @@ Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and 
 
 If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository and, if available, its DOI (see above).
 
-## Quick Start for Collaborators
+# Quick Start for Collaborators
 
 The full pipeline can roughly be devided into two stages: (1) Download of summary statistics, running PRS methods and predicting on the 1000 Genomes data (public stage), and (2) prediction and evaluation using the scores from step 1, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
 
@@ -129,42 +129,41 @@ RScript --version
 # to exit the container
 exit
 ```
-> :warning: Note: When running with singularity, make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`.
+> :warning: Note: When running with singularity make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`.
 
 Beware, if the version of R above is *not* `R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"`, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L21) to force using the container's R (see the comment in that file).
 
-> Note: If you do **not** have singularity, you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
+> Note: If you do **not** have singularity you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
 
-## Container mounts
+## Container mounts :file_folder:
 
-:warning: When running the container, you have to "mount" any directories that you will later want to access. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container. If you are running snakemake with the `--singularity` flag (not covered in this tutorial), you have to use the corresponding snakemake parameter, e.g., `--singularity-args "-B /some/random/"`.
+:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container. If you are running snakemake with the `--singularity` flag (not covered in this tutorial), you have to use the corresponding snakemake parameter, e.g., `--singularity-args "-B /some/random/"`.
 
+## :globe_with_meridians: Download and process the 1000 Genomes data
 
-### :globe_with_meridians: Download and process the 1000 Genomes data
-
-Assuming you have snakemake running, you can now download and pre-process the 1000 Genomes data. This data will serve as an external reference throughout the analysis, and is used for ancestry scoring. First we perform a "quiet" (`-q`) "dry-run" (`-n`).
+Assuming you have snakemake running, you can now download and pre-process the 1000 Genomes data. This data will serve as an external reference throughout the analysis and is used for ancestry scoring. First we perform a "quiet" (`-q`) "dry-run" (`-n`).
 
 ```
 export SNAKEMAKE_CORES=1
 bash run.sh -n -q all_setup
 ```
-
 The command above will display a summary of what will be done. To then actually run these steps:
 
 ```
 bash run.sh all_setup
 ```
-> :warning: Note: depending on your download speed and how many cores you have available, this can take several hours. It will also require a lot of disk-space (~90G).
+> :warning: Note: depending on your download speed and how many cores you have available this can take several hours. It will also require a lot of disk-space (~90G).
 
-One you have successfully completed these steps, you can clear up space by running
+Once you have successfully completed these steps, you can clear up space by running
 
 ```
 bash run.sh cleanup_after_setup
 ```
 
-### Test your setup by running pruning & thresholding on synthetic data
+# Running PRS methods
+## Test your setup by running pruning & thresholding on synthetic data
 
-The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics). By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
+The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics) generated by Sophie Wharrie, Vishnu Raj and Zhiyu Yang. By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
 
 ```
 bash run.sh initialize_synthetic
@@ -190,7 +189,7 @@ bash run_cluster.sh prs/pt_clump/synth01/ok
 
 >:warning:Note: Collaborators don't have to run all these methods. **Their outputs will be distributed.** See steps below.
 
-### Predict polygenic scores for synthetic dataset 
+## Predict polygenic scores for synthetic dataset 
 
 Check out the polygenic scoring files created by the rule above:
 
@@ -215,7 +214,7 @@ To predict all *available* scores for all ancestries and target data, run:
 
 ```
 # dryrun
-# this should only trigger scoring for the scores we just created:
+# this should only trigger scoring for the scores we just created above
 
 bash run.sh -n -q all_target_prs_available
 ```
