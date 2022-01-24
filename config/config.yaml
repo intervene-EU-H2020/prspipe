@@ -15,7 +15,7 @@ prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
 ##################
 
 # if you are running using the pipeline container and are having issues with R (missing packages, wrong path etc.)
-# change the paths below to "/usr/local/bin/R" and "/usr/local/bin/RScript" (i.e., the location of R in the container)
+# change the paths below to "/usr/local/bin/R" and "/usr/local/bin/Rscript" (i.e., the location of R in the container)
 
 R: "R" 
 Rscript: "Rscript"
