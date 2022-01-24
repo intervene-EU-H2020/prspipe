@@ -27,7 +27,7 @@ rule prs_scoring_ptclump_sparse:
         1
     shell:
         "( "
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator/polygenic_score_file_creator_plink2.R "
         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
         "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--sumstats {input[qc_stats]} "

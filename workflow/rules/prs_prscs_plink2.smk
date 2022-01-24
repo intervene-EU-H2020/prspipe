@@ -60,7 +60,10 @@ rule prs_scoring_prscs:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
         ld_reference_dir = lambda wc, input: '/'.join(input['ld_reference'][0].split('/')[:-1])
     output:
-        touch('prs/prscs/{study}/ok')
+        touch('prs/prscs/{study}/ok'),
+        score='prs/prscs/{study}/1KGPhase3.w_hm3.{study}.score.gz',
+        scale=expand('prs/prscs/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop']),
+        log='prs/prscs/{study}/1KGPhase3.w_hm3.{study}.log'
     log:
         "logs/prs_scoring_prscs/{study}.log"
     conda:
@@ -77,7 +80,7 @@ rule prs_scoring_prscs:
         "export NUMEXPR_NUM_THREADS=1; "
         "export OMP_NUM_THREADS=1; "
         "export OPENBLAS_NUM_THREADS=1; "
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs_plink2.R "
         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--sumstats {input[qc_stats]} "
@@ -159,7 +162,7 @@ rule all_prs_scoring_prscs:
 #         16
 #     shell:
 #         "( "
-#         "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs.R "
+#         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_PRScs/polygenic_score_file_creator_PRScs.R "
 #         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
 #         "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
 #         "--sumstats {input[qc_stats]} "

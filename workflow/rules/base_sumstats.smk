@@ -32,7 +32,7 @@ rule QC_sumstats:
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "
         "--sumstats {input[sumstats]} "
         "--ss_freq_col FRQ "
         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "

@@ -227,7 +227,7 @@ rule intersect_1kg_hm3:
         "logs/intersect_1kg_hm3/{chr}.log"
     shell:
         "("
-        "Rscript workflow/scripts/R/setup/intersect_1kg_hm3.R "
+        "{config[Rscript]} workflow/scripts/R/setup/intersect_1kg_hm3.R "
         "--bim {input[bim_1kg]} "
         "--hm3_bim {params[bim_hm3]} "
         "--chr {wildcards[chr]} "
@@ -274,7 +274,7 @@ rule generate_1kg_hm3_hg19_hg38_mapping:
         "logs/generate_1kg_hm3_hg19_hg38_mapping/{chr}.log"
     shell:
         "("
-        "Rscript workflow/scripts/R/setup/merge_1kg_hm3_hg19_hg38.R "
+        "{config[Rscript]} workflow/scripts/R/setup/merge_1kg_hm3_hg19_hg38.R "
         "--mapping {input.mapping} "
         "--lifted {input.lifted} "
         "--chr {wildcards[chr]} "
@@ -315,7 +315,7 @@ rule filter_1kg_firstpass:
     log:
         'logs/filter_1kg_firstpass/{chr}.log'
     shell:
-        "Rscript workflow/scripts/R/setup/position_based_hm3_harmonizer.R "
+        "{config[Rscript]} workflow/scripts/R/setup/position_based_hm3_harmonizer.R "
         "--bim {input[bim]} "
         "--out_prefix {params[out_prefix]} " 
         "--mapping {input[mapping]} "
@@ -410,7 +410,7 @@ rule merge_1kg_hm3_mapping_with_maf:
         'logs/merge_1kg_hm3_mapping_with_maf.log'
     shell:
         "("
-        "Rscript workflow/scripts/R/setup/merge_1kg_hm3_mapping_with_maf.R "
+        "{config[Rscript]} workflow/scripts/R/setup/merge_1kg_hm3_mapping_with_maf.R "
         "--frq_path_prefix resources/1kg/tmp "
         "--mapping_prefix resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping_chr "
         "--out_prefix resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping "
@@ -454,7 +454,7 @@ rule extract_hm3:
     log:
         'logs/extract_hm3/{chr}.log'
     shell:
-        "Rscript workflow/scripts/R/setup/position_based_hm3_harmonizer.R "
+        "{config[Rscript]} workflow/scripts/R/setup/position_based_hm3_harmonizer.R "
         "--bim {input[bim]} "
         "--out_prefix {params[out_prefix]} " 
         "--mapping {input[mapping]} "
@@ -577,7 +577,7 @@ rule ancestry_scoring:
         config['singularity']['all']
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
         "--ref_keep resources/1kg/keep_files/{wildcards[popul]}_samples.keep "
         "--plink {config[plink1_9]} "
@@ -609,7 +609,7 @@ rule ancestry_scoring_allancestry:
         config['singularity']['all']
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/ancestry_score_file_creator/ancestry_score_file_creator.R "
         "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
         "--plink {config[plink1_9]} "
         "--plink2 {config[plink2]} "

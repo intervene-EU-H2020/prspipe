@@ -29,7 +29,7 @@ rule prs_scoring_sblup:
         16
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBLUP/polygenic_score_file_creator_SBLUP.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBLUP/polygenic_score_file_creator_SBLUP.R "
         "--ref_plink resources/1kg/1KGPhase3.w_hm3.GW "
         "--ref_keep resources/1kg/keep_files/{wildcards[ancestry]}_samples.keep "
         "--sumstats {input.qc_stats} "

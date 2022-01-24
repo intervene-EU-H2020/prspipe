@@ -43,7 +43,7 @@ rule ancestry_scoring_ext:
         time="03:00:00"
     shell:
         "( "
-        "Rscript {config[GenoPred_dir]}/Scripts/Ancestry_identifier/Ancestry_identifier.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Ancestry_identifier/Ancestry_identifier.R "
         "--target_plink_chr custom_input/{wildcards[bbid]}/genotypes/chr "
         "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
         "--n_pcs 100 "
@@ -133,7 +133,7 @@ rule run_scaled_polygenic_scorer:
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
     shell:
-        "Rscript {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer_plink2.R "
         "--target_plink_chr {params.geno_prefix} "
         "--target_keep {input.target_keep} "
         "--ref_score {input.score} "
@@ -143,7 +143,9 @@ rule run_scaled_polygenic_scorer:
         "--pheno_name {wildcards.study} "
         "--output {params[out_prefix]} "
 
-        
+
+# run target scoring for all methods defined in the pipeline
+# TODO: all super-populations
 rule all_run_scaled_polygenic_scorer:
     input:
         expand(rules.run_scaled_polygenic_scorer.output,
@@ -153,6 +155,66 @@ rule all_run_scaled_polygenic_scorer:
                score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
                method=config['prs_methods'])
 
+
+# run target scoring for pT + clump
+# TODO: all super-populations
+rule all_target_prs_pt_clump:
+    input:
+        expand(rules.run_scaled_polygenic_scorer.output,
+               bbid=target_list.name,
+               study=studies.study_id.values,
+               superpop=['EUR'],
+               score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
+               method=['pt_clump'])
+               
+
+###########################################################
+# target scoring for all files that match general pattern #
+###########################################################
+
+from glob import glob
+import os
+
+def collect_prs_outputs():
+
+    # function that scans the prs/ directory for scores, and requests to predict them on all target datasets
+
+    score_dirs = glob('prs/*/*/')
+    bbids = target_list.name.values
+    
+    outfile_request = []
+
+    for basedir in score_dirs:
+        _, method, study, _ = basedir.split('/') 
+    
+        score_files = glob(basedir + '*score.gz')
+        
+        if not len(score_files):
+            continue
+    
+        score_ids = [ x.split('/')[-1].replace('.score.gz','') for x in score_files ]
+        scale_files = list( s for s in glob(basedir + '*.scale') if s.split('/')[-1].split('.')[-2] in ['AFR','AMR','EAS','EUR','SAS'] and '.'.join(s.split('/')[-1].split('.')[:-2]) in score_ids)
+        
+        if not len(scale_files):
+            print('Warning: found score-files but no scale-files in directory {}'.format(basedir))
+            continue
+            
+        for s in scale_files:
+            
+            superpop = s.split('/')[-1].split('.')[-2]
+            score_id = '.'.join(s.split('/')[-1].split('.')[:-2])
+            
+            request = ['results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.profiles'.format(bbid=b, method=method, study=study, superpop=superpop, score_id=score_id) for b in bbids ]
+            
+            outfile_request += request
+        
+    return outfile_request
+    
+
+rule all_target_prs_available:
+    input:
+        collect_prs_outputs()
+        
 
 ############################>>
 # START: Score evaluation  #>>
@@ -210,7 +272,7 @@ rule all_run_scaled_polygenic_scorer:
 #        config['singularity']['all']
 #    shell:
 #        "("
-#        "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+#        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
 #        "--pheno {input[pheno_file]} "
 #        "--predictors {input[predictors]} "
 #        "--n_core {threads} "
@@ -239,7 +301,7 @@ rule all_run_scaled_polygenic_scorer:
 #         config['singularity']['all']
 #     shell:
 #         "("
-#         "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+#         "{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R "
 #         "--pred_eval {input[pred_eval]} "
 #         "--drop TRUE "
 #         ") &> {log}"
@@ -269,7 +331,7 @@ rule all_run_scaled_polygenic_scorer:
 #         config['singularity']['all']
 #     shell:
 #         "("
-#         "Rscript {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+#         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
 #         "--pheno {input[pheno_file]} "
 #         "--predictors {input[predictors]} "
 #         "--n_core {threads} "
@@ -293,7 +355,7 @@ rule all_run_scaled_polygenic_scorer:
 #         config['singularity']['all']
 #     shell:
 #         "("
-#         "Rscript workflow/scripts/R/get_best_models_from_pred_eval.R "
+#         "{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R "
 #         "--pred_eval {input[pred_eval]} "
 #         "--drop TRUE "
 #         ") &> {log} "

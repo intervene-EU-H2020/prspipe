@@ -56,7 +56,7 @@ rule harmonize_target_genotypes:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
     shell:
         '('
-        'Rscript workflow/scripts/GenoPred/Scripts/geno_to_plink/geno_to_plink.R '
+        '{config[Rscript]} workflow/scripts/GenoPred/Scripts/geno_to_plink/geno_to_plink.R '
         '--target {params[in_prefix_target]} '
         '--ref {params[in_prefix_ref]} '
         '--format {params[arg][0]} '

@@ -42,7 +42,7 @@ rule prs_scoring_ldpred2:
     shell:
         "( "
         "export OPENBLAS_NUM_THREADS=1; "
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred2/polygenic_score_file_creator_LDPred2_LDPredRef_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_LDPred2/polygenic_score_file_creator_LDPred2_LDPredRef_plink2.R "
         "--ref_plink resources/1kg/1KGPhase3.w_hm3.GW "
         "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--ldpred2_ref_dir resources/LD_matrix/ldpred2/UKBB/precomputed/EUR "

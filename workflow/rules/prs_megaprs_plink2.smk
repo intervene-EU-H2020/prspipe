@@ -56,7 +56,7 @@ rule prs_scoring_megaprs:
         scale=expand('prs/megaprs/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop']),
         score='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.score.gz',
         model_param='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.model_param.txt',
-        pseudoval='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.pseudoval',
+        pseudoval='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.pseudoval.txt',
         log='prs/megaprs/{study}/1KGPhase3.w_hm3.{study}.log'
     params:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc['study']].iloc[0]
@@ -70,7 +70,7 @@ rule prs_scoring_megaprs:
         5
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/ldak_mega_prs/ldak_mega_prs.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/ldak_mega_prs/ldak_mega_prs.R "
         "--ref_plink resources/1kg/1KGPhase3.w_hm3.GW "
         "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--sumstats {input[qc_stats]} "

@@ -18,7 +18,7 @@ rule prs_scoring_lassosum:
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_lassosum/polygenic_score_file_creator_lassosum_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_lassosum/polygenic_score_file_creator_lassosum_plink2.R "
         "--ref_plink_gw resources/1kg/1KGPhase3.w_hm3.GW "
         "--ref_keep resources/1kg/keep_files/{params[study_ancestry]}_samples.keep "
         "--sumstats {input.qc_stats} "

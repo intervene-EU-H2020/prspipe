@@ -14,6 +14,12 @@ prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
 # Software paths #
 ##################
 
+# if you are running using the pipeline container and are having issues with R (missing packages, wrong path etc.)
+# change the paths below to "/usr/local/bin/R" and "/usr/local/bin/RScript" (i.e., the location of R in the container)
+
+R: "R" 
+Rscript: "Rscript"
+
 # names are identical to those used in GenoPred
 # only change if you really know what you are doing
 # plink2 has to be up-to-date in order to perform polygenic scoring!

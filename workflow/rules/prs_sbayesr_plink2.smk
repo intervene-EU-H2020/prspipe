@@ -54,7 +54,7 @@ rule prs_scoring_sbayesr:
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
     shell:
         "("
-        "Rscript {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR_plink2.R "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_SBayesR/polygenic_score_file_creator_SBayesR_plink2.R "
         "--ref_plink resources/1kg/1KGPhase3.w_hm3.GW "
         "--sumstats {input[qc_stats]} "
         "--plink {config[plink1_9]} "
