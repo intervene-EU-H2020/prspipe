@@ -14,33 +14,36 @@ Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and 
 
 If you use this workflow in a paper, don't forget to give credits to the authors by citing the URL of this (original) repository and, if available, its DOI (see above).
 
-# Quick Start for Collaborators
+# Tutorial for Collaborators
 
 The full pipeline can roughly be devided into two stages: (1) Download of summary statistics, running PRS methods and predicting on the 1000 Genomes data (public stage), and (2) prediction and evaluation using the scores from step 1, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
 
-Follow the steps below to make the pipeline work with your data (i.e., the target data) [`workflow/rules/external_biobanks.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/external_biobanks.smk). For collaborators, we distribute pre-computed scoring files from the different PRS methods, which means most of the pipeline can be skipped. However, the rules to run the different PRS methods are available to everyone - feel free to try!
+Follow the steps below to make the pipeline work with your data (i.e., the target data). For collaborators, we distribute pre-computed scoring files from the different PRS methods, which means most of the pipeline can be skipped. However, the rules to run the different PRS methods are available to everyone - feel free to try!
 
-In the steps below, we will install all the dependencies to run polygenic scoring for your target data. We will then harmonize the target genotype data. Finally, we will run polygenic scoring and score evaluation. Evaluation requires the target phenotype data.
+In the steps below, we will install all the dependencies to run polygenic scoring for your target data. We will then harmonize the target genotype data and perform ancestry scoring. Finally, we will run polygenic scoring and score evaluation. Evaluation requires the target phenotype data.
 
-Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.
+**Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.**
 
 ## Preface on Singularity and Docker :takeout_box:
 
-Genopred, i.e., the repository this pipeline depends on, heavily relies on R and dependency management with conda (i.e., python). The pipeline itself is run with [snakemake](https://snakemake.bitbucket.io). Snakemake comes with built-in support for Singularity containers. In theory, different steps of the pipeline (correspinding to different snakemake *rules*), can be run in different containers. However, this pipeline only relies on a single container [available on dockerhub](https://hub.docker.com/r/rmonti/prspipe). This container works both with Docker and Singularity.
+Genopred, i.e., the repository this pipeline depends on, relies on R and dependency management with conda (i.e., python). The pipeline itself is run with [snakemake](https://snakemake.bitbucket.io). Snakemake comes with built-in support for Singularity containers. In theory, different steps of the pipeline (correspinding to different snakemake *rules*), can be run in different containers. However, this pipeline only relies on a single container [available on dockerhub](https://hub.docker.com/r/rmonti/prspipe). This container works both with Docker and Singularity.
 
 ```
 # get the container with docker
 docker pull rmonti/prspipe:0.0.1
 
 # ... or with singularity
+# this should work without root permissions
 singularity pull docker://rmonti/prspipe:0.0.1
 ```
 
 ## Preface on Snakemake :snake:
+ 
+ Snakemake will handle all the steps to get from a set of input files (typically defined in a [*samplesheet*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) or [*config-file*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml)) to a set of outout files. The user requests specific output files, and snakemake will figure out how to produce them given previously defined [*rules*](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/). Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
 
-Snakemake reproducibly manages large workflows. Basically, it will handle all the steps to get from a set of input files (typically defined in a *samplesheet* or *config-file*) to a set of outout files. The user requests a set of output files, and snakemake will figure out how to produce them given previously defined *rules*. Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
+However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, **these instructions will handle the interactive case**.
 
-However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, these instructions will handle the interactive case.
+### running snakemake rules
 
 To run steps of the pipeline, the user can request specific output files on the command-line. For example
 
@@ -48,17 +51,18 @@ To run steps of the pipeline, the user can request specific output files on the 
 snakemake --cores 1 --snakefile workflow/Snakefile resources/HapMap3_snplist/w_hm3.snplist
 ```
 
-will request `resources/HapMap3_snplist/w_hm3.snplist`. There are many parameters that can be configured (see `snakemake --help`).
+will request `resources/HapMap3_snplist/w_hm3.snplist`.
 
-If the output file does not contain any *wildcards* (i.e., it is always called the same, no matter how the pipeline is configured), the user can also request to run specific *rules* using their name directly. Rules are the different steps defining the snakemake workflow and are located in `workflow/Snakefile` and `workflow/rules/...smk`.
+If the output files do not contain any [*wildcards*](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards), the user can also request to run *rules* using the rule name directly. Rules are the different steps defining the snakemake workflow and are located in `workflow/Snakefile` and `workflow/rules/...smk`.
 
 For example, the file above could also be requested by the rule name:
 
 ```
+# "download_hapmap3_snplist" is the rule name
 snakemake --cores 1 --snakefile workflow/Snakefile download_hapmap3_snplist
 ```
 
-the corresponding rule looks like this (located in `workflow/rules/setup.smk`):
+the corresponding rule looks like this (located in [`workflow/rules/setup.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/setup.smk):
 
 ```
 rule download_hapmap3_snplist:
@@ -75,16 +79,16 @@ rule download_hapmap3_snplist:
         ") &> {log}"
 ```
 
-As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output and the log file!
+The `shell:`-directive defines what will be executed. As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output and the log file!
 
-In order to not have to type a long command with snakemake parameters every time you run snakemake, the shell script `run.sh` in the main workflow directory can be used to wrap default parameters, i.e.
+In order to avoid writing a long command every time you run snakemake, the shell script [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) in the main directory can be used to wrap default parameters, i.e.
 
 ```
 bash run.sh workflow/Snakefile download_hapmap3_snplist
 ```
 is equivalent to the two commands in the examples above. 
 
-## :globe_with_meridians: Basic Setup
+## :globe_with_meridians: Basic Setup and Dependencies
 
 Clone the repository. The base directory of the repository will be your working directory.
 
@@ -98,15 +102,13 @@ Harmonizing target genotype data and performing polygenic scoring require a numb
 bash install_basics.sh
 ```
 
-This will clone our fork of the GenoPred repository download `qctool2` latest versions of `plink1` and `plink2`. If you already have these tools installed, you can also change the paths in `config/config.yaml`. However, if you don't have an up-to-date version, this can lead to bugs :cockroach:, so be careful.
+This will clone our fork of the [GenoPred repository](https://github.com/intervene-EU-H2020/GenoPred), download `qctool2` and the latest versions of `plink1` and `plink2`. If you already have these tools installed, you can also change the paths in `config/config.yaml`. However, this can lead to bugs :cockroach: and is not recommended.
 
-If `workflow/scripts/GenoPred` does not exist after running this step, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
+:warning: If `workflow/scripts/GenoPred` does not exist after running `bash install_basics.sh`, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
 
-## :globe_with_meridians: Set up snakemake
+## :globe_with_meridians: Set up Snakemake
 
-While you still have access to the internet, you can [install snakemake using conda/mamba](#step-2-install-snakemake). If you will have access to the internet *and* singularity even while working with sensitive data later on, this will typically be the easiest way to go forward.
-
-The other way is to run snakemake using only the prspipe container. When working with singularity, you can create a local container image which will be able to run the pipeline locally (at least the polygenic scoring and genotype harmonization steps).
+Snakemake is installed in the prspipe container. If singularity is available, you can create a local container image which will be able to run the pipeline (at least the polygenic scoring and genotype harmonization steps):
 
 ```
 # this will create a local image called prspipe.sif
@@ -131,9 +133,11 @@ exit
 ```
 > :warning: Note: When running with singularity make sure to clear environment variables related to R such as `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`.
 
-Beware, if the version of R above is *not* `R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"`, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L21) to force using the container's R (see the comment in that file).
+Beware, if the version of R above is *not* `R version 4.1.0 (2021-05-18) -- "Camp Pontanezen"`, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L21) to force using the container's R installation (see the comment in that file).
 
-> Note: If you do **not** have singularity you can also install R-packages manually [install R-packages](#step-3-r-packages-and-other-dependencies). You will then also have to install snakemake.
+> Note: If you do **not** have singularity you can also install R-packages manually [install R-packages](#manual-installation-of-r-packages). You will then also have to install [install snakemake](#installing-snakemake-with-conda).
+
+If you will have internet access while working with sensitive data, you can also [install snakemake using conda/mamba](#installing-snakemake-with-conda), and rely on snakemake to handle containers (see documentation [here](https://snakemake.readthedocs.io/en/stable/snakefiles/deployment.html#running-jobs-in-containers)).
 
 ## Container mounts :file_folder:
 
@@ -160,8 +164,10 @@ Once you have successfully completed these steps, you can clear up space by runn
 bash run.sh cleanup_after_setup
 ```
 
-# Running PRS methods
-## Test your setup by running pruning & thresholding on synthetic data
+# Testing PRS methods with synthetic data
+In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used.
+
+## Test your setup by running pruning & thresholding
 
 The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics) generated by Sophie Wharrie, Vishnu Raj and Zhiyu Yang. By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
 
@@ -173,21 +179,21 @@ You can now create polygenic scores using plink and summary statistics from a GW
 
 ```
 # first, check what will be executed:
-bash run_cluster.sh -n -q prs/pt_clump/synth01/ok
+bash run.sh -n -q prs/pt_clump/synth01/ok
 
 # second, run the rule
-bash run_cluster.sh prs/pt_clump/synth01/ok
+bash run.sh prs/pt_clump/synth01/ok
 ```
 
-`config/studies.tsv` is the sample-sheet that contains all the information on available summary statistics:
+`config/studies.tsv` by default is the sample-sheet that contains the information on available summary statistics:
 
 | study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name |
+| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name (descriptive name, like "T2D", can be repeated) |
 
 [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) is configured to work with summary statistics generated from synthetic data. In order to create scores with a specific PRS method "`{method}`" and GWAS stummary statistics `"{study}"`, the user can request output files which follow the pattern: `prs/{method}/{study}/ok`. Available methods are `dbslmm`,`lassosum`,`ldpred2`,`megaprs`,`prscs`,`pt_clump`.
 
->:warning:Note: Collaborators don't have to run all these methods. **Their outputs will be distributed.** See steps below.
+>:warning:Note: This is just an example. Collaborators don't have to run these methods. **Their outputs will be distributed.** See steps below.
 
 ## Predict polygenic scores for synthetic dataset 
 
@@ -224,160 +230,152 @@ bash run.sh -n -q all_target_prs_available
 bash run.sh all_target_prs_available
 ```
 
+## Evaluate polygenic score performance for the synthetic dataset
 
-# :globe_with_meridians: Everything below is under (re-)construction :building_construction:. Ignore! 
+We now want to evaluate the performance of the polygenic scores we just created. Because we only have scores for pruning & thresholding + clump (`pt_clump`) available, we edit `config/config.yaml` to only consider that method:
 
-~~### Download Pre-adjusted summary statistics~~
-
-I've generated adjusted summary statistics for 5 phenoypes (BMI, T2D, breast cancer, prostate cancer and HbA1c). Follow the steps below to download them, and set up the pipeline to use them. 
-
-1.  :globe_with_meridians: Download data from figshare by running `bash run.sh download_test_data`. This might take a while...
-2.  Verify the data is in the correct location by running `bash run.sh -n validate_setup_ext`. You should see a message that says *"Nothing to be done."*.
-
-All the steps that require internet access are done. 
-
-~~### Set up Genotype and Phenotype data~~
-
-These steps have not yet been automated, but we will work on automating them in the future. Replace "{bbid}" (biobank id) with a name of your choice in the steps below. **The harmonization of genetic data relies on rsIDs. If your genotypes are not annotated with rsIDs, you will not be able to harmonize your data!**. Contact me if this is the case.
-
-1.  Create folders `custom_input/genotypes/{bbid}` and `custom_input/phenotypes/{bbid}`
-2.  :rotating_light: The pipeline requires genotypes in plink format. If you are starting from other formats such as BGEN or VCF, you will first have to convert your data to plink format using [plink v1.9](https://www.cog-genomics.org/plink/1.9/input#oxford) or [QCTOOL v2](https://www.well.ox.ac.uk/~gav/qctool_v2/index.html). If your plink-formated data is not split by chromosome, you can split the data by chromosome with the following loop on the command-line, assuming your genetic data is called `master.{bed,bim,fam}`:
 ```
-# replace "master" with the prefix of your data
+# this will swap the default
+#     prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
+# with
+#     prs_methods: ['pt_clump']
+
+sed -i -e "s/^prs_methods: .\+/prs_methods: ['pt_clump']/g" config/config.yaml
+```
+The synthetic phenotype data for phenotype "synthetic01" and target data "synth" are located at `custom_input/synth/phenotypes/synthetic01.tsv.gz`. In general, the pipeline will look for phenotype data in the directories matching the pattern `custom_input/{target-name}/phenotypes/{phenotype-name}.tsv.gz` (more about that later).
+
+We can then run polygenic score evaluation and model selection by running the rule `all_model_eval_ext`
+
+```
+bash run.sh all_model_eval_ext
+```
+
+Finally, we revert our changes to the `config/config.yaml`:
+
+```
+sed -i "s/prs_methods: \['pt_clump'\]/prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']/g" config/config.yaml
+```
+> :warning:Note: if the above sed-commands don't work for you, you can of course just manually edit config/config.yaml. To revert all changes, do `git checkout -- config/config.yaml`.
+
+# Polygenic scoring for new target genotype/phenotye data
+The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree. Also, you have to successfully run at least `bash run.sh all_setup` and `bash run.sh cleanup_after_setup` before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
+
+## :rotating_light: Setting up target genetic data
+Target genetic data are defined using a tab-separated-values file (tsv), by default this is [`config/target_list.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv). This file has three columns:
+
+| name | path | type |
+| --- | --- | --- |
+| the name of the target data (e.g., "ukbiobank") | the path/prefix of the imputed per-chromosome genotype data (e.g.,"some/path/prefix_chr") | the format (see below) |
+
+Genotype data paths are expected to follow the pattern `<prefix>chr<1-22>.<.bed/.bim/.fam/.bgen/.vcf.gz>`. For bgen-formatted data, the sample-file should be called called `<prefix>.sample`. Both hg19 and hg38 are accepted. Note that the path will have to be accessible inside the container, see the section on [container mounts](#container-mounts-file_folder) above.
+
+Supported data types are 
+- **samp_imp_plink1**: plink 1 formated data (.bed/.bim/.fam)
+- **samp_imp_bgen_ref_first**, **samp_imp_bgen_ref_last** or **samp_imp_bgen_ref_unknown**: [Bgen](https://www.well.ox.ac.uk/~gav/bgen_format/) formatted data (.bgen/.sample). UK Biobank imputed genpotypes are ref-first, others typically ref-last. Specifying only "samp_imp_bgen" will default to ref-last.
+- **samp_imp_vcf**: VCF format
+
+As mentioned above, genotype data are expected to be split by chromosome. For plink 1 formatted data, the following bash one-liner will split data by chromosome. Asumming your main file is called `main.bed/.bim/.fam`:
+
+```
+# replace "main" with the prefix of your data
 # this will generate files tmp_chr{1-22}.{bed,bim,fam}
 for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i}; done
 ```
-3.    :rotating_light: Harmonize the per-chromosome genotype data with the HapMap3 (hm3) variants. The script [hm3_harmoniser.R](https://github.com/intervene-EU-H2020/GenoPred/blob/1d5fddc6e6bf41c7ee94041f84ac91c1afd694fb/Scripts/hm3_harmoniser/hm3_harmoniser.R) can be used to harmonize plink-formatted genotype files with the hm3 variants. If you completed the [basic setup steps above](#basic-setup) successfully, the folder `resources/Geno_1KG` should contain harmonized genotype files with prefixes `1KGPhase3.w_hm3.chr...`. These can be used as the input for the `hm3_harmoniser.R` script (see the `--ref` parameter). Set the `--target` parameter to the prefix of your per-chromosome genotype data prefix (for example `tmp_chr` if you used the loop above to generate them).
-> Note: If your genotype panel does not cover >90% of the hm3 variants, imputation might be required!
-4.  :rotating_light: Place the per-chromosome harmonized plink-formated bim/bed/fam-files generated in step 3 in  `custom_input/genotypes/{bbid}/`, name them `chr1.{bed,bim,fam}`,`chr2.{bed,bim,fam}`,...,`chr22.{bed,bim,fam}`.
-5.  :rotating_light: Extract the phenotypes of interest, in this case BMI, HbA1c, prostate cancer, breast cancer and Type 2 Diabetes. This will be highly specific to the biobank you are working with and may include self-reported endpoints or data scraped from patient records. Phenotypes should be placed in separate files with three tab-separated columns (no header): The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
 
-    |  |  |  |
-    | --- | --- | --- |
-    | fid_1 | iid_1 | 0 |
-    | fid_2 | iid_2 | 1 |
-    | ... | ... | ... |
+### :rotating_light: Target genotype harmonization
 
-    The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This   way only a sub-set of individuals can be analysed for each phenotype to save computational time. Also, if you do not want to analyse a specific phenotype, you can delete the row corresponding to that phenotype from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
+Prspipe uses the same script as [GenoPredPipe](https://github.com/opain/GenoPred/tree/master/GenoPredPipe) to convert all target genetic data to plink1 hard-calls. Genotypes are harmonized based on variant positions and allele codes to match the HapMap3 referece intersected with the 1000 Genomes variants. Any existing variant identifiers wil be replaced by rsids.
 
-    Place the phenotype files in `custom_input/phenotypes/{bbid}/`. Name them `{phenotype}.txt`, where {phenotype} should match the entries in the "name"-column of [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv), i.e `./custom_input/phenotypes/{bbid}/HbA1c.txt`, `./custom_input/phenotypes/{bbid}/BMI.txt` and so on.
+To perform harmonization of the target genetic data, run
 
-    The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/` and `custom_input/genotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`conf/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/6b4611bdd2417072229762444a994e02dba6c597/config/studies.tsv).
+```
+bash run.sh all_harmonize_target_genotypes
+```
 
-6.  :rotating_light: Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
+Harmonization can take several hours to finish depending on the size of your data. Once completed, the harmonized target data are located at `custom_input/{target-name}/genotypes/`, where `target-name` matches the entry in the name-column of the `target_list.tsv` (see above).
+
+### :rotating_light: Ancestry scoring
+
+Once the target genotype data are harmonized, we can perform ancestry scoring:
+
+```
+bash run.sh -n all_ancestry_scoring_ext
+```
+
+this will create output files at `results/{target-name}/Ancestry_idenitfier/`. 
+
+## :rotating_light: Setting up target phenotype data
+
+> ⚠️ This section is under construction 🚧
+
+Extract the phenotypes of interest. A list of phenotypes for initial testing will be distributed. How to extract phenotypes will be highly specific to the biobank you are working with and may include self-reported endpoints or data scraped from patient records. Phenotypes should be placed in *separate* files with three tab-separated columns (no header): The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
+
+|  |  |  |
+| --- | --- | --- |
+| fid_1 | iid_1 | 0 |
+| fid_2 | iid_2 | 1 |
+| ... | ... | ... |
+
+An example is provided at [`resources/synthetic_data/pheno250.tsv.gz`](https://github.com/intervene-EU-H2020/prspipe/blob/main/resources/synthetic_data/). A script to convert the INTERVENE phenotype format to this format should be provided soon (any volunteers?). 
+
+The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This   way only a sub-set of individuals can be analysed for each phenotype to save computational effort. Also, if you do not want to analyse a specific phenotype, you can delete the row corresponding to that phenotype from [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv).
+
+Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the "name"-column of [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv), i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. **You can also gzip these files to save space.**
+
+The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv).
+
+### :rotating_light: Run polygenic risk scoring and evaluation for target data
+
+> ⚠️ This section is under construction 🚧
+
+Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
     
-    ```
-    bash run.sh --use-singularity --dryrun --keep-going all_get_best_models_ext
-    ```
+```
+bash run.sh --use-singularity --dryrun --keep-going all_get_best_models_ext
+```
 
-    the output should look something like this
+the output should look something like this
 
-    ```
-    [...]
-    Job counts:
-            count   jobs
-            1       all_get_best_models_ext
-            1       ancestry_scoring_ext
-            22      calculate_maf_ancestry_ext
-            5       dbslmm_score_ext_ref1kg
-            5       get_best_models_ext
-            5       lassosum_score_ext
-            5       ldpred2_score_ext_refukbb
-            5       ldpred_score_ext_ref1kg
-            5       model_eval_ext
-            5       model_eval_ext_prep
-            5       prscs_score_ext_refukbb
-            5       sbayesr_score_ext_refukbb_robust
-            5       sblup_score_ext_ref1kg
-            5       sparse_thresholding_score_ext_ref1kg
-            79
-    ```
+```
+[...]
+Job counts:
+        count   jobs
+        ...
+```
     if you see significantly more jobs listed, your pipeline is misconfigured. Please contact me in this case (remo.monti@hpi.de).
 
-This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. You can now run these steps with `bash run.sh --use-singularity --keep-going all_get_best_models_ext`.
+This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. You can now run these steps with `bash run.sh --keep-going all_get_best_models_ext`.
 
-
+--------------------------------------
     
-# Documentation
+# Other Documentation
 
-This part of the documentation will lead you through all steps of the pipeline, including setting it up for new phenotypes.
+Other information related to running the pipeline and setting it up for new summary statistics.
 
-### Step 1: Obtain a copy of this workflow
+## Installing Snakemake with conda
 
-1. Create a new github repository using this workflow [as a template](https://help.github.com/en/articles/creating-a-repository-from-a-template).
-2. [Clone](https://help.github.com/en/articles/cloning-a-repository) the newly created repository to your local system, into the place where you want to perform the data analysis.
+To install snakemake with [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
 
-### Step 2: Install Snakemake
+```
+conda create -c bioconda -c conda-forge -n snakemake snakemake
+```
 
-Install Snakemake using [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
-
-     conda create -c bioconda -c conda-forge -n snakemake snakemake
 > Note: make sure to update conda, or use mamba to get the latest version of snakemake i.e. `6.2.1`
 
 For installation details, see the [instructions in the Snakemake documentation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
 
-Run `download_resources.sh` and `install_software.sh` to set up software.
-
-    bash ./install_software.sh
-
-### Step 3: R packages and other dependencies
+## Manual installation of R packages
 
 The pipeline relies heavily on [R](https://www.r-project.org/). There are two options to handle R-package dependencies: (1, **recommended**) running the pipeline using singularity containers, or (2) running with a local conda and R installation and installing R-packages manually.
 
 If manually installing R-packages, the following commands will install all dependencies:
 
-    R
-    install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
+```
+R
+install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
     
-    install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
-
-#### Containers (Docker/Singularity)
-
-We have provided [Singularity](https://sylabs.io/) and [Docker](https://www.docker.com/) container [definitions](https://github.com/intervene-EU-H2020/prspipe/tree/main/containers). Users can either build the images from scratch (using `docker build` or `singularity build`), or use the available docker image on [dockerhub](https://hub.docker.com/repository/docker/rmonti/prspipe).
-
-Creating a singularity image that is able to run the pipeline is as simple as:
-
+install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
 ```
-# build from the local container definition...
-singularity build containers/singularity/prspipe.sif containers/singularity/prspipe_alldeps.def
-
-# ... or build directly from dockerhub
-singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
-```
-
-the latter should work even *without* root access.
-
-To run the pipeline with singulartiy, use the `--use-singularity` flag with snakemake. The default image is defined in `workflow/Snakefile`. Currently, the default is `docker://rmonti/prspipe:0.0.1`. When running with singularity, make sure to clear environment variables `R_LIBS`, `R_LIBS_SITE` and `R_LIBS_USER`, if set, as they can interfere with R in the container.
-
-Instead of running with `--use-singularity` the entire pipeline can also be run locally within the `docker://rmonti/prspipe:0.0.1`-container, as it contains both conda and snakemake.
-
-For example:
-
-```
-# build container directly from dockerhub
-singularity build containers/singularity/prspipe.sif docker://rmonti/prspipe:0.0.1
-
-# run pipeline commands inside the container
-# for example, a dry-run of the setup rules:
-singularity run containers/singularity/prspipe.sif ./run.sh -n all_setup
-```
-
-### Step 4: Configure workflow
-
-Basic parameters and paths are configured within `config/config.yaml`. The most important input files are described below.
-
-### Step 5: Execute workflow
-
-Activate the snakemake conda environment, and use `./run.sh` to launch snakemake with default parameters:
-
-    conda activate snakemake
-    # run all the setup rules (steps 1-3 of GenoPred)
-    ./run.sh all_setup
-    
-    # OR, using singularity
-    ./run.sh --use-singularity all_setup
-
-See the [Snakemake documentation](https://snakemake.readthedocs.io/en/stable/executable.html) for further details (cluster execution, dependency handling etc.).
 
 ## Incorporating new GWAS summary statistics
 
