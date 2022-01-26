@@ -9,6 +9,8 @@ rule download_sumstats:
         "resources/sumstats/{study}.{ancestry}.raw",
     log:
         "logs/download_sumstats/{study}_{ancestry}.log"
+    resources:
+        mem_mb=20000
     shell:
         "python workflow/scripts/Python/gwas_catalog_sumstats.py "
         "--study-id {wildcards[study]} "
@@ -29,6 +31,7 @@ rule QC_sumstats:
     singularity:
         config['singularity']['all']
     resources:
+        mem_mb=20000,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home"
     shell:
         "("

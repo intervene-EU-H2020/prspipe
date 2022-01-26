@@ -1,6 +1,6 @@
 study_id	ancestry	n_cases	n_controls	ftp_address	local_path	binary	name
 GCST90018959	EUR	525444	0	/pub/databases/gwas/summary_statistics/GCST90018001-GCST90019000/GCST90018959/harmonised/34594039-GCST90018959-EFO_0004339.h.tsv.gz		no	Height
-GCST90013445	EUR	22153	37374		sumstats_raw/GCST90013445_buildGRCh38_T1D.tsv.gy	yes	T1D
+GCST90013445	EUR	22153	37374		sumstats_raw/GCST90013445_buildGRCh38_T1D.munged.tsv.gz	yes	T1D
 GCST008972	EUR	457690	0		sumstats_raw/GCST008972_urate_chr1_22_LQ_IQ06_mac10_all_741_rsid.munged.txt.gz	yes	Urate_Gout
 GCST005838	EUR	67162	454450	/pub/databases/gwas/summary_statistics/GCST005001-GCST006000/GCST005838/harmonised/29531354-GCST005838-EFO_0000712.h.tsv.gz		yes	Stroke_excluding_SAH
 GCST90012877	EUR	53042	355900	/pub/databases/gwas/summary_statistics/GCST90012001-GCST90013000/GCST90012877/harmonised/33589840-GCST90012877-EFO_0000249.h.tsv.gz		yes	Alzheimers_disease
