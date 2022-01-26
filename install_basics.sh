@@ -15,19 +15,21 @@ if [ ! -d ./bin ]; then
 fi
 
 
-# Install Plink 2.0s
+# Download Plink 2.0 
 if [ ! -f ./bin/plink2 ]; then
     >&2 echo "Downloading Plink 2.0 binaries"
     (
     cd bin
+    wget -O plink2.zip 'https://figshare.com/ndownloader/files/33895304?private_link=3641ef6df51eddbeea60'
+    unzip plink2.zip && rm plink2.zip
     avx_support="$(grep avx /proc/cpuinfo | wc -l)"
     # if this fails, check https://www.cog-genomics.org/plink/2.0/ for the latest download links
     if [ $avx_support -gt 0 ]; then
-        wget https://s3.amazonaws.com/plink2-assets/plink2_linux_avx2_20211125.zip
-        unzip plink2_linux_avx2_20211125.zip && rm plink2_linux_avx2_20211125.zip
+        echo 'found AVX support, will use the plink 2.0 AVX version'
     else
-        wget https://s3.amazonaws.com/plink2-assets/plink2_linux_x86_64_20210920.zip
-        unzip plink2_linux_x86_64_20211125.zip && rm plink2_linux_x86_64_20211125.zip
+        echo 'no AVX support found, will use the plink 2.0 64-bit version'
+        echo 'you can still switch to the avx version later...'
+        mv plink2 plink2_avx && mv plink2_x86_64 plink2
     fi
     )
 fi
