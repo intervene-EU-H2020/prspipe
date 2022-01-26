@@ -1,5 +1,7 @@
-HbA1c	NA
-BMI	NA
-T2D	0.06
+T1D	0.005
+T2D	0.08
 Breast_cancer	0.125
 Prostate_cancer	0.125
+Stroke_excluding_SAH	0.125
+Alzheimers_disease	0.06
+Urate_Gout	0.014

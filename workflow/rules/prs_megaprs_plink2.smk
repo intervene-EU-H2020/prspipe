@@ -67,7 +67,7 @@ rule prs_scoring_megaprs:
     log:
         "logs/prs_scoring_megaprs/{study}.log"
     threads:
-        5
+        10
     shell:
         "("
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/ldak_mega_prs/ldak_mega_prs.R "
