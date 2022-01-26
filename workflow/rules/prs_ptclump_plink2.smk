@@ -20,7 +20,7 @@ rule prs_scoring_ptclump_sparse:
         score="prs/pt_clump/{study}/1KGPhase3.w_hm3.{study}.score.gz",
         range_list="prs/pt_clump/{study}/1KGPhase3.w_hm3.{study}.range_list"
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home"
     log:
         "logs/prs_scoring_ptclump_sparse/{study}.log"
     threads:

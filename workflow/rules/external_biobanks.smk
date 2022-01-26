@@ -39,7 +39,7 @@ rule ancestry_scoring_ext:
         config['singularity']['all']
     resources:
         mem_mb=32000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
         time="03:00:00"
     shell:
         "( "
@@ -53,7 +53,10 @@ rule ancestry_scoring_ext:
         "--ref_pop_scale {input[super_pop_keep]} "
         "--pop_data {config[Geno_1KG_dir]}/integrated_call_samples_v3.20130502.ALL.panel_small "
         ") &> {log} "
-        
+
+rule all_ancestry_scoring_ext:
+    input:
+        expand(rules.ancestry_scoring_ext.output, bbid=target_list.name.values)
        
 rule calculate_maf_ancestry_ext:
     # calculate allele frequencies for different superpopulations
@@ -128,7 +131,7 @@ rule run_scaled_polygenic_scorer:
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
         time="03:00:00"
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
@@ -215,79 +218,95 @@ rule all_target_prs_available:
     input:
         collect_prs_outputs()
         
+localrules: all_target_prs_available
 
 ############################>>
 # START: Score evaluation  #>>
 ############################>>
 
+# TODO: make sure these run with plink2-versions of scripts above
+    
+rule model_eval_ext_prep:
+    # preparation for model evaluation, requests for all studies and all methods specified in the config.yaml
+    # TODO: other super-populations
+    input:
+        expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles',
+                method=config['prs_methods'],
+                superpop=['EUR'],
+                allow_missing=True)
+    output:
+        predictors='results/{bbid}/PRS_evaluation/{study}/EUR/{study}.AllMethodComp.predictor_groups'
+    run:
+        # prepare a file with predictors, grouped by method
+        with open(output[0], 'w') as outfile:
+            outfile.write('predictors group\n')
+            for i in input:
+                method = i.split('/')[3]
+                outfile.write('{} {}\n'.format(i, method))
+                
+localrules: model_eval_ext_prep
 
-#########
-# P + T #
-#########
+def check_gz_pheno_tsv(wc):
+    
+    pheno = studies.loc[wc.study, 'name']
+    infile = 'custom_input/{bbid}/phenotypes/{pheno}.tsv.gz'.format(bbid = wc.bbid, pheno = pheno)
+    
+    if os.path.isfile(infile):
+        return infile
+    elif os.path.isfile(infile[:-3]):
+        return infile[:-3]
+    else:
+        print('Error: Could not find phenotype file for study "{}" and phenotype "{}", should be either "{}" or "{}" '.format(wc.study, pheno, infile, infile[:-3]))
+        return infile
+    
+rule model_eval_ext:
+    input:
+        predictors = rules.model_eval_ext_prep.output.predictors,
+        pheno_file = check_gz_pheno_tsv
+    output:
+        assoc='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.assoc.txt',
+        pred_comp='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_comp.txt',
+        pred_eval='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_eval.txt'
+    params:
+        prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
+        out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
+    threads:
+        8
+    resources:
+        mem_mb=64000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
+        time="08:00:00"
+    log:
+        'logs/model_eval_ext/{bbid}/{study}.log'
+    singularity:
+        config['singularity']['all']
+    shell:
+        "("
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
+        "--pheno {input[pheno_file]} "
+        "--predictors {input[predictors]} "
+        "--n_core {threads} "
+        "--compare_predictors T "
+        "--assoc T "
+        "--outcome_pop_prev {params[prev]} "
+        "--out {params[out_prefix]} "
+        "--save_group_model T "
+        ") &> {log}"
 
-# TODO: port these to plink2-versions
 
-#rule model_eval_ext_prep:
-#    # methods are evaluated *together*
-#    # phenotypes are evaluated *separately*
-#    input:
-#        pt_clump = rules.sparse_thresholding_score_ext_ref1kg.output['profiles'],
-#        lassosum = rules.lassosum_score_ext.output['profiles'],
-#        prscs = rules.prscs_score_ext_refukbb.output['profiles'],
-#        sblup = rules.sblup_score_ext_ref1kg.output['profiles'],
-#        sbayesr = rules.sbayesr_score_ext_refukbb_robust.output['profiles'],
-#        dbslmm = rules.dbslmm_score_ext_ref1kg.output['profiles'],
-#        ldpred = rules.ldpred_score_ext_ref1kg.output['profiles'],
-#        ldpred2 = rules.ldpred2_score_ext_refukbb.output['profiles']
-#    output:
-#        predictors = 'results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.predictor_groups'
-#    run:
-#        # prepare a file with predictors, grouped by method
-#        with open(output[0], 'w') as outfile:
-#            outfile.write('predictors group\n')
-#            for k, v in input.items():
-#                outfile.write('{} {}\n'.format(v, k))
+rule all_model_eval_ext:
+    input:
+        expand(rules.model_eval_ext.output, bbid=target_list.name.values, study=studies.study_id.values)
+    
                 
 #rule all_model_eval_ext_prep:
 #    input:
 #        expand(rules.model_eval_ext_prep.output, study=studies.study_id, allow_missing=True)
-#
-#
-#rule model_eval_ext:
-#    input:
-#        predictors = rules.model_eval_ext_prep.output.predictors,
-#        pheno_file = lambda wc: 'custom_input/phenotypes/{bbid}/' + studies.name[studies.study_id == wc.study].iloc[0] +'.txt'
-#    output:
-#        assoc='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.assoc.txt',
-#        pred_comp='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_comp.txt',
-#        pred_eval='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_eval.txt'
-#    params:
-#        prev = lambda wc: prevalence[ studies.name[studies.study_id == wc['study']].iloc[0] ],
-#        out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
-#    threads:
-#        8
-#    log:
-#        'logs/model_eval_ext/{bbid}/{study}.log'
-#    singularity:
-#        config['singularity']['all']
-#    shell:
-#        "("
-#        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
-#        "--pheno {input[pheno_file]} "
-#        "--predictors {input[predictors]} "
-#        "--n_core {threads} "
-#        "--compare_predictors T "
-#        "--assoc T "
-#        "--outcome_pop_prev {params[prev]} "
-#        "--out {params[out_prefix]} "
-#        "--save_group_model T "
-#        ") &> {log}"
-
 
 # rule all_model_eval_ext:
 #     input:
 #         expand(rules.model_eval_ext.output, study=studies.study_id, allow_missing=True)
-# 
+ 
         
 # rule get_best_models_ext:
 #     # exctract the best performing models and their performance into a neat TSV

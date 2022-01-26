@@ -29,7 +29,7 @@ rule QC_sumstats:
     singularity:
         config['singularity']['all']
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_1.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home"
     shell:
         "("
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "

@@ -8,7 +8,9 @@ prevalence: "config/pop_prevalence.tsv"
 
 GenoPred_dir: "workflow/scripts/GenoPred"
 
-prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
+#prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
+prs_methods: ['pt_clump']
+
 
 ##################
 # Software paths #
@@ -27,6 +29,9 @@ Rscript: "Rscript"
 # plink2 has to be up-to-date in order to perform polygenic scoring!
 # tested with PLINK v2.00a3LM AVX2 Intel (20 Sep 2021)
 
+# in the container, plink2 and plink1 are available at /usr/local/bin/plink2 and /usr/local/bin/plink
+# the paths below can be set to those paths to use the container plink1 and plink2 
+
 plink1_9: "bin/plink"
 plink2: "bin/plink2"
 
@@ -35,8 +40,10 @@ gctb: "bin/gctb/gctb"
 LDSC_dir: "workflow/scripts/ldsc"
 LDPRED_dir: "workflow/scripts/ldpred"
 DBSLMM_dir: "workflow/scripts/DBSLMM"
-qctool2: "bin/qctool"
 PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
+
+# qctool 2 is available in the prsipe container at "/usr/local/bin/qctool" 
+qctool2: "bin/qctool"
 
 
 ###############
@@ -46,7 +53,7 @@ PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 # if running snakemake with the --use-singularity, the main container to run in:
 
 singularity:
-  all: 'docker://rmonti/prspipe:0.0.1'
+  all: 'docker://rmonti/prspipe:0.0.2'
 
 #################################
 # 1000 genomes superpopulations #

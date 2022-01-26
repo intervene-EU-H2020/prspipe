@@ -30,11 +30,11 @@ Genopred, i.e., the repository this pipeline depends on, relies on R and depende
 
 ```
 # get the container with docker
-docker pull rmonti/prspipe:0.0.1
+docker pull rmonti/prspipe:0.0.2
 
 # ... or with singularity
 # this should work without root permissions
-singularity pull docker://rmonti/prspipe:0.0.1
+singularity pull docker://rmonti/prspipe:0.0.2
 ```
 
 ## Preface on Snakemake :snake:
