@@ -1,7 +1,7 @@
 
 Bootstrap: docker
 
-From: rmonti/prspipe:0.0.1
+From: rmonti/prspipe:0.0.2
 
 %runscript
   bash "$@"
