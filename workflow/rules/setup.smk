@@ -45,6 +45,22 @@ rule initialize_synthetic:
         "ln -s -r \"$(readlink -f resources/synthetic_data/pheno250.tsv.gz)\" {output[pheno]}"
         
 
+rule download_test_data:
+    # rule to download test data from figshare
+    shell:
+        "( mkdir -p resources/test_prs/ && "
+        "wget -O resources/test_prs/PRS.tar.gz https://figshare.com/ndownloader/files/33905531?private_link=8ac0f09450555d6ba6dd && "
+        "cd resources/test_prs/ && "
+        "tar -xvf PRS.tar.gz && "
+        "find . -type f -exec touch {{}} + ); " # touching the extracted files so the snakemake timestamp checks work
+        "mkdir -p prs && cd prs; "
+        "for DIR in ../resources/test_prs/*/; do "
+        "METHOD=${{DIR##../resources/test_prs/}}; "
+        "mkdir -p $METHOD; cd $METHOD; "
+        "for SUBDIR in ../${{DIR}}/*; "
+        "do ln -s -r $SUBDIR; done;" # linking the directories to the standard directory for polygenic scores
+        "cd ../; done "
+        
 
 rule cleanup_after_setup:
     # removes unnecessary intermediate output files
