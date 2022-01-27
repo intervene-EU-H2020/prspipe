@@ -164,6 +164,17 @@ Once you have successfully completed these steps, you can clear up space by runn
 bash run.sh cleanup_after_setup
 ```
 
+## :globe_with_meridians: Download scoring files for 10 phenotypes
+
+The following step will download some pre-calculated scores for 10 phenotypes using PRScs, MegaPRS or pruning and thresholding + clump.
+
+```
+bash run.sh download_test_data
+```
+
+To predict on new target data, use the rule `all_target_prs_available` (explained [below](#predict-polygenic-scores-for-synthetic-dataset) for synthetic data). The corresponding samplesheet for these scores is located [here](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies_for_methods_comparison.tsv). To predict for new target data (i.e., your biobank), [additional configuration is necessary](#rotating_light-setting-up-target-genetic-data).
+
+
 # Testing PRS methods with synthetic data
 In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used.
 
@@ -257,8 +268,9 @@ sed -i "s/prs_methods: \['pt_clump'\]/prs_methods: ['dbslmm','lassosum','ldpred2
 ```
 > :warning:Note: if the above sed-commands don't work for you, you can of course just manually edit config/config.yaml. To revert all changes, do `git checkout -- config/config.yaml`.
 
+
 # Polygenic scoring for new target genotype/phenotye data
-The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree. Also, you have to successfully run at least `bash run.sh all_setup` and `bash run.sh cleanup_after_setup` before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
+The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup` and `bash run.sh cleanup_after_setup` before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
 
 ## :rotating_light: Setting up target genetic data
 Target genetic data are defined using a tab-separated-values file (tsv), by default this is [`config/target_list.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv). This file has three columns:
