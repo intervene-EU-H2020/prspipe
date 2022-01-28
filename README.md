@@ -24,6 +24,33 @@ In the steps below, we will install all the dependencies to run polygenic scorin
 
 **Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.**
 
+## TL;DR
+
+For the lazy / impatient / advanced users, here is a breakdown of what you have to do, including the most relevant commands
+
+1. :globe_with_meridians: Clone this reposotory and switch to the base directory for all subsequent steps
+2. :globe_with_meridians: Use the prspipe docker/singularity container to run snakemake (or install snakemake and R-packages manually)
+3. :globe_with_meridians: run the setup script
+    ```
+    bash install_basics.sh
+    ```
+5. edit the software paths in `config/config.yaml`, if necessary
+6. :globe_with_meridians: run the snakemake rules to download and pre-process the 1000 Genomes reference
+    ```
+    bash run.sh all_setup
+    bash run.sh cleanup_after_setup
+    ```
+7.  :globe_with_meridians: Download pre-calculated scores for pruning & thresholding + clump, MegaPRS, PRScs for 10 phenotypes
+    ```
+    bash run.sh download_test_data
+    ```
+9.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`)
+10. 🚨 Predict scores
+    ```
+    bash run.sh all_target_prs_available
+    ```
+The tutorial below covers the steps above and more in greater detail.
+
 ## Preface on Singularity and Docker :takeout_box:
 
 Genopred, i.e., the repository this pipeline depends on, relies on R and dependency management with conda (i.e., python). The pipeline itself is run with [snakemake](https://snakemake.bitbucket.io). Snakemake comes with built-in support for Singularity containers. In theory, different steps of the pipeline (correspinding to different snakemake *rules*), can be run in different containers. However, this pipeline only relies on a single container [available on dockerhub](https://hub.docker.com/r/rmonti/prspipe). This container works both with Docker and Singularity.
