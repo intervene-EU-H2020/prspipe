@@ -14,7 +14,8 @@ rule prs_scoring_lassosum:
     threads:
         1
     resources:
-        mem_mb=5000,
+        mem_mb=16000,
+        time="16:00:00",
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home"
     shell:
         "("
@@ -24,7 +25,7 @@ rule prs_scoring_lassosum:
         "--sumstats {input.qc_stats} "
         "--output prs/lassosum/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--plink2 {config[plink2]} "
-        "--memory {resources[mem_mb]} "
+        "--memory 10000 "
         "--ref_pop_scale {input.super_pop_keep} "
         ") &> {log}"
 
