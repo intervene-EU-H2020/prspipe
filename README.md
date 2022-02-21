@@ -153,7 +153,7 @@ snakemake --help
 
 # should be the container's R:
 which R
-RScript --version
+Rscript --version
 
 # to exit the container
 exit
