@@ -33,9 +33,8 @@ bim[ (a1 == 'A' & a2 =='C') | (a1 == 'C' & a2 =='A'), IUPAC:='M']
 mapping <- fread(opt$mapping, sep='\t')
 nr <- nrow(mapping)
 cat('Loaded ', nr, ' variants from mapping file.\n')
-mapping <- mapping[ a1 %in% c('A','C','T','G') & a2 %in% c('A', 'C', 'T', 'G')  ]
+mapping <- mapping[ a1 %in% c('A','C','T','G') & a2 %in% c('A', 'C', 'T', 'G') ]
 cat('dropped ', nr-nrow(mapping), ' indels.\n')
-
 
 if (opt$rsid_col %in% colnames(mapping)){
     setnames(mapping,opt$rsid_col,'rsid')
@@ -46,8 +45,14 @@ if (opt$rsid_col %in% colnames(mapping)){
 setnames(mapping, 'IUPAC_1kg', 'IUPAC')
 
 if (opt$genome_build == 'infer'){
+    
     l1 = nrow(merge(bim[,list(chr,pos,IUPAC)], mapping[,list(chr, pos_hg19, IUPAC)], by.x = c('chr','pos','IUPAC'), by.y=c('chr','pos_hg19','IUPAC'), suffixes=c('_target', '_ref'), all.x = FALSE, all.y = FALSE))
     l2 = nrow(merge(bim[,list(chr,pos,IUPAC)], mapping[,list(chr, pos_hg38, IUPAC)], by.x = c('chr','pos','IUPAC'), by.y=c('chr','pos_hg38','IUPAC'), suffixes=c('_target', '_ref'), all.x = FALSE, all.y = FALSE))
+    
+    if ( (l1 == 0) & (l2 == 0) ){
+        stop('Error: no overlaps with mapping file found.')
+    }
+    
     if (l1 > l2){
         opt$genome_build <- 'hg19'
     } else {
