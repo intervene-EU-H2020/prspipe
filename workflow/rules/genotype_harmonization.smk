@@ -3,7 +3,6 @@
 # harmonization of target genotype data #
 #########################################
 
-
 def get_input_file_from_type(prefix, chr, type):
     # get an input file to check for based on prefix, chromosome, and input file type
     if type == 'samp_imp_plink1':

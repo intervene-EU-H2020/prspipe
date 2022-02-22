@@ -434,8 +434,8 @@ rule merge_1kg_hm3_mapping_with_maf_cached:
 # These are the rules that define the reference used in subsequent analyses
 
 rule extract_hm3:
-    # the second and final filtering pass
-    # replaces the output of the original "extract_hm3"
+    # Outputs the 1000 Genomes filtered to HapMap3 variants
+    # Generates per-chromosome files.
     input:
         mapping='resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz',
         bed=rules.download_1kg.output['bed'],
@@ -459,10 +459,13 @@ rule extract_hm3:
         "--out_prefix {params[out_prefix]} " 
         "--mapping {input[mapping]} "
         "--plink2 {config[plink2]} "
+        "--tmpdir ./temp "
         "--rsid_col 'rsid' &> {log}"
     
     
 rule extract_hm3_gw:
+    # Outputs the 1000 Genomes filtered to HapMap3 variants
+    # Generates a single file with all chromosomes
     input:
         expand(rules.extract_hm3.output, chr=range(1,23))
     output:
@@ -618,4 +621,4 @@ rule ancestry_scoring_allancestry:
         "--output resources/1kg/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry"
         ") &> {log}"
 
-        
+
