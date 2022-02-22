@@ -1,15 +1,30 @@
-# This file should contain everything to configure the workflow on a global scale.
+# This contains everything to configure the workflow on a global scale.
 
-# In case of sample based data, it should be complemented by a samples.tsv file that contains
-# one row per sample. It can be parsed easily via pandas.
+#######################
+# Configuration Files #
+#######################
+
+# table of GWAS summary statistics to analyse
+# see https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv for an example
 studies: "config/studies.tsv"
+
+# table of target genetic data
+# see https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv for an example
 target_list: "config/target_list.tsv"
+
+# table of prevalences
+# see https://github.com/intervene-EU-H2020/prspipe/blob/main/config/pop_prevalence.tsv for an example
 prevalence: "config/pop_prevalence.tsv"
 
+# path to the GenoPred repo
 GenoPred_dir: "workflow/scripts/GenoPred"
 
-#prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
-prs_methods: ['pt_clump']
+###############
+# PRS Methods #
+###############
+
+# list of methods to compare
+prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump', 'sbayesr']
 
 
 ##################
@@ -23,17 +38,22 @@ R: "R"
 Rscript: "Rscript"
 
 # Note: Software paths are relative to the main working directory
-#       If running sing the pipeline container the container, software at locations like "/bin/" or "/usr/" will not be found, unless these directories are explicitly mounted, which might cause other problems...
 
 # only change the paths below if you really know what you are doing
-# plink2 has to be up-to-date in order to perform polygenic scoring!
+
 # tested with PLINK v2.00a3LM AVX2 Intel (20 Sep 2021)
+# in the container, plink2 and plink1 are available at /usr/local/bin/plink2 and /usr/local/bin/plink (and are in the PATH)
+# if running *without* container, change the paths below to bin/plink and bin/plink2, respectively, and use install_basics.sh to download the correct versions of plink1 and plink2
 
-# in the container, plink2 and plink1 are available at /usr/local/bin/plink2 and /usr/local/bin/plink
-# the paths below can be set to those paths to use the container plink1 and plink2 
+plink1_9: "plink"
+plink2: "plink2"
 
-plink1_9: "bin/plink"
-plink2: "bin/plink2"
+# qctool 2 is available in the prsipe container at "/usr/local/bin/qctool" (and is in the PATH)
+# if running *without* container, change the path below to bin/qctool and use install_basics.sh to download qctool2
+qctool2: "qctool"
+
+
+# the paths below are only relevant if you want to run the PRS methods yourself, and can be left unchanged.
 
 gcta: "bin/gcta/gcta64"
 gctb: "bin/gctb/gctb"
@@ -42,15 +62,11 @@ LDPRED_dir: "workflow/scripts/ldpred"
 DBSLMM_dir: "workflow/scripts/DBSLMM"
 PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 
-# qctool 2 is available in the prsipe container at "/usr/local/bin/qctool" 
-qctool2: "bin/qctool"
-
-
 ###############
 # Singularity #
 ###############
 
-# if running snakemake with the --use-singularity, the main container to run in:
+# if running snakemake with "--use-singularity", this parameter sets main container to run in:
 
 singularity:
   all: 'docker://rmonti/prspipe:0.0.2'
@@ -58,6 +74,8 @@ singularity:
 #################################
 # 1000 genomes superpopulations #
 #################################
+
+# can be left unchanged.
 
 1kg_superpop: ["EUR", "EAS", "AMR", "SAS", "AFR"]
 1kg_pop: ["GBR", "FIN", "CHS", "PUR", "CDX", "CLM", "IBS", "PEL", "PJL", "KHV", "ACB", "GWD", "ESN", "BEB", "MSL", "STU", "ITU", "CEU", "YRI", "CHB", "JPT", "LWK", "ASW", "MXL", "TSI", "GIH"]
