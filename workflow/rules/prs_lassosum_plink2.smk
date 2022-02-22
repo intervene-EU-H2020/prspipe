@@ -6,7 +6,9 @@ rule prs_scoring_lassosum:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         hm3_gw=rules.extract_hm3_gw.output
     output:
-        touch('prs/lassosum/{study}/ok')
+        touch('prs/lassosum/{study}/ok'),
+        score='prs/lassosum/{study}/1KGPhase3.w_hm3.{study}.score.gz',
+        scale=expand('prs/lassosum/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop'])
     params:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0]
     log:

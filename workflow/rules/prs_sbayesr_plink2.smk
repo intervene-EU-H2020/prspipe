@@ -43,7 +43,11 @@ rule prs_scoring_sbayesr:
         hm3_gw=rules.extract_hm3_gw.output,
         gctb=config['gctb']
     output:
-        touch('prs/sbayesr/{study}/ok')
+        touch('prs/sbayesr/{study}/ok'),
+        score='prs/sbayesr/{study}/1KGPhase3.w_hm3.{study}.score.gz',
+        scale=expand('prs/sbayesr/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop'])
+    params:
+        score_tmp=lambda wc, output: output['score'][:-3]
     log:
         "logs/prs_scoring_sbayesr/{study}.log"
     threads:
@@ -64,7 +68,8 @@ rule prs_scoring_sbayesr:
         "--n_cores {threads} "
         "--robust T "
         "--output prs/sbayesr/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
-        "--ref_pop_scale {input[super_pop_keep]} "
+        "--ref_pop_scale {input[super_pop_keep]} && gzip {params[score_tmp]} "
+        "gzip "
         ") &> {log}"
         
 

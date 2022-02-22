@@ -29,8 +29,9 @@ rule prs_scoring_ldpred2:
         study_ancestry=lambda wc: studies.ancestry[studies.study_id == wc.study].iloc[0],
         is_binary=lambda wc: {'no':'FALSE', 'yes':'TRUE', 'No':'FALSE', 'Yes':'TRUE'}[studies.binary[studies.study_id == wc.study].iloc[0]]
     output:
-        # TODO: update output files
-        touch('prs/ldpred2/{study}/ok')
+        touch('prs/ldpred2/{study}/ok'),
+        score='prs/ldpred2/{study}/1KGPhase3.w_hm3.{study}.score.gz',
+        scale=expand('prs/ldpred2/{{study}}/1KGPhase3.w_hm3.{{study}}.{ancestry}.scale', ancestry=config['1kg_superpop'])
     log:
         "logs/prs_scoring_ldpred2/{study}.log"
     threads:

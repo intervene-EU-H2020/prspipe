@@ -19,4 +19,3 @@ RUN  wget https://www.well.ox.ac.uk/~gav/resources/qctool_v2.0.6-Ubuntu16.04-x86
 &&   tar -xvf qctool_v2.0.6-Ubuntu16.04-x86_64.tgz && rm qctool_v2.0.6-Ubuntu16.04-x86_64.tgz \
 &&   mv qctool_v2.0.6-Ubuntu16.04-x86_64/qctool /usr/local/bin/ && rm -r qctool_v2.0.6-Ubuntu16.04-x86_64
 
-

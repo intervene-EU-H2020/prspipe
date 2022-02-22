@@ -45,13 +45,13 @@ rule ancestry_scoring_ext:
         "( "
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Ancestry_identifier/Ancestry_identifier.R "
         "--target_plink_chr custom_input/{wildcards[bbid]}/genotypes/chr "
-        "--ref_plink_chr {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr "
+        "--ref_plink_chr reference/1kg/1KGPhase3.w_hm3.chr "
         "--n_pcs 100 "
         "--plink {config[plink1_9]} "
         "--plink2 {config[plink2]} "
         "--output results/{wildcards[bbid]}/Ancestry_idenitfier/AllAncestry "
         "--ref_pop_scale {input[super_pop_keep]} "
-        "--pop_data {config[Geno_1KG_dir]}/integrated_call_samples_v3.20130502.ALL.panel_small "
+        "--pop_data reference/1kg/integrated_call_samples_v3.20130502.ALL.panel_small "
         ") &> {log} "
 
 rule all_ancestry_scoring_ext:
@@ -108,12 +108,15 @@ rule validate_setup_ext:
      # requests all necessary outputs for the rules below.
      # TODO: replace these with the plink2 counterparts
      input:
-         expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id)
+         expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id),
+         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.score.gz', method=config['prs_methods'], study=studies.study_id),
+         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.{ancestry}.scale', method=config['prs_methods'], study=studies.study_id, ancestry=config['1kg_superpop'])
+
 
 wildcard_constraints:
     score_id="[A-Za-z\\.0-9_\\-]+"
+  
 
-    
 rule run_scaled_polygenic_scorer:
     # general purpose rule to run scaled_polygenic_scorer
     input:

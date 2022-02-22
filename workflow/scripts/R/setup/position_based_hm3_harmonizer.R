@@ -8,7 +8,8 @@ option_list = list(
     make_option("--mapping", action="store", default=NA, type="character", help="mapping file."),
     make_option("--plink2", action="store", default="plink2", type="character", help="path to plink2 binary"),
     make_option("--rsid_col", action="store", default="rsid_mrg", type="character"),
-    make_option("--plink2_args", action="store", default="--make-bed", type="character", help="arguments passed to plink2 (use this only if you know what you are doing)")
+    make_option("--plink2_args", action="store", default="--make-bed", type="character", help="arguments passed to plink2 (use this only if you know what you are doing)"),
+    make_option('--tmpdir', action="store", default=NA, type="character")
 )
 
 opt = parse_args(OptionParser(option_list=option_list))
@@ -19,7 +20,16 @@ if(!dir.exists(dirname(opt$out_prefix))){
     dir.create(dirname(opt$out_prefix))
 }
 
-bim = fread(opt$bim, sep = '\t', col.names = c('chr','rsid','dst','pos','a1','a2'))
+tempdir <- opt$tmpdir
+if( is.na(tempdir) ){
+    tempdir <- tempdir()
+} else {
+    if(!dir.exists(tempdir)){
+    stop(paste0('specified temporary directory "', tempdir,'" does not exist.'))
+    }
+}
+
+bim = fread(opt$bim, sep = '\t', col.names = c('chr','rsid','dst','pos','a1','a2'), tmpdir=tempdir)
 
 # add IUPAC codes
 bim[,IUPAC:='.']
@@ -30,7 +40,7 @@ bim[ (a1 == 'C' & a2 =='T') | (a1 == 'T' & a2 =='C'), IUPAC:='Y']
 bim[ (a1 == 'G' & a2 =='T') | (a1 == 'T' & a2 =='G'), IUPAC:='K']
 bim[ (a1 == 'A' & a2 =='C') | (a1 == 'C' & a2 =='A'), IUPAC:='M']
 
-mapping <- fread(opt$mapping, sep='\t')
+mapping <- fread(opt$mapping, sep='\t', tmpdir=tempdir)
 nr <- nrow(mapping)
 cat('Loaded ', nr, ' variants from mapping file.\n')
 mapping <- mapping[ a1 %in% c('A','C','T','G') & a2 %in% c('A', 'C', 'T', 'G') ]
