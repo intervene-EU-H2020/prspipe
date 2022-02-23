@@ -111,7 +111,7 @@ The `shell:`-directive defines what will be executed. As you can see, this rule 
 In order to avoid writing a long command every time you run snakemake, the shell script [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) in the main directory can be used to wrap default parameters, i.e.
 
 ```
-bash run.sh workflow/Snakefile download_hapmap3_snplist
+bash run.sh download_hapmap3_snplist
 ```
 is equivalent to the two commands in the examples above.
 
