@@ -131,7 +131,7 @@ bash install_basics.sh
 
 This will clone our fork of the [GenoPred repository](https://github.com/intervene-EU-H2020/GenoPred), download `qctool2` and the latest versions of `plink1` and `plink2`. If you already have these tools installed, you can also change the paths in `config/config.yaml`. However, this can lead to bugs :cockroach: and is not recommended.  The default software paths in `config/config.yaml` should work when using the pipeline container. 
 
-:warning: If `workflow/scripts/GenoPred` does not exist after running `bash install_basics.sh`, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
+> :warning: If `workflow/scripts/GenoPred` does not exist after running `bash install_basics.sh`, try to clone the repo manually: `git clone git@github.com:intervene-EU-H2020/GenoPred.git workflow/scripts/GenoPred`. Getting an error? Make sure you have access, and your git is [configured to use ssh](https://docs.github.com/en/authentication/connecting-to-github-with-ssh/adding-a-new-ssh-key-to-your-github-account)!
 
 ## :globe_with_meridians: Set up Snakemake using Singularity
 
