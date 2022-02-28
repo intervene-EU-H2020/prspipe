@@ -11,6 +11,7 @@
 
 # Read in environmental variables
 source('workflow/scripts/R/source_config.R')
+Geno_1KG_dir <- 'resources/1kg'
 
 library(data.table)
 
