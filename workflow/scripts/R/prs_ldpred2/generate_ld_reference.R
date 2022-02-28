@@ -10,6 +10,7 @@ library(bigreadr)
 
 # read configuration
 source('workflow/scripts/R/source_config.R')
+Geno_1KG_dir <- 'resources/1kg'
 
 args = commandArgs(trailingOnly=TRUE)
 
