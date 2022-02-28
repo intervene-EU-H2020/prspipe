@@ -9,6 +9,7 @@
 
 # Read in environmental variables
 source('workflow/scripts/R/source_config.R')
+Geno_1KG_dir <- 'resources/1kg'
 
 library(data.table)
 hapmap3_snps<-fread(paste0(HapMap3_snplist_dir,'/w_hm3.snplist'))
