@@ -335,7 +335,7 @@ rule allele_freq_1kg_pop_tmp:
     output:
         expand('resources/1kg/tmp/{{popul}}/chr{chr}.frq', chr=range(1,23), allow_missing=True)
     params:
-        keep_file=lambda wc: "{}/keep_files/{}_samples.keep".format(config['Geno_1KG_dir'], wc['popul']),
+        keep_file=lambda wc: "resources/1kg/keep_files/{}_samples.keep".format(wc['popul']),
         in_prefix=lambda wc, input: input['bed'][0].replace('1.tmp.bed',''),
         out_prefix=lambda wc, output: output[0][:-5]
     wildcard_constraints:
@@ -501,10 +501,10 @@ rule allele_freq_pop:
     shell:
         "("
         "for chrom in $(seq 1 22); do "
-        "{config[plink1_9]} --bfile {config[Geno_1KG_dir]}/1KGPhase3.w_hm3.chr${{chrom}} "
-        "--keep {config[Geno_1KG_dir]}/keep_files/{wildcards[popul]}_samples.keep "
+        "{config[plink1_9]} --bfile resources/1kg/1KGPhase3.w_hm3.chr${{chrom}} "
+        "--keep resources/1kg/keep_files/{wildcards[popul]}_samples.keep "
         "--freq "
-        "--out {config[Geno_1KG_dir]}/freq_files/{wildcards[popul]}/1KGPhase3.w_hm3.{wildcards[popul]}.chr${{chrom}}; "
+        "--out resources/1kg/freq_files/{wildcards[popul]}/1KGPhase3.w_hm3.{wildcards[popul]}.chr${{chrom}}; "
         "done "
         ") &> {log} "
 
