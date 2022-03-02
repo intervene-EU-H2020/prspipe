@@ -39,7 +39,7 @@ rule ancestry_scoring_ext:
         config['singularity']['all']
     resources:
         mem_mb=32000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="03:00:00"
     shell:
         "( "
@@ -57,6 +57,40 @@ rule ancestry_scoring_ext:
 rule all_ancestry_scoring_ext:
     input:
         expand(rules.ancestry_scoring_ext.output, bbid=target_list.name.values)
+    
+rule ancestry_outlier_ext:
+    input:
+        rules.ancestry_scoring_ext.output,
+        expand(rules.harmonize_target_genotypes.output, chr=range(1,23), allow_missing=True),
+        keep_files = rules.ancestry_scoring_ext.output.model_pred_keep
+    output:
+        touch('results/{bbid}/Ancestry_identifier/outlier_detection/ok'),
+        keep_list = "results/{bbid}/Ancestry_identifier/outlier_detection/AllAncestry.model_pred.keep_list"
+    resources:
+        mem_mb=20000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        time="12:00:00"
+    params:
+        keep_files = lambda wc, input: ','.join(input['keep_files'])
+    log:
+        'logs/ancestry_outlier_ext/{bbid}.log'
+    shell:
+        # "ls results/{wildcards[bbid]}/Ancestry_identifier/*model_pred.*.keep > {output[keep_list]} && "
+        "( "
+        "echo {params[keep_files]} | tr ',' '\\n' > {output[keep_list]} && "
+        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Population_outlier/Population_outlier.R "
+        "--target_plink custom_input/{wildcards[bbid]}/genotypes/chr "
+        "--target_keep {output[keep_list]} "
+        "--n_pcs 8 "
+        "--maf 0.05 "
+        "--geno 0.02 "
+        "--hwe 1e-6 "
+        "--memory 15000 "
+        "--plink {config[plink1_9]} "
+        "--plink2 {config[plink2]} "
+        "--output results/{wildcards[bbid]}/Ancestry_identifier/outlier_detection/AllAncestry.QC "
+        ") &> {log} "
+    
        
 rule calculate_maf_ancestry_ext:
     # calculate allele frequencies for different superpopulations
@@ -134,7 +168,7 @@ rule run_scaled_polygenic_scorer:
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="03:00:00"
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
@@ -277,7 +311,7 @@ rule model_eval_ext:
         8
     resources:
         mem_mb=64000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_2.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="08:00:00"
     log:
         'logs/model_eval_ext/{bbid}/{study}.log'

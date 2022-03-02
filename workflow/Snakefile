@@ -37,7 +37,7 @@ if 'prevalence' in config:
 report: "report/workflow.rst"
 
 # Allow users to fix the underlying OS via singularity (default singularity container to use)
-singularity: 'docker://rmonti/prspipe:0.0.2'
+singularity: 'docker://rmonti/prspipe:0.0.3'
 
 
 rule test_R:
