@@ -306,7 +306,7 @@ Target genetic data are defined using a tab-separated-values file (tsv), by defa
 | --- | --- | --- |
 | the name of the target data (e.g., "ukbiobank") | the path/prefix of the imputed per-chromosome genotype data (e.g.,"some/path/prefix_chr") | the format (see below) |
 
-Genotype data paths are expected to follow the pattern `<prefix>chr<1-22>.<.bed/.bim/.fam/.bgen/.vcf.gz>`. For bgen-formatted data, the sample-file should be called called `<prefix>.sample`. Both hg19 and hg38 are accepted. Note that the path will have to be accessible inside the container, see the section on [container mounts](#container-mounts-file_folder) above.
+Genotype data paths are expected to follow the pattern `<prefix>_chr<1-22>.<.bed/.bim/.fam/.bgen/.vcf.gz>` (mind the gap, i.e., the underscore). For bgen-formatted data, the sample-file should be called called `<prefix>.sample`. Both hg19 and hg38 are accepted. Note that the path will have to be accessible inside the container, see the section on [container mounts](#container-mounts-file_folder) above.
 
 Supported data types are 
 - **samp_imp_plink1**: plink 1 formated data (.bed/.bim/.fam)
