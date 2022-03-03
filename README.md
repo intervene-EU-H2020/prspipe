@@ -57,12 +57,13 @@ Genopred, i.e., the repository this pipeline depends on, relies on R and depende
 
 ```
 # get the container with docker
-docker pull rmonti/prspipe:0.0.2
+docker pull rmonti/prspipe:0.0.3
 
 # ... or with singularity
 # this should work without root permissions
-singularity pull docker://rmonti/prspipe:0.0.2
+singularity pull docker://rmonti/prspipe:0.0.3
 ```
+> ⚠️ To run population outlier detection, you need at least version 0.0.3
 
 ## Preface on Snakemake :snake:
  
@@ -410,7 +411,7 @@ If manually installing R-packages, the following commands will install all depen
 
 ```
 R
-install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
+install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce', 'NbClust', 'GGally'), dependencies=TRUE)
     
 install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
 ```
