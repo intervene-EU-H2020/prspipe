@@ -411,7 +411,7 @@ If manually installing R-packages, the following commands will install all depen
 
 ```
 R
-install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce'), dependencies=TRUE)
+install.packages(c('data.table','doMC','optparse','foreach','caret','ggplot2','cowplot','glmnet','MLmetrics','e1071','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce', 'NbClust', 'GGally'), dependencies=TRUE)
     
 install.packages("bin/lassosum/lassosum_0.4.5.tar.gz", repos=NULL, type="source")
 ```
