@@ -40,10 +40,10 @@ rule initialize_synthetic:
         ss='resources/synthetic_data/Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz',
         pheno='custom_input/synth/phenotypes/synthetic01.tsv.gz'
     shell:
-        "cd resources/synthetic_data/ && unzip synthetic_genotypes_250.zip && "
-        "zcat Herr0.3_pPoly0.005.PHENO1.glm.linear.gz | awk 'BEGIN{{OFS=\"\t\"; print \"CHR\", \"POS\", \"SNP\", \"A2\", \"A1\", \"N\", \"BETA\", \"SE\", \"P\"}}{{if(NR>1){{print $1, $2, $3, $4, $5, $8, $9, $10, $14}}}}' | gzip > Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz  && "
-        "ln -s -r \"$(readlink -f resources/synthetic_data/pheno250.tsv.gz)\" {output[pheno]}"
-        
+        "(cd resources/synthetic_data/ && unzip synthetic_genotypes_250.zip && "
+        "zcat Herr0.3_pPoly0.005.PHENO1.glm.linear.gz | awk 'BEGIN{{OFS=\"\t\"; print \"CHR\", \"POS\", \"SNP\", \"A2\", \"A1\", \"N\", \"BETA\", \"SE\", \"P\"}}{{if(NR>1){{print $1, $2, $3, $4, $5, $8, $9, $10, $14}}}}' | gzip > Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz ); "
+        "ln -s -r \"$(readlink -f resources/synthetic_data/Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz)\" {output[pheno]}"
+
 
 rule download_test_data:
     # rule to download test data from figshare
