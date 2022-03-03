@@ -54,9 +54,6 @@ rule ancestry_scoring_ext:
         "--pop_data reference/1kg/integrated_call_samples_v3.20130502.ALL.panel_small "
         ") &> {log} "
 
-rule all_ancestry_scoring_ext:
-    input:
-        expand(rules.ancestry_scoring_ext.output, bbid=target_list.name.values)
     
 rule ancestry_outlier_ext:
     input:
@@ -97,7 +94,11 @@ if config['enable_outlier_detection']:
     keep_file_pattern = "results/{bbid}/Ancestry_identifier/outlier_detection/AllAncestry.QC.{superpop}.keep"
 else:
     keep_file_pattern = "results/{bbid}/Ancestry_identifier/AllAncestry.{superpop}.keep"
-    
+
+rule all_ancestry_scoring_ext:
+    input:
+        expand(keep_file_pattern, bbid=target_list.name.values, superpop=config['1kg_superpop'])
+
 rule calculate_maf_ancestry_ext:
     # calculate allele frequencies for different superpopulations
     # NA-values are dropped (TODO: make sure this doesn't lead to bugs downstream)

@@ -34,9 +34,7 @@ rule harmonize_target_genotypes:
         bed=rules.extract_hm3.output['bed'],
         geno = lambda wc: get_input_file_from_type(target_list.loc[wc['bbid'], 'path'],wc['chr'],target_list.loc[wc['bbid'], 'type']),
         liftover=rules.download_liftover.output['liftover'],
-        chain=rules.download_liftover.output['hg19_to_hg38_chain'],
-        plink2=config['plink2'],
-        plink19=config['plink1_9']
+        chain=rules.download_liftover.output['hg19_to_hg38_chain']
     output:
         bim='custom_input/{bbid}/genotypes/chr{chr}.bim',
         bed='custom_input/{bbid}/genotypes/chr{chr}.bed',
@@ -50,7 +48,8 @@ rule harmonize_target_genotypes:
         4
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        time='12:00:00'
     log:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
     shell:
@@ -61,7 +60,6 @@ rule harmonize_target_genotypes:
         '--format {params[arg][0]} '
         '--plink {config[plink1_9]} '
         '--plink2 {config[plink2]} '
-        '--qctool2 {config[qctool2]} '
         '--liftover {input[liftover]} '
         '--liftover_track {input[chain]} '
         '--out {params[out_prefix]} '
