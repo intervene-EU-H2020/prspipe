@@ -22,17 +22,17 @@ rule ancestry_scoring_ext:
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],
         harmonised_geno=expand("custom_input/{bbid}/genotypes/chr{chr}.bed", chr=range(1,23), allow_missing=True)
     output:
-        eigenvec_sp=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.{superpop}.eigenvec', superpop=config['1kg_superpop']),
-        keep_sp=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.{superpop}.keep', superpop=config['1kg_superpop']),
-        scale_sp=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.{superpop}.scale', superpop=config['1kg_superpop']),
-        eigenvec='results/{bbid}/Ancestry_idenitfier/AllAncestry.eigenvec',
-        eigenvec_var='results/{bbid}/Ancestry_idenitfier/AllAncestry.eigenvec.var',
-        log='results/{bbid}/Ancestry_idenitfier/AllAncestry.log',
-        model_pred_keep=expand('results/{{bbid}}/Ancestry_idenitfier/AllAncestry.model_pred.{superpop}.keep', superpop=config['1kg_superpop']),
-        model_pred='results/{bbid}/Ancestry_idenitfier/AllAncestry.model_pred',
-        pop_model='results/{bbid}/Ancestry_idenitfier/AllAncestry.pop_model.rds',
-        model_details='results/{bbid}/Ancestry_idenitfier/AllAncestry.pop_model_prediction_details.txt',
-        scale='results/{bbid}/Ancestry_idenitfier/AllAncestry.scale'
+        eigenvec_sp=expand('results/{{bbid}}/Ancestry_identifier/AllAncestry.{superpop}.eigenvec', superpop=config['1kg_superpop']),
+        keep_sp=expand('results/{{bbid}}/Ancestry_identifier/AllAncestry.{superpop}.keep', superpop=config['1kg_superpop']),
+        scale_sp=expand('results/{{bbid}}/Ancestry_identifier/AllAncestry.{superpop}.scale', superpop=config['1kg_superpop']),
+        eigenvec='results/{bbid}/Ancestry_identifier/AllAncestry.eigenvec',
+        eigenvec_var='results/{bbid}/Ancestry_identifier/AllAncestry.eigenvec.var',
+        log='results/{bbid}/Ancestry_identifier/AllAncestry.log',
+        model_pred_keep=expand('results/{{bbid}}/Ancestry_identifier/AllAncestry.model_pred.{superpop}.keep', superpop=config['1kg_superpop']),
+        model_pred='results/{bbid}/Ancestry_identifier/AllAncestry.model_pred',
+        pop_model='results/{bbid}/Ancestry_identifier/AllAncestry.pop_model.rds',
+        model_details='results/{bbid}/Ancestry_identifier/AllAncestry.pop_model_prediction_details.txt',
+        scale='results/{bbid}/Ancestry_identifier/AllAncestry.scale'
     log:
         "logs/ancestry_scoring_ext/{bbid}.log"
     singularity:
@@ -49,7 +49,7 @@ rule ancestry_scoring_ext:
         "--n_pcs 100 "
         "--plink {config[plink1_9]} "
         "--plink2 {config[plink2]} "
-        "--output results/{wildcards[bbid]}/Ancestry_idenitfier/AllAncestry "
+        "--output results/{wildcards[bbid]}/Ancestry_identifier/AllAncestry "
         "--ref_pop_scale {input[super_pop_keep]} "
         "--pop_data reference/1kg/integrated_call_samples_v3.20130502.ALL.panel_small "
         ") &> {log} "
@@ -64,8 +64,10 @@ rule ancestry_outlier_ext:
         expand(rules.harmonize_target_genotypes.output, chr=range(1,23), allow_missing=True),
         keep_files = rules.ancestry_scoring_ext.output.model_pred_keep
     output:
+        # many other output files not listed here.
         touch('results/{bbid}/Ancestry_identifier/outlier_detection/ok'),
-        keep_list = "results/{bbid}/Ancestry_identifier/outlier_detection/AllAncestry.model_pred.keep_list"
+        keep_list = "results/{bbid}/Ancestry_identifier/outlier_detection/AllAncestry.model_pred.keep_list",
+        keep_files = expand("results/{{bbid}}/Ancestry_identifier/outlier_detection/AllAncestry.QC.{superpop}.keep", superpop=config['1kg_superpop'])
     resources:
         mem_mb=20000,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
@@ -79,7 +81,7 @@ rule ancestry_outlier_ext:
         "( "
         "echo {params[keep_files]} | tr ',' '\\n' > {output[keep_list]} && "
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Population_outlier/Population_outlier.R "
-        "--target_plink custom_input/{wildcards[bbid]}/genotypes/chr "
+        "--target_plink_chr custom_input/{wildcards[bbid]}/genotypes/chr "
         "--target_keep {output[keep_list]} "
         "--n_pcs 8 "
         "--maf 0.05 "
@@ -91,15 +93,19 @@ rule ancestry_outlier_ext:
         "--output results/{wildcards[bbid]}/Ancestry_identifier/outlier_detection/AllAncestry.QC "
         ") &> {log} "
     
-       
+if config['enable_outlier_detection']:
+    keep_file_pattern = "results/{bbid}/Ancestry_identifier/outlier_detection/AllAncestry.QC.{superpop}.keep"
+else:
+    keep_file_pattern = "results/{bbid}/Ancestry_identifier/AllAncestry.{superpop}.keep"
+    
 rule calculate_maf_ancestry_ext:
     # calculate allele frequencies for different superpopulations
     # NA-values are dropped (TODO: make sure this doesn't lead to bugs downstream)
     input:
-        keep_sp='results/{bbid}/Ancestry_idenitfier/AllAncestry.{superpop}.keep',
+        keep_sp=keep_file_pattern,
         harmonised_geno="custom_input/genotypes/{bbid}/chr{chr}.bed"
     output:
-        afreq='results/{bbid}/Ancestry_idenitfier/AllAncestry.{superpop}.chr{chr}.frq'
+        afreq='results/{bbid}/Ancestry_identifier/AllAncestry.{superpop}.chr{chr}.frq'
     params:
         geno_prefix=lambda wc, input: input['harmonised_geno'][:-4],
         out_prefix=lambda wc, output: output['afreq'][:-4]
@@ -116,7 +122,6 @@ rule calculate_maf_ancestry_ext:
         '--out {params[out_prefix]}_tmp ; '
         'awk \'$5 != "NA"\' {params[out_prefix]}_tmp.frq > {params[out_prefix]}.frq && rm {params[out_prefix]}_tmp.frq '
         ') &> {log} '
-        # 'gzip {params[out_prefix]}.frq; ' 
 
 
 rule all_calculate_maf_ancestry_ext:
@@ -130,7 +135,7 @@ rule all_calculate_maf_ancestry_ext:
 # 10K reference #
 #################
 
-# we skip the generation of a 10K reference, see (deprecated) ukbb.smk if we wished to implement this for external biobanks as well.
+# we skip the generation of a 10K reference as done in the original GenoPred paper, see (deprecated) ukbb.smk if we wished to implement this for external biobanks as well.
 
         
 #############################>>
@@ -144,7 +149,7 @@ rule validate_setup_ext:
      input:
          expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id),
          expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.score.gz', method=config['prs_methods'], study=studies.study_id),
-         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.{ancestry}.scale', method=config['prs_methods'], study=studies.study_id, ancestry=config['1kg_superpop'])
+         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.{superpop}.scale', method=config['prs_methods'], study=studies.study_id, superpop=config['1kg_superpop'])
 
 
 wildcard_constraints:
@@ -158,7 +163,7 @@ rule run_scaled_polygenic_scorer:
         scale='prs/{method}/{study}/{score_id}.{superpop}.scale',
         ref_freq_chr=expand('resources/1kg/freq_files/{{superpop}}/1KGPhase3.w_hm3.{{superpop}}.chr{chr}.frq', chr=range(1,23)),
         target_plink=expand('custom_input/{{bbid}}/genotypes/chr{chr}.{suffix}', chr=range(1,23), suffix=['bed','bim','fam']),
-        target_keep="results/{bbid}/Ancestry_idenitfier/AllAncestry.model_pred.{superpop}.keep"
+        target_keep=keep_file_pattern
     output:
         ok=touch('results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.done'),
         profiles='results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.profiles'
@@ -295,7 +300,8 @@ def check_gz_pheno_tsv(wc):
     else:
         print('Error: Could not find phenotype file for study "{}" and phenotype "{}", should be either "{}" or "{}" '.format(wc.study, pheno, infile, infile[:-3]))
         return infile
-    
+
+
 rule model_eval_ext:
     input:
         predictors = rules.model_eval_ext_prep.output.predictors,

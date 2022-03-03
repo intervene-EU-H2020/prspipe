@@ -19,6 +19,13 @@ prevalence: "config/pop_prevalence.tsv"
 # path to the GenoPred repo
 GenoPred_dir: "workflow/scripts/GenoPred"
 
+####################
+# Ancestry scoring #
+####################
+
+# Use Ollie's Population_outlier.R script to detect outlier samples within predicted super populations (True/False).
+enable_outlier_detection: True
+
 ###############
 # PRS Methods #
 ###############
@@ -44,7 +51,7 @@ Rscript: "Rscript"
 # tested with PLINK v2.00a3LM AVX2 Intel (20 Sep 2021)
 # in the container, plink2 and plink1 are available at /usr/local/bin/plink2 and /usr/local/bin/plink (and are in the PATH)
 # if running *without* container, change the paths below to bin/plink and bin/plink2, respectively, and use install_basics.sh to download the correct versions of plink1 and plink2
-# a standard 64-bit non-AVX version of plink2 is located at /usr/local/bin/plink2_x86_64
+# a standard 64-bit non-AVX version of plink2 is located at /usr/local/bin/plink2_x86_64, if needed.
 
 plink1_9: "plink"
 plink2: "plink2"
@@ -70,7 +77,7 @@ PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 # if running snakemake with "--use-singularity", this parameter sets main container to run in:
 
 singularity:
-  all: 'docker://rmonti/prspipe:0.0.2'
+  all: 'docker://rmonti/prspipe:0.0.3'
 
 #################################
 # 1000 genomes superpopulations #
