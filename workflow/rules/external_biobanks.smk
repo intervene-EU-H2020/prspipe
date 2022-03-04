@@ -38,20 +38,20 @@ rule ancestry_scoring_ext:
     singularity:
         config['singularity']['all']
     resources:
-        mem_mb=32000,
+        mem_mb=64000,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
-        time="03:00:00"
+        time="12:00:00"
     shell:
         "( "
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Ancestry_identifier/Ancestry_identifier.R "
         "--target_plink_chr custom_input/{wildcards[bbid]}/genotypes/chr "
-        "--ref_plink_chr reference/1kg/1KGPhase3.w_hm3.chr "
+        "--ref_plink_chr resources/1kg/1KGPhase3.w_hm3.chr "
         "--n_pcs 100 "
         "--plink {config[plink1_9]} "
         "--plink2 {config[plink2]} "
         "--output results/{wildcards[bbid]}/Ancestry_identifier/AllAncestry "
         "--ref_pop_scale {input[super_pop_keep]} "
-        "--pop_data reference/1kg/integrated_call_samples_v3.20130502.ALL.panel_small "
+        "--pop_data resources/1kg/integrated_call_samples_v3.20130502.ALL.panel_small "
         ") &> {log} "
 
     
