@@ -483,7 +483,11 @@ rule extract_hm3_gw:
         "--out resources/1kg/1KGPhase3.w_hm3.GW "
         ") &> {log} "
         
-        
+
+############################################
+# Allele frequency calculation - plink 1.9 #
+############################################
+
 rule allele_freq_pop:
     # 2.5 1000 Genomes allele frequency files
     # Here we create files containing ancestry specific minor allele frequency estimates for the HapMap3 SNPs based on the 1000 Genomes Phase 3 data. This information is mainly used for mean-imputation of missing SNPs during genotype-based scoring. This avoids target sample specific minor allele frequencies being used for mean imputation which may not be available, and will vary between target samples.
@@ -516,16 +520,15 @@ rule run_allele_freq_pop:
         expand(rules.allele_freq_pop.output, popul=config['1kg_pop'])
     output:
         touch("resources/1kg/freq_files/all_pop.ok")
-
-
+        
+        
 rule run_allele_freq_superpop:
-    # runs 2.5 for super populations
     input:
         rules.create_ancestry.output,
         expand(rules.allele_freq_pop.output, popul=config['1kg_superpop'])
     output:
         touch("resources/1kg/freq_files/all_superpop.ok")
-
+        
 
 rule run_allele_freq_allancestry:
     # runs 2.5 for all ancestries combined
@@ -556,6 +559,86 @@ rule run_allele_freq_all:
     output:
         touch("resources/1kg/freq_files/all.ok")
 
+
+##########################################
+# Allele frequency calculation - plink 2 #
+##########################################
+
+# Plink 1.x allele frequency files lead to segmentation faults when combined with plink2 scoring (?)
+# For this reason we create plink2 .afreq files to use for polygenic scoring.
+
+rule allele_freq_pop_plink2:
+    input:
+        rules.create_ancestry.output,
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
+    output:
+        pop_list=expand("resources/1kg/freq_files/{{popul}}/1KGPhase3.w_hm3.{{popul}}.chr{chr}.afreq", chr=range(1,23))
+    wildcard_constraints:
+        pop='[A-Z]+'
+    log:
+        "logs/allele_freq_pop_plink2/{popul}.log"
+    singularity:
+        config['singularity']['all']
+    shell:
+        "("
+        "for chrom in $(seq 1 22); do "
+        "{config[plink2]} --bfile resources/1kg/1KGPhase3.w_hm3.chr${{chrom}} "
+        "--keep resources/1kg/keep_files/{wildcards[popul]}_samples.keep "
+        "--freq "
+        "--out resources/1kg/freq_files/{wildcards[popul]}/1KGPhase3.w_hm3.{wildcards[popul]}.chr${{chrom}}; "
+        "done "
+        ") &> {log} "
+
+
+rule run_allele_freq_pop_plink2:
+    input:
+        rules.create_ancestry.output,
+        expand(rules.allele_freq_pop_plink2.output, popul=config['1kg_pop'])
+    output:
+        touch("resources/1kg/freq_files/all_pop_plink2.ok")
+
+rule run_allele_freq_superpop_plink2:
+    input:
+        rules.create_ancestry.output,
+        expand(rules.allele_freq_pop_plink2.output, popul=config['1kg_superpop'])
+    output:
+        touch("resources/1kg/freq_files/all_superpop_plink2.ok")
+
+
+rule run_allele_freq_allancestry_plink2:
+    input:
+        expand(rules.extract_hm3.output, chr=range(1,23), allow_missing=True)
+    output:
+        expand("resources/1kg/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr{chr}.afreq", chr=range(1, 23))
+    log:
+        "logs/run_allele_freq_allancestry.log"
+    singularity:
+        config['singularity']['all']
+    shell:
+        "("
+        "for chr in $(seq 1 22); do "
+        "{config[plink2]} --bfile resources/1kg/1KGPhase3.w_hm3.chr${{chr}} "
+        "--freq "
+        "--out resources/1kg/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr${{chr}}; "
+        "done "
+        ") &> {log} "
+
+
+rule run_allele_freq_all_plink2:
+    # this rule executes all the rules above
+    input:
+        rules.run_allele_freq_pop.output,
+        rules.run_allele_freq_superpop.output,
+        rules.run_allele_freq_allancestry.output
+    output:
+        touch("resources/1kg/freq_files/all.ok")
+
+
+##########################
+# Ancestry scoring - PCA #
+##########################
+
+# create files needed for ancestry scoring
 
 rule ancestry_scoring:
     # 3 Ancestry scoring
@@ -621,5 +704,4 @@ rule ancestry_scoring_allancestry:
         "--ref_pop_scale resources/1kg/super_pop_keep.list "
         "--output resources/1kg/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry"
         ") &> {log}"
-
 

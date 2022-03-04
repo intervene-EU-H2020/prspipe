@@ -162,7 +162,7 @@ rule run_scaled_polygenic_scorer:
     input:
         score='prs/{method}/{study}/{score_id}.score.gz',
         scale='prs/{method}/{study}/{score_id}.{superpop}.scale',
-        ref_freq_chr=expand('resources/1kg/freq_files/{{superpop}}/1KGPhase3.w_hm3.{{superpop}}.chr{chr}.frq', chr=range(1,23)),
+        ref_freq_chr=expand('resources/1kg/freq_files/{{superpop}}/1KGPhase3.w_hm3.{{superpop}}.chr{chr}.afreq', chr=range(1,23)),
         target_plink=expand('custom_input/{{bbid}}/genotypes/chr{chr}.{suffix}', chr=range(1,23), suffix=['bed','bim','fam']),
         target_keep=keep_file_pattern
     output:
@@ -170,7 +170,7 @@ rule run_scaled_polygenic_scorer:
         profiles='results/{bbid}/prs/{method}/{study}/{superpop}/{score_id}.{superpop}.profiles'
     params:
         geno_prefix=lambda wc, input: input['target_plink'][0][:-5],
-        freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-5],
+        freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-7],
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
         mem_mb=8000,
@@ -188,16 +188,17 @@ rule run_scaled_polygenic_scorer:
         "--plink2 {config[plink2]} "
         "--pheno_name {wildcards.study} "
         "--output {params[out_prefix]} "
+        "--freq_format plink2 "
+        "--safe TRUE "
 
 
 # run target scoring for all methods defined in the pipeline
-# TODO: all super-populations
 rule all_run_scaled_polygenic_scorer:
     input:
         expand(rules.run_scaled_polygenic_scorer.output,
                bbid=target_list.name,
                study=studies.study_id.values,
-               superpop=['EUR'],
+               superpop=config['1kg_superpop'],
                score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
                method=config['prs_methods'])
 
@@ -209,7 +210,7 @@ rule all_target_prs_pt_clump:
         expand(rules.run_scaled_polygenic_scorer.output,
                bbid=target_list.name,
                study=studies.study_id.values,
-               superpop=['EUR'],
+               superpop=config['1kg_superpop'],
                score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
                method=['pt_clump'])
                
@@ -223,7 +224,7 @@ import os
 
 def collect_prs_outputs():
 
-    # function that scans the prs/ directory for scores, and requests to predict them on all target datasets
+    # function that scans the prs/ directory for scores, and requests to predict them on all target datasets and all ancestries
 
     score_dirs = glob('prs/*/*/')
     bbids = target_list.name.values
@@ -275,13 +276,12 @@ rule model_eval_ext_prep:
     input:
         expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles',
                 method=config['prs_methods'],
-                superpop=['EUR'],
                 allow_missing=True)
     output:
-        predictors='results/{bbid}/PRS_evaluation/{study}/EUR/{study}.AllMethodComp.predictor_groups'
+        predictors='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.AllMethodComp.predictor_groups'
     run:
         # prepare a file with predictors, grouped by method
-        with open(output[0], 'w') as outfile:
+        with open(output['predictors'], 'w') as outfile:
             outfile.write('predictors group\n')
             for i in input:
                 method = i.split('/')[3]
@@ -308,9 +308,9 @@ rule model_eval_ext:
         predictors = rules.model_eval_ext_prep.output.predictors,
         pheno_file = check_gz_pheno_tsv
     output:
-        assoc='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.assoc.txt',
-        pred_comp='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_comp.txt',
-        pred_eval='results/{bbid}/PRS_evaluation/{study}/{study}.AllMethodComp.pred_eval.txt'
+        assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.assoc.txt',
+        pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt',
+        pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_eval.txt'
     params:
         prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
@@ -321,7 +321,7 @@ rule model_eval_ext:
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="08:00:00"
     log:
-        'logs/model_eval_ext/{bbid}/{study}.log'
+        'logs/model_eval_ext/{bbid}/{study}.{superpop}.log'
     singularity:
         config['singularity']['all']
     shell:
@@ -340,7 +340,7 @@ rule model_eval_ext:
 
 rule all_model_eval_ext:
     input:
-        expand(rules.model_eval_ext.output, bbid=target_list.name.values, study=studies.study_id.values)
+        expand(rules.model_eval_ext.output, bbid=target_list.name.values, study=studies.study_id.values, superpop=config['1kg_superpop'])
     
                 
 #rule all_model_eval_ext_prep:
