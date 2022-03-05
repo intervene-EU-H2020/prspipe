@@ -577,11 +577,15 @@ rule allele_freq_pop_plink2:
         pop='[A-Z]+'
     log:
         "logs/allele_freq_pop_plink2/{popul}.log"
+    resources:
+        time="01:00:00",
+        mem_mb=4000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
         "("
-        "for chrom in $(seq 1 22); do "
+        "for chrom in {{1..22}}; do "
         "{config[plink2]} --bfile resources/1kg/1KGPhase3.w_hm3.chr${{chrom}} "
         "--keep resources/1kg/keep_files/{wildcards[popul]}_samples.keep "
         "--freq "
@@ -612,11 +616,15 @@ rule run_allele_freq_allancestry_plink2:
         expand("resources/1kg/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr{chr}.afreq", chr=range(1, 23))
     log:
         "logs/run_allele_freq_allancestry.log"
+    resources:
+        time="01:00:00",
+        mem_mb=4000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
         "("
-        "for chr in $(seq 1 22); do "
+        "for chr in {{1..22}}; do "
         "{config[plink2]} --bfile resources/1kg/1KGPhase3.w_hm3.chr${{chr}} "
         "--freq "
         "--out resources/1kg/freq_files/AllAncestry/1KGPhase3.w_hm3.AllAncestry.chr${{chr}}; "

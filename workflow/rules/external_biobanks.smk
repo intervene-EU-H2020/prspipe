@@ -143,19 +143,18 @@ rule all_calculate_maf_ancestry_ext:
 # START: Polygenic scoring  #>>
 #############################>>
 
-
 rule validate_setup_ext:
-     # requests all necessary outputs for the rules below.
-     # TODO: replace these with the plink2 counterparts
-     input:
-         expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id),
-         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.score.gz', method=config['prs_methods'], study=studies.study_id),
-         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.{superpop}.scale', method=config['prs_methods'], study=studies.study_id, superpop=config['1kg_superpop'])
+    # requests all necessary outputs for the rules below.
+    # TODO: replace these with the plink2 counterparts
+    input:
+        expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id),
+        expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.score.gz', method=config['prs_methods'], study=studies.study_id),
+        expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.{superpop}.scale', method=config['prs_methods'], study=studies.study_id, superpop=config['1kg_superpop'])
 
 
 wildcard_constraints:
     score_id="[A-Za-z\\.0-9_\\-]+"
-  
+
 
 rule run_scaled_polygenic_scorer:
     # general purpose rule to run scaled_polygenic_scorer
@@ -173,13 +172,13 @@ rule run_scaled_polygenic_scorer:
         freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-7],
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
-        mem_mb=8000,
+        mem_mb=16000,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="03:00:00"
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
     shell:
-        "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer_plink2.R "
+        "({config[Rscript]} {config[GenoPred_dir]}/Scripts/Scaled_polygenic_scorer/Scaled_polygenic_scorer_plink2.R "
         "--target_plink_chr {params.geno_prefix} "
         "--target_keep {input.target_keep} "
         "--ref_score {input.score} "
@@ -189,7 +188,7 @@ rule run_scaled_polygenic_scorer:
         "--pheno_name {wildcards.study} "
         "--output {params[out_prefix]} "
         "--freq_format plink2 "
-        "--safe TRUE "
+        "--safe TRUE) &> {log}"
 
 
 # run target scoring for all methods defined in the pipeline
@@ -274,9 +273,7 @@ rule model_eval_ext_prep:
     # preparation for model evaluation, requests for all studies and all methods specified in the config.yaml
     # TODO: other super-populations
     input:
-        expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles',
-                method=config['prs_methods'],
-                allow_missing=True)
+        expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles', method=config['prs_methods'], allow_missing=True)
     output:
         predictors='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.AllMethodComp.predictor_groups'
     run:
