@@ -303,10 +303,11 @@ def check_gz_pheno_tsv(wc):
 rule model_eval_ext:
     input:
         predictors = rules.model_eval_ext_prep.output.predictors,
-        pheno_file = check_gz_pheno_tsv
+        pheno_file = check_gz_pheno_tsv,
+        keep_file = keep_file_pattern
     output:
         assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.assoc.txt',
-        pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt',
+        pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt.gz',
         pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_eval.txt'
     params:
         prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
@@ -332,6 +333,7 @@ rule model_eval_ext:
         "--outcome_pop_prev {params[prev]} "
         "--out {params[out_prefix]} "
         "--save_group_model T "
+        "--keep {input[keep_file]} "
         ") &> {log}"
 
 
