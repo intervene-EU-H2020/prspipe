@@ -172,7 +172,7 @@ rule run_scaled_polygenic_scorer:
         freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-7],
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
-        mem_mb=16000,
+        mem_mb=32000,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="03:00:00"
     log:
