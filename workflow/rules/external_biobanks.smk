@@ -300,6 +300,13 @@ def check_gz_pheno_tsv(wc):
         return infile
 
 
+def get_mem_mb_model_eval_ext(wildcards, input, attempt):
+    with open(input['keep_file'], 'r') as infile:
+        for i, _ in enumerate(infile):
+            pass
+    return max(8000, int(i * 0.145 * 1.5**(attempt-1)))
+    
+
 rule model_eval_ext:
     input:
         predictors = rules.model_eval_ext_prep.output.predictors,
@@ -307,15 +314,15 @@ rule model_eval_ext:
         keep_file = keep_file_pattern
     output:
         assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.assoc.txt',
-        pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt.gz',
         pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_eval.txt'
+        # pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt.gz'
     params:
         prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
     threads:
         8
     resources:
-        mem_mb=64000,
+        mem_mb=get_mem_mb_model_eval_ext,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
         time="08:00:00"
     log:
@@ -329,6 +336,7 @@ rule model_eval_ext:
         "--predictors {input[predictors]} "
         "--n_core {threads} "
         "--compare_predictors T "
+        "--eval_only T "
         "--assoc T "
         "--outcome_pop_prev {params[prev]} "
         "--out {params[out_prefix]} "
@@ -337,10 +345,19 @@ rule model_eval_ext:
         ") &> {log}"
 
 
+rule all_ancestry_model_eval_ext:
+    input:
+        expand(rules.model_eval_ext.output, study=studies.study_id.values, allow_missing=True) 
+    output:
+        touch('results/{bbid}/PRS_evaluation/{superpop}.ok')
+
 rule all_model_eval_ext:
     input:
         expand(rules.model_eval_ext.output, bbid=target_list.name.values, study=studies.study_id.values, superpop=config['1kg_superpop'])
-    
+
+localrules:
+    all_ancestry_model_eval_ext,
+    all_model_eval_ext
                 
 #rule all_model_eval_ext_prep:
 #    input:
