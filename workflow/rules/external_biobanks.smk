@@ -311,7 +311,8 @@ rule model_eval_ext:
     input:
         predictors = rules.model_eval_ext_prep.output.predictors,
         pheno_file = check_gz_pheno_tsv,
-        keep_file = keep_file_pattern
+        keep_file = keep_file_pattern,
+        profiles = rules.model_eval_ext_prep.input
     output:
         assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.assoc.txt',
         pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_eval.txt'
@@ -320,7 +321,7 @@ rule model_eval_ext:
         prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
     threads:
-        8
+        4
     resources:
         mem_mb=get_mem_mb_model_eval_ext,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
@@ -358,36 +359,33 @@ rule all_model_eval_ext:
 localrules:
     all_ancestry_model_eval_ext,
     all_model_eval_ext
-                
-#rule all_model_eval_ext_prep:
-#    input:
-#        expand(rules.model_eval_ext_prep.output, study=studies.study_id, allow_missing=True)
-
-# rule all_model_eval_ext:
-#     input:
-#         expand(rules.model_eval_ext.output, study=studies.study_id, allow_missing=True)
- 
         
-# rule get_best_models_ext:
-#     # exctract the best performing models and their performance into a neat TSV
-#     input:
-#         pred_eval=rules.model_eval_ext.output['pred_eval']
-#     output:
-#         best_models_tsv='results/{bbid}/PRS_evaluation/{study}/best_models.tsv'
-#     log:
-#         'logs/get_best_models_ext/{bbid}/{study}.log'
-#     singularity:
-#         config['singularity']['all']
-#     shell:
-#         "("
-#         "{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R "
-#         "--pred_eval {input[pred_eval]} "
-#         "--drop TRUE "
-#         ") &> {log}"
         
-# rule all_get_best_models_ext:
-#     input:
-#         expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids)
+rule get_best_models_ext:
+    # exctract the best performing models and their performance into a neat TSV
+    input:
+        pred_eval=rules.model_eval_ext.output['pred_eval']
+    output:
+        best_models_tsv='results/{bbid}/PRS_evaluation/{study}/{superpop}/best_models.tsv'
+    log:
+        'logs/get_best_models_ext/{bbid}/{study}_{superpop}.log'
+    singularity:
+        config['singularity']['all']
+    resources:
+        mem_mb=8000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        time="00:10:00"
+    shell:
+        "("
+        "{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R "
+        "--pred_eval {input[pred_eval]} "
+        "--drop TRUE "
+        ") &> {log}"
+        
+        
+rule all_get_best_models_ext:
+    input:
+        expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids, superpop=config['1kg_superpop'])
 
 
 # rule model_eval_custom_ext:
