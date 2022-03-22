@@ -145,7 +145,6 @@ rule all_calculate_maf_ancestry_ext:
 
 rule validate_setup_ext:
     # requests all necessary outputs for the rules below.
-    # TODO: replace these with the plink2 counterparts
     input:
         expand('prs/{method}/{study}/ok', method=config['prs_methods'], study=studies.study_id),
         expand('prs/{method}/{study}/1KGPhase3.w_hm3.{study}.score.gz', method=config['prs_methods'], study=studies.study_id),
@@ -304,7 +303,7 @@ def get_mem_mb_model_eval_ext(wildcards, input, attempt):
     with open(input['keep_file'], 'r') as infile:
         for i, _ in enumerate(infile):
             pass
-    return max(8000, int(i * 0.145 * 1.5**(attempt-1)))
+    return max(8000, int(i * 0.2 * 1.5**(attempt-1)))
     
 
 rule model_eval_ext:
@@ -325,13 +324,14 @@ rule model_eval_ext:
     resources:
         mem_mb=get_mem_mb_model_eval_ext,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
-        time="08:00:00"
+        time="16:00:00"
     log:
         'logs/model_eval_ext/{bbid}/{study}.{superpop}.log'
     singularity:
         config['singularity']['all']
     shell:
         "("
+        "export OPENBLAS_NUM_THREADS=1; "
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/Model_builder/Model_builder_V2.R "
         "--pheno {input[pheno_file]} "
         "--predictors {input[predictors]} "
@@ -418,7 +418,7 @@ rule all_get_best_models_ext:
 #         "--out {params[out_prefix]} "
 #         "--save_group_model T "
 #         ") &> {log}"
-# 
+
 
 # rule get_best_models_custom_ext:
 #     # exctract the best performing models and their performance into a neat TSV
