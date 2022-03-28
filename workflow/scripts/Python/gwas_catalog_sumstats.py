@@ -103,7 +103,8 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
     # this won't do anything if the columns already have the correct names
     rename_cols = {'variant_id':'SNP', 
                     'chromosome':'CHR',
-                    'p_value':'P', 
+                    'base_pair_location':'POS',
+                    'p_value':'P',
                     'effect_allele':'A1', 
                     'other_allele':'A2', 
                     'odds_ratio':'OR', 
@@ -183,10 +184,10 @@ def download_sumstats(args, p=True):
     
     n_gwas = n_cases + n_controls
     
-    assert n_gwas > 0, 'Error: GWAS sample size is 0'
+    assert n_gwas > 0, 'Error: GWAS sample size specified is 0'
     
     cleaned_sumstats = cleanup_summary_statistics(sumstats, args.study_id, n_gwas)
-    cleaned_sumstats.to_csv(args.out, index=None)
+    cleaned_sumstats.to_csv(args.out, index=None, sep='\t')
     print(f'>> output saved at {args.out}')
 
 

@@ -427,6 +427,7 @@ rule merge_1kg_hm3_mapping_with_maf_cached:
     shell:
         'ln -s -r {input} {output}'
 
+localrules: merge_1kg_hm3_mapping_with_maf_cached
         
 #########################################
 # filtering the 1000 Genomes genotypes  #

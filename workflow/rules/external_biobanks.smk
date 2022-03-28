@@ -300,9 +300,12 @@ def check_gz_pheno_tsv(wc):
 
 
 def get_mem_mb_model_eval_ext(wildcards, input, attempt):
+    i = 0
     with open(input['keep_file'], 'r') as infile:
-        for i, _ in enumerate(infile):
-            pass
+        for j, _ in enumerate(infile):
+            i += 1
+    if i == 0:
+        print('Warning, empty keep file: ' + input['keep_file'])
     return max(8000, int(i * 0.2 * 1.5**(attempt-1)))
     
 
