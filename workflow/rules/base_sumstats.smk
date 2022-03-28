@@ -11,11 +11,12 @@ rule download_sumstats:
     resources:
         mem_mb=20000
     shell:
+        "("
         "python workflow/scripts/Python/gwas_catalog_sumstats.py "
         "--study-id {wildcards[study]} "
         "--out {output} "
         "--studies {config[studies]} "
-        "| tee -a {log}"
+        ") &> {log} "
         
         
 rule map_sumstats:
