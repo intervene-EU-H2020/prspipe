@@ -26,6 +26,13 @@ GenoPred_dir: "workflow/scripts/GenoPred"
 # Use Ollie's Population_outlier.R script to detect outlier samples within predicted super populations (True/False).
 enable_outlier_detection: True
 
+#####################################
+# Summary statistics pre-processing #
+#####################################
+
+# use sumstat_harmonizer.R to force hg19 coordinates and rename SNPs to match our version of the HapMap3 rsids (recommended, True/False)
+force_sumstats_remapping: True
+
 ###############
 # PRS Methods #
 ###############
