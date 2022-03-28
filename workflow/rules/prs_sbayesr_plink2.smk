@@ -69,7 +69,6 @@ rule prs_scoring_sbayesr:
         "--robust T "
         "--output prs/sbayesr/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} && gzip {params[score_tmp]} "
-        "gzip "
         ") &> {log}"
         
 

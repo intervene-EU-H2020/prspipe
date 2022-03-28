@@ -295,7 +295,7 @@ def check_gz_pheno_tsv(wc):
     elif os.path.isfile(infile[:-3]):
         return infile[:-3]
     else:
-        print('Error: Could not find phenotype file for study "{}" and phenotype "{}", should be either "{}" or "{}" '.format(wc.study, pheno, infile, infile[:-3]))
+        print('Error: Could not find phenotype file for target data "{}" and phenotype "{}", should be either "{}" or "{}" '.format(wc.study, pheno, infile, infile[:-3]))
         return infile
 
 
@@ -306,7 +306,7 @@ def get_mem_mb_model_eval_ext(wildcards, input, attempt):
             i += 1
     if i == 0:
         print('Warning, empty keep file: ' + input['keep_file'])
-    return max(8000, int(i * 0.2 * 1.5**(attempt-1)))
+    return max(8000, int(i * 0.25 * 1.5**(attempt-1)))
     
 
 rule model_eval_ext:
