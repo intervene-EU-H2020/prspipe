@@ -21,6 +21,7 @@ given study id supports API access (you can check this at the GWAS catalog websi
 import requests
 import argparse
 import pandas as pd
+from pandas.errors import ParserError
 import numpy as np
 
 import re
@@ -101,18 +102,87 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
     """
     # rename the columns to those used by https://github.com/bulik/ldsc/blob/master/munge_sumstats.py
     # this won't do anything if the columns already have the correct names
-    rename_cols = {'variant_id':'SNP', 
-                    'chromosome':'CHR',
-                    'base_pair_location':'POS',
-                    'p_value':'P',
-                    'effect_allele':'A1', 
-                    'other_allele':'A2', 
-                    'odds_ratio':'OR', 
-                    'beta':'BETA', 
-                    'effect_allele_frequency':'FRQ'}
-
+    rename_cols = {'variant_id':'SNP',
+                   'chromosome':'CHR',
+                   'base_pair_location':'POS',
+                   'p_value':'P',
+                   'effect_allele':'A1', 
+                   'other_allele':'A2', 
+                   'odds_ratio':'OR', 
+                   'beta':'BETA', 
+                   'effect_allele_frequency':'FRQ'}
+    
     df = df.rename(columns=rename_cols)
+    
+    # below some efforts are made to recover columns from summary statistics if they don't follow the recommended naming convention.
 
+    if 'CHR' not in df.columns:
+        chr_cols = list(c for c in df.columns if str(c).lower().startswith('chrom'))
+        chr_cols += list(c for c in df.columns if str(c).lower().startswith('chr'))
+        if len(chr_cols):
+            print('Assuming "{}" is the CHR column'.format(chr_cols[0]))
+            df.rename(columns={chr_cols[0]:'CHR'}, inplace=True)
+    
+    if 'POS' not in df.columns:
+        pos_cols = list(c for c in df.columns if str(c).lower().startswith('pos'))
+        if len(pos_cols):
+            print('Assuming "{}" is the POS column'.format(pos_cols[0]))
+            df.rename(columns={pos_cols[0]:'POS'}, inplace=True)
+    
+    if 'SNP' not in df.columns:
+        snp_cols = list(c for c in df.columns if str(c).lower().startswith('rsid'))
+        snp_cols += list(c for c in df.columns if str(c).lower().startswith('snp'))
+        if len(snp_cols):
+            print('Assuming "{}" is the SNP column'.format(snp_cols[0]))
+            df.rename(columns={snp_cols[0]:'SNP'}, inplace=True)
+        else:
+            print('Unable to determine the SNP column. Using dummy values.')
+            df['SNP'] = np.array(['snp_{}'.format(i) for i in range(len(df))])
+                
+    if 'A1' not in df.columns:
+        a1_cols = list(c for c in df.columns if str(c).lower().startswith('a1'))
+        a1_cols += list(c for c in df.columns if str(c).lower().startswith('allele') and str(c).endswith('1'))
+        a1_cols += list(c for c in df.columns if str(c).lower().startswith('effect') and str(c).lower().endswith('allele'))
+        a1_cols += list(c for c in df.columns if str(c).lower().startswith('alter') and str(c).lower().endswith('allele'))
+        a1_cols += list(c for c in df.columns if str(c).lower().startswith('minor') and str(c).lower().endswith('allele'))
+        if len(a1_cols):
+            print('Assuming "{}" is the A1 column'.format(a1_cols[0]))
+            df.rename(columns={a1_cols[0]:'A1'}, inplace=True)
+        else:
+            print('Unable to determine A1 column.')
+            
+    if 'A2' not in df.columns:
+        a2_cols = list(c for c in df.columns if str(c).lower().startswith('a2'))
+        a2_cols += list(c for c in df.columns if str(c).lower().startswith('allele') and str(c).endswith('2'))
+        a2_cols += list(c for c in df.columns if str(c).lower().startswith('other') and str(c).lower().endswith('allele'))
+        a2_cols += list(c for c in df.columns if str(c).lower().startswith('ref') and str(c).lower().endswith('allele'))
+        if len(a2_cols):
+            print('Assuming "{}" is the A2 column'.format(a2_cols[0]))
+            df.rename(columns={a2_cols[0]:'A2'}, inplace=True)
+        else:
+            print('Unable to determine A2 column.')
+            
+    if 'BETA' not in df.columns:
+        beta_cols = list(c for c in df.columns if 'beta' in str(c).lower())
+        beta_cols += list(c for c in df.columns if 'effect' in str(c).lower() and not 'allele' in str(c).lower())
+        if len(beta_cols):
+            print('Assuming "{}" is the BETA column'.format(beta_cols[0]))
+            df.rename(columns={beta_cols[0]: 'BETA'}, inplace=True)
+            
+            
+    if 'FRQ' not in df.columns:
+        frq_cols = list(c for c in df.columns if ('freq' in str(c).lower()) or ('frq' in str(c).lower()) )
+        if len(frq_cols):
+            print('Assuming "{}" is the FRQ column'.format(frq_cols[0]))
+            df.rename(columns={frq_cols[0]:'FRQ'}, inplace=True)
+            
+    if 'P' not in df.columns:
+        pv_cols = list(c for c in df.columns if c == str(c).lower())
+        pv_cols = list(c for c in df.columns if (str(c).lower().startswith('p')) and ('val' in c))
+        if len(pv_cols):
+            print('Assuming "{}" is the P column'.format(pv_cols[0]))
+            df.rename(columns={pv_cols[0]:'P'}, inplace=True)
+    
     df['STUDY'] = study_id
 
     # ensure A1,A2 are upper case - otherwise QC script disregards them
@@ -153,8 +223,32 @@ def download_ftp_sumstats(local_path, remote_path):
 
     with open(local_path, 'wb') as outfile:
         ftp.retrbinary("RETR " + remote_path, lambda block: file_write(block, outfile))
+        
+    if local_path.endswith('gz'):
+        with gzip.open(local_path, 'rt') as infile:
+            l1 = infile.read()
+    else:
+        with open(local_path, 'r') as infile:
+            l1 = infile.read()
+            
+    tabsep = len(l1.split('\t')) > len(l1.split(' '))
+    if tabsep:
+        print("Assuming summary statistics are tab-separated based on first line")
+        sep = '\t'
+    else:
+        if len(l1.split(',')) > len(l1.split(' ')):
+            print("Assuming summary statistics are comma-separated based on first line")
+            sep = ','
+        else:
+            print("Assuming summary statistics are whitespace-separated based on first line")
+            sep = ' '
 
-    sumstats_df = pd.read_csv(local_path, sep='\t')
+    try:
+        sumstats_df = pd.read_csv(local_path, sep=sep)
+    except ParserError as e:
+        print("ParserError while trying to read sumstats file. Trying delim_whitespace=True")
+        sumstats_df = pd.read_csv(local_path, delim_whitespace=True)
+        
     return sumstats_df
 
 
