@@ -338,7 +338,7 @@ Harmonization can take several hours to finish depending on the size of your dat
 Once the target genotype data are harmonized, we can perform ancestry scoring:
 
 ```
-bash run.sh -n all_ancestry_scoring_ext
+bash run.sh all_ancestry_scoring_ext
 ```
 
 this will create output files at `results/{target-name}/Ancestry_idenitfier/`. 
