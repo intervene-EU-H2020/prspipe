@@ -37,6 +37,7 @@ rule prs_scoring_ptclump_sparse:
         "--memory 3000 "
         "--output prs/pt_clump/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "
+        "--tmpdir ./temp"
         ") &> {log} "
 
 
