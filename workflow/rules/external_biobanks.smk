@@ -193,11 +193,10 @@ rule run_scaled_polygenic_scorer:
 # run target scoring for all methods defined in the pipeline
 rule all_run_scaled_polygenic_scorer:
     input:
-        expand(rules.run_scaled_polygenic_scorer.output,
+        expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.done',
                bbid=target_list.name,
                study=studies.study_id.values,
                superpop=config['1kg_superpop'],
-               score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
                method=config['prs_methods'])
 
 
@@ -205,11 +204,10 @@ rule all_run_scaled_polygenic_scorer:
 # TODO: all super-populations
 rule all_target_prs_pt_clump:
     input:
-        expand(rules.run_scaled_polygenic_scorer.output,
+        expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.done',
                bbid=target_list.name,
                study=studies.study_id.values,
                superpop=config['1kg_superpop'],
-               score_id=['1KGPhase3.w_hm3.{}'.format(s) for s in studies.study_id.values],
                method=['pt_clump'])
                
 
