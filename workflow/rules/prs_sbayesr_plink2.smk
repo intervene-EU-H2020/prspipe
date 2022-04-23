@@ -66,6 +66,7 @@ rule prs_scoring_sbayesr:
         "--ld_matrix_chr resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ukbEURu_hm3_v3_50k_chr "
         "--memory {resources[mem_mb]} "
         "--n_cores {threads} "
+        "--P_max 0.999 "
         "--robust T "
         "--output prs/sbayesr/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} && gzip {params[score_tmp]} "
