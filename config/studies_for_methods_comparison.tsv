@@ -12,3 +12,5 @@ GCST006085	EUR	79148	61106	/pub/databases/gwas/summary_statistics/GCST006001-GCS
 GCST008059	EUR	283730	283730	/pub/databases/gwas/summary_statistics/GCST008001-GCST009000/GCST008059/20171017_MW_eGFR_overall_EA_nstud42.dbgap.txt.gz		yes	Chronic_kidney_disease
 GCST90013534	EUR	22628	288664	/pub/databases/gwas/summary_statistics/GCST90013001-GCST90014000/GCST90013534/harmonised/33310728-GCST90013534-EFO_0000685.h.tsv.gz		yes	Seropositive_rheumatoid_arthritis
 GCST004131	EUR	25042	34915	/pub/databases/gwas/summary_statistics/GCST004001-GCST005000/GCST004131/harmonised/28067908-GCST004131-EFO_0003767.h.tsv.gz		yes	Inflammatory_bowel_disease
+GCST007140	EUR	94674	0	/pub/databases/gwas/summary_statistics/GCST007001-GCST008000/GCST007140/GERA-sqrtHDL.tsv.gz		no	HDL_cholesterol
+GCST003401	EUR	118448	0	/pub/databases/gwas/summary_statistics/GCST003001-GCST004000/GCST003401/harmonised/26831199-GCST003401-EFO_0004518.h.tsv.gz		no	Creatinine_eGFR
