@@ -363,7 +363,8 @@ localrules:
         
         
 rule get_best_models_ext:
-    # exctract the best performing models and their performance into a neat TSV
+    # exctract the best performing models and their performance into a neat TSV for a single phenotype / biobank
+    # it will often make more sense to run the rules below instead.
     input:
         pred_eval=rules.model_eval_ext.output['pred_eval']
     output:
@@ -383,10 +384,42 @@ rule get_best_models_ext:
         "--drop TRUE "
         ") &> {log}"
         
-        
-rule all_get_best_models_ext:
+
+rule biobank_get_best_models_ext:
+    # extract the best performing models and their performance for all phenotypes for a single biobank
+    # makes more sense to run this way because it doesn't use much compute
     input:
-        expand(rules.get_best_models_ext.output, study=studies.study_id, bbid=bbids, superpop=config['1kg_superpop'])
+        expand(rules.model_eval_ext.output['pred_eval'], study=studies.study_id, superpop=config['1kg_superpop'], allow_missing=True)
+    output:
+        touch('results/{bbid}/PRS_evaluation/all_get_best_models.ok')
+    log:
+        'logs/biobank_get_best_models_ext/{bbid}.log'
+    singularity:
+        config['singularity']['all']
+    params:
+        infiles=lambda wc, input: ' '.join(input)
+    resources:
+        mem_mb=8000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        time="00:30:00"
+    shell:
+        '('
+        'for infile in {params[infiles]}; do '
+        '{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R '
+        '--pred_eval $infile '
+        '--drop TRUE; '
+        'done '
+        ') &> {log}'
+
+
+rule all_get_best_models_ext:
+    # extract the best performing models for all phenotypes and biobanks
+    input:
+        expand(rules.biobank_get_best_models_ext.output, bbid=bbids)
+
+
+localrules:
+    all_get_best_models_ext
 
 
 # rule model_eval_custom_ext:

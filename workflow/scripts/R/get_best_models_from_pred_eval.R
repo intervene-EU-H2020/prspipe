@@ -71,15 +71,24 @@ if (!is.na(pheno)){
         lassosum_s <- gsub('s = ',replacement = 's',pseudoval_params[2],fixed = T)
         lassosum_lambda <- gsub('lambda = ',replacement = 'lambda',pseudoval_params[3],fixed = T)
         
-        if (nchar(lassosum_lambda) > 4){ lassosum_lambda <- gsub('[0-9]$','',lassosum_lambda) } # rounding can mess things up -> remove last digit
+        if (nchar(lassosum_lambda) > 11){
+            lassosum_lambda <- gsub('[0-9]$','[0-9]+_group',lassosum_lambda) 
+        } else {
+            lassosum_lambda <- paste0(lassosum_lambda, '_group')
+        }
         
         pat <- paste0(lassosum_s,'.',lassosum_lambda)
         row <- res_pred_eval[grepl(pattern = pat, Model) & grepl(pattern = 'lassosum.*PredFile', Model)]
+
+        print(pat)
+        print(res_pred_eval[grepl(pattern = 'lassosum.*PredFile', Model)])
+
         if (nrow(row) == 1){    
             row[,c('label','method_type'):=list('lassosum.PseudoVal','PseudoVal')]
             res_pred_eval <- rbindlist(list(res_pred_eval, row))
         } else {
             cat('Can\'t determine lassosum pseudovalidation model.\n')
+            stop()
         }
         rm(pat, row, pseudoval_params)
     }
