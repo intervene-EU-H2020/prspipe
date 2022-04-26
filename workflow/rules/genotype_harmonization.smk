@@ -48,7 +48,7 @@ rule harmonize_target_genotypes:
         4
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time='12:00:00'
     log:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'

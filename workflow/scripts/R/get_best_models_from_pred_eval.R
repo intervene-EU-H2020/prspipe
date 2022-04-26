@@ -20,8 +20,16 @@ opt = parse_args(OptionParser(option_list=option_list))
 drop = opt$drop
 
 print(opt)
-res_pred_eval <- fread(opt$pred_eval)
+res_pred_eval <- fread(opt$pred_eval, header=T)
 
+outpath <- paste0(dirname(opt$pred_eval))
+
+if (nrow(res_pred_eval) == 0){
+    cat('Warning: The .pred_eval file (',opt$pred_eval,') has 0 rows. This typically happens when there were not enough cases in the validation set in the previous step.\n')
+    cat('         The script will now exit without error, and produce an empty output file.\n')
+    system(paste0('touch ',outpath, '/best_models.tsv'))
+    quit(save = "no", status = 0, runLast = TRUE)
+}
 
 res_pred_eval$group<-gsub('\\.PredFile.*','',gsub('_group$','',res_pred_eval$Model))
 
@@ -87,8 +95,8 @@ if (!is.na(pheno)){
             row[,c('label','method_type'):=list('lassosum.PseudoVal','PseudoVal')]
             res_pred_eval <- rbindlist(list(res_pred_eval, row))
         } else {
-            cat('Can\'t determine lassosum pseudovalidation model.\n')
-            stop()
+            cat('Warning: Can\'t determine lassosum pseudovalidation model.\n')
+            # stop()
         }
         rm(pat, row, pseudoval_params)
     }
@@ -112,7 +120,7 @@ if (nrow(row) == 1){
     res_pred_eval <- rbindlist(list(res_pred_eval, row))
     rm(row)
 } else {
-    cat('Can\'t determine PRScs pseudovalidation model.\n')
+    cat('Warning: Can\'t determine PRScs pseudovalidation model.\n')
 }
 
 
@@ -138,7 +146,7 @@ if (nrow(row) == 1){
     row[, c('label','method_type'):=list('LDPred2.Inf','Inf')]
     res_pred_eval <- rbindlist(list(res_pred_eval, row))
 } else {
-    cat('Can\'t determine LDPred2 Inf model.\n')
+    cat('Warning: Can\'t determine LDPred2 Inf model.\n')
 }
 rm(row)
 
@@ -147,7 +155,7 @@ if (nrow(row) == 1){
     row[, c('label','method_type'):=list('LDPred2.PseudoVal','PseudoVal')]
     res_pred_eval <- rbindlist(list(res_pred_eval, row))
 } else {
-    cat('Can\'t determine LDPred2 pseudovalidation model.\n')
+    cat('Warning: Can\'t determine LDPred2 pseudovalidation model.\n')
 }
 rm(row)
 
@@ -197,8 +205,7 @@ if (!is.na(pheno)){
         rm(pat, row, pseudoval_params)
     }
 } else {
-    cat('Could not guess lassosum log file path from input filename.\n')
-    cat('Can\'t determine lassosum pseudovalidation model.\n')
+    cat('Warning: Can\'t determine MegaPRS pseudovalidation model.\n')
 }
 
 res_pred_eval[method=='All' ,  c('label','method_type'):=list('All.MultiPRS','MultiPRS')]
@@ -209,8 +216,6 @@ res_eval$Method <- res_eval$method
 res_eval$tag <- res_eval$Model
 res_eval$Model<-factor(res_eval$method_type, level=c('MultiPRS','CV','PseudoVal','Inf','All'))
 res_eval$Test <- res_eval$label
-
-outpath <- paste0(dirname(opt$pred_eval))
 
 
 cat('writing output to', paste0(outpath, '/best_models.tsv'), '\n')

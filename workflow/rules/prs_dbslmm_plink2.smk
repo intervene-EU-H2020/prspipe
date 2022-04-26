@@ -50,7 +50,7 @@ rule prs_scoring_dbslmm:
         1
     resources:
         mem_mb=5000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     shell:
         "("
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/polygenic_score_file_creator_DBSLMM/polygenic_score_file_creator_DBSLMM_plink2.R "

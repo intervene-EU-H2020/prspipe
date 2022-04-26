@@ -39,7 +39,7 @@ rule ancestry_scoring_ext:
         config['singularity']['all']
     resources:
         mem_mb=64000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="12:00:00"
     shell:
         "( "
@@ -67,7 +67,7 @@ rule ancestry_outlier_ext:
         keep_files = expand("results/{{bbid}}/Ancestry_identifier/outlier_detection/AllAncestry.QC.{superpop}.keep", superpop=config['1kg_superpop'])
     resources:
         mem_mb=20000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="12:00:00"
     params:
         keep_files = lambda wc, input: ','.join(input['keep_files'])
@@ -172,7 +172,7 @@ rule run_scaled_polygenic_scorer:
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
         mem_mb=32000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="03:00:00"
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
@@ -220,7 +220,7 @@ import os
 
 def collect_prs_outputs():
 
-    # function that scans the prs/ directory for scores, and requests to predict them on all target datasets and all ancestries
+    # function that scans the prs/ directory for scores, and returns the corresponding output files to request in order to run predictions
 
     score_dirs = glob('prs/*/*/')
     bbids = target_list.name.values
@@ -263,8 +263,6 @@ localrules: all_target_prs_available
 ############################>>
 # START: Score evaluation  #>>
 ############################>>
-
-# TODO: make sure these run with plink2-versions of scripts above
     
 rule model_eval_ext_prep:
     # preparation for model evaluation, requests for all studies and all methods specified in the config.yaml
@@ -324,7 +322,7 @@ rule model_eval_ext:
         4
     resources:
         mem_mb=get_mem_mb_model_eval_ext,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="16:00:00"
     log:
         'logs/model_eval_ext/{bbid}/{study}.{superpop}.log'
@@ -340,6 +338,7 @@ rule model_eval_ext:
         "--compare_predictors T "
         "--eval_only T "
         "--assoc T "
+        "--min_case_val 10 "
         "--outcome_pop_prev {params[prev]} "
         "--out {params[out_prefix]} "
         "--save_group_model T "
@@ -375,7 +374,7 @@ rule get_best_models_ext:
         config['singularity']['all']
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="00:10:00"
     shell:
         "("
@@ -400,7 +399,7 @@ rule biobank_get_best_models_ext:
         infiles=lambda wc, input: ' '.join(input)
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_0_3.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
         time="00:30:00"
     shell:
         '('
@@ -420,6 +419,62 @@ rule all_get_best_models_ext:
 
 localrules:
     all_get_best_models_ext
+    
+    
+##################################
+# Export best scores for sharing #
+##################################
+
+
+def get_existing_group_files():
+    
+    files = []
+    
+    for bbid in bbids:
+        for study in studies.study_id.values:
+            for ancestry in config['1kg_superpop']:
+                path = 'results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.AllMethodComp.predictor_groups'.format(bbid=bbid, study=study, superpop=ancestry)
+                if os.path.isfile(path):
+                    files += [path]
+                    break
+                    
+    # print('all_export_best_scores: Will export best scores for '+str(len(files))+' studies.')
+    
+    return files
+                    
+    
+
+rule all_export_best_scores:
+    # export best scores
+    # essentially make a slimmed down copy of the .score.gz and .scale files in prs/..., based on the evaluation metrics of choice.
+    # exports them to temp/prs/... the tmp/prs directory can then be shared, e.g. as a tar archive.
+    # runs in a loop instead of separate jobs. The script could also be used in single jobs though (see below).
+    # TODO: make this dynamically check for complete input files too
+    params:
+        group_files=get_existing_group_files(),
+        ancestries=','.join(config['1kg_superpop'])
+    output:
+        touch('temp/all_export_best_scores.ok')
+    singularity:
+        config['singularity']['all']
+    log:
+        'logs/all_export_best_scores.log'
+    resources:
+        mem_mb=8000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        time="1:00:00"
+    shell:
+        '('
+        'for infile in {params[group_files]}; do '
+        '{config[Rscript]} workflow/scripts/R/export_best_scores.R '
+        '--groups $infile '
+        '--metric CrossVal_R '
+        '--decreasing TRUE '
+        '--N_max 20 '
+        '--ancestries {params[ancestries]}; '
+        'done '
+        ') &> {log}'
+
 
 
 # rule model_eval_custom_ext:
