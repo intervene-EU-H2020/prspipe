@@ -1,6 +1,8 @@
 
 FROM bioconductor/bioconductor_docker:RELEASE_3_13
 
+RUN unzip test
+
 # Installing miniconda
 RUN    touch /.condarc \
 &&     wget -O Miniconda_installer.sh -c https://repo.anaconda.com/miniconda/Miniconda3-py38_4.10.3-Linux-x86_64.sh \
