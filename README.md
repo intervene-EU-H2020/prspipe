@@ -57,11 +57,11 @@ Genopred, i.e., the repository this pipeline depends on, relies on R and depende
 
 ```
 # get the container with docker
-docker pull rmonti/prspipe:0.0.3
+docker pull rmonti/prspipe:0.1.0
 
 # ... or with singularity
 # this should work without root permissions
-singularity pull docker://rmonti/prspipe:0.0.3
+singularity pull docker://rmonti/prspipe:0.1.0
 ```
 > ⚠️ To run population outlier detection, you need at least version 0.0.3
 
