@@ -154,8 +154,6 @@ snakemake --help
 
 # should be the container's R (located at /usr/local/bin/R):
 which R
-# should be 4.1.0:
-Rscript --version
 
 # to exit the container
 exit
