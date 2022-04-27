@@ -13,7 +13,6 @@ rule install_gcta:
 
 rule prs_scoring_sblup:
     # Implements the sblup method
-/{{chr_id}}.l2.ldscore.gz".format(config['LD_ref_dir']), chr_id=range(1,23), study=studies.itertuples())
     input: 
         ld_ref=expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{{ancestry}}/{chr}.l2.ldscore.gz", chr=range(1,23)),
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study], allow_missing=True),
