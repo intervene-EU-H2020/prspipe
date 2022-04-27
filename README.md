@@ -140,7 +140,7 @@ Snakemake is installed in the prspipe container. If singularity is available, yo
 
 ```
 # this will create a local image called prspipe.sif
-singularity pull prspipe.sif docker://rmonti/prspipe:0.0.3
+singularity pull prspipe.sif docker://rmonti/prspipe:0.1.0
 ```
 
 After that, you can run snakemake interactively by first starting an [interactive shell inside the container](https://sylabs.io/guides/3.7/user-guide/cli/singularity_shell.html), and then running snakemake:
