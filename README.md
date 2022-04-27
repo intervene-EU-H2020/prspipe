@@ -189,19 +189,8 @@ Once you have successfully completed these steps, you can clear up space by runn
 bash run.sh cleanup_after_setup
 ```
 
-## :globe_with_meridians: Download scoring files for 10 phenotypes
-
-The following step will download some pre-calculated scores for 10 phenotypes using PRScs, MegaPRS or pruning and thresholding + clump.
-
-```
-bash run.sh download_test_data
-```
-
-To predict on new target data, use the rule `all_target_prs_available` (explained [below](#predict-polygenic-scores-for-synthetic-dataset) for synthetic data). The corresponding samplesheet for these scores is located [here](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies_for_methods_comparison.tsv). To predict for new target data (i.e., your biobank), [additional configuration is necessary](#rotating_light-setting-up-target-genetic-data).
-
-
 # Testing PRS methods with synthetic data
-In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used. **If you're not all that interested, this part can be skipped.**
+In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used. **this part can be skipped if you only want to run the score evaluation steps**
 
 ## Test your setup by running pruning & thresholding
 
