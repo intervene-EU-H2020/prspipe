@@ -305,7 +305,7 @@ As mentioned above, genotype data are expected to be split by chromosome. For pl
 ```
 # replace "main" with the prefix of your data
 # this will generate files tmp_chr{1-22}.{bed,bim,fam}
-for i in {1..22}; do plink --bfile master --chr $i --make-bed --out tmp_chr${i}; done
+for i in {1..22}; do plink --bfile main --chr $i --make-bed --out tmp_chr${i}; done
 ```
 
 ### :rotating_light: Target genotype harmonization
