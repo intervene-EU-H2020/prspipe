@@ -162,7 +162,7 @@ exit
 
 Beware, if the path displayed after `which R` is *not* /usr/local/bin/R, your environment variables, `.bashrc` or `.bash_profile` might be interfering with R in the container. Try changing the parameter `Rscript:` inside [`config/config.yaml`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml#L32) to force using the container's R installation (see the comments in that file).
 
-> Note: If you do **not** have singularity you can also install R-packages manually [install R-packages](#manual-installation-of-r-packages). You will then also have to install [install snakemake](#installing-snakemake-with-conda), and adjust software paths in `config/config.yaml`.
+> Note: If you do **not** have singularity you can also [install R-packages manually](#manual-installation-of-r-packages). You will then also have to [install snakemake](#installing-snakemake-with-conda), and adjust software paths in `config/config.yaml`.
 
 ## Container mounts :file_folder:
 
