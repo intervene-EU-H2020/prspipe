@@ -166,7 +166,7 @@ Beware, if the path displayed after `which R` is *not* /usr/local/bin/R, your en
 
 ## Container mounts :file_folder:
 
-:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container. If you are running snakemake with the `--singularity` flag (not covered in this tutorial), you have to use the corresponding snakemake parameter, e.g., `--singularity-args "-B /some/random/"`.
+:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
 
 ## :globe_with_meridians: Download and process the 1000 Genomes Reference
 
@@ -181,7 +181,7 @@ The command above will display a summary of what will be done. To then actually 
 ```
 bash run.sh all_setup
 ```
-> :warning: Note: depending on your download speed and how many cores you have available this can take several hours. It will also require a lot of disk-space (~90G).
+> :warning: Note: depending on your download speed and how many cores you have available this can take several hours. It will also potentially require a lot of disk-space (~90G). To save disk space, you can use a small number of cores (i.e., fewer parallel processes) in snakemake.
 
 Once you have successfully completed these steps, you can clear up space by running
 
