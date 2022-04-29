@@ -3,7 +3,7 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥5.7.0-brightgreen.svg)](https://snakemake.bitbucket.io)
 [![Build Status](https://travis-ci.org/snakemake-workflows/prspipe.svg?branch=master)](https://travis-ci.org/snakemake-workflows/prspipe)
 
-Snakemake pipeline to run Polygenic Risk Score (PRS) prediction. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods using summary statistics.
+Snakemake pipeline to run Polygenic Risk Score (PRS) prediction and evaluation for biobank-scale data. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods using summary statistics.
 
 ## Authors
 
@@ -16,36 +16,35 @@ If you use this workflow in a paper, don't forget to give credits to the authors
 
 # Tutorial for Collaborators
 
-The full pipeline can roughly be devided into two stages: (1) Download of summary statistics, running PRS methods and predicting on the 1000 Genomes data (public stage), and (2) prediction and evaluation using the scores from step 1, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
+The full pipeline can roughly be devided into two stages: (1) Download of summary statistics, running PRS methods and predicting on the 1000 Genomes reference data (public stage), and (2) prediction and evaluation using the scores from step 1, which includes hyper-parameter tuning using cross validation. The second step uses private data e.g. from the UK Biobank or your biobank of interest. **We are currently evaluating running the second step in other biobanks**.
 
 Follow the steps below to make the pipeline work with your data (i.e., the target data). For collaborators, we distribute pre-computed scoring files from the different PRS methods, which means most of the pipeline can be skipped. However, the rules to run the different PRS methods are available to everyone - feel free to try!
 
-In the steps below, we will install all the dependencies to run polygenic scoring for your target data. We will then harmonize the target genotype data and perform ancestry scoring. Finally, we will run polygenic scoring and score evaluation. Evaluation requires the target phenotype data.
+In the steps below, we will install all the dependencies to run polygenic scoring. We will then harmonize the target genotype data and perform ancestry scoring. Finally, we will run polygenic scoring and score evaluation. Evaluation requires the target phenotype data.
 
 **Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.**
 
 ## TL;DR
 
-For the lazy / impatient / advanced users, here is a breakdown of what you have to do, including the most relevant commands
+Here is a breakdown of what is covered, including the most important commands
 
-1. :globe_with_meridians: Clone this repository and switch to the base directory for all subsequent steps
-2. :globe_with_meridians: Use the prspipe docker/singularity container to run snakemake (or install snakemake and R-packages manually)
-3. :globe_with_meridians: run the setup script
+1. :globe_with_meridians: Clone this repository and switch to the base directory (`prspipe`) for all subsequent steps
+2. :globe_with_meridians: [Use the prspipe docker/singularity container to run snakemake](#globe_with_meridians-set-up-snakemake-using-singularity) (or install snakemake and R-packages manually).
+3. :globe_with_meridians: run the setup script to install basic dependencies
     ```
     bash install_basics.sh
     ```
-5. edit the software paths in `config/config.yaml`, if necessary
-6. :globe_with_meridians: run the snakemake rules to download and pre-process the 1000 Genomes reference
+3. :globe_with_meridians: run the snakemake rules to download and pre-process the 1000 Genomes reference
     ```
     bash run.sh all_setup
     bash run.sh cleanup_after_setup
     ```
-7.  :globe_with_meridians: Download pre-calculated scores for pruning & thresholding + clump, MegaPRS, PRScs for 10 phenotypes
+4.  :globe_with_meridians: Download pre-calculated scores for pruning & thresholding + clump, MegaPRS, PRScs for 10 phenotypes
     ```
     bash run.sh download_test_data
     ```
-9.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`)
-10. 🚨 Predict scores
+5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`)
+6. 🚨 Predict scores
     ```
     bash run.sh all_target_prs_available
     ```
@@ -67,54 +66,22 @@ singularity pull docker://rmonti/prspipe:0.1.0
 
 ## Preface on Snakemake :snake:
  
- Snakemake will handle all the steps to get from a set of input files (typically defined in a [*samplesheet*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) or [*config-file*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml)) to a set of output files. The user requests specific output files, and snakemake will figure out how to produce them given previously defined [*rules*](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/). Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
+Snakemake will handle all the steps to get from a set of input files (typically defined in a [*samplesheet*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) or [*config-file*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml)) to a set of output files. The user requests specific output files, and snakemake will figure out how to produce them given previously defined [*rules*](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/). Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
 
 However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, **these instructions will handle the interactive case**.
 
-### running snakemake rules
-
-To run steps of the pipeline, the user can request specific output files on the command-line. For example
+In the tutorial will be running snakemake using the [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) script.
 
 ```
-snakemake --cores 1 --snakefile workflow/Snakefile resources/HapMap3_snplist/w_hm3.snplist
-```
+# ajust the number of cores / parallel processes
+export SNAKEMAKE_CORES=1
 
-will request `resources/HapMap3_snplist/w_hm3.snplist`.
+# this is how we request certain "rules" to run, or specific output files
+bash run.sh [ rule | output-file-name ]
+``` 
 
-If the output files do not contain any [*wildcards*](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards), the user can also request to run *rules* using the rule name directly. Rules are the different steps defining the snakemake workflow and are located in `workflow/Snakefile` and `workflow/rules/...smk`.
+To learn more about how snakemake works, consider the [sections at the end of the readme](#running-snakemake-rules).
 
-For example, the file above could also be requested by the rule name:
-
-```
-# "download_hapmap3_snplist" is the rule name
-snakemake --cores 1 --snakefile workflow/Snakefile download_hapmap3_snplist
-```
-
-the corresponding rule looks like this (located in [`workflow/rules/setup.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/setup.smk):
-
-```
-rule download_hapmap3_snplist:
-    input:
-        'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
-    output:
-        "resources/HapMap3_snplist/w_hm3.snplist"
-    log:
-        "logs/download_hapmap3_snplist.log"
-    shell:
-        "("
-        "zcat {input} | cut -f2-4 | "
-        ' awk \'BEGIN{{OFS="\t"; print "SNP", "A1", "A2"}}{{if(NR > 1){{print $0}}}}\' > {output} '
-        ") &> {log}"
-```
-
-The `shell:`-directive defines what will be executed. As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output and the log file!
-
-In order to avoid writing a long command every time you run snakemake, the shell script [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) in the main directory can be used to wrap default parameters, i.e.
-
-```
-bash run.sh download_hapmap3_snplist
-```
-is equivalent to the two commands in the examples above.
 
 ## :globe_with_meridians: Basic Setup and Dependencies
 
@@ -188,100 +155,6 @@ Once you have successfully completed these steps, you can clear up space by runn
 ```
 bash run.sh cleanup_after_setup
 ```
-
-# Testing PRS methods with synthetic data
-In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used. **this part can be skipped if you only want to run the score evaluation steps**
-
-## Test your setup by running pruning & thresholding
-
-The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics) generated by Sophie Wharrie, Vishnu Raj and Zhiyu Yang. By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
-
-```
-bash run.sh initialize_synthetic
-```
-
-You can now create polygenic scores using plink and summary statistics from a GWAS run on synthetic data:
-
-```
-# first, check what will be executed:
-bash run.sh -n -q prs/pt_clump/synth01/ok
-
-# second, run the rule
-bash run.sh prs/pt_clump/synth01/ok
-```
-
-`config/studies.tsv` by default is the sample-sheet that contains the information on available summary statistics:
-
-| study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name (descriptive name, like "T2D", can be repeated) |
-
-[`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) is configured to work with summary statistics generated from synthetic data. In order to create scores with a specific PRS method "`{method}`" and GWAS stummary statistics `"{study}"`, the user can request output files which follow the pattern: `prs/{method}/{study}/ok`. Available methods are `dbslmm`,`lassosum`,`ldpred2`,`megaprs`,`prscs`,`pt_clump`.
-
->:warning:Note: This is just an example. Collaborators don't have to run these methods. **Their outputs will be distributed.** See steps below.
-
-## Predict polygenic scores for synthetic dataset 
-
-Check out the polygenic scoring files created by the rule above:
-
-```
-ls -1 prs/pt_clump/synth01/
-```
-
->Output (only showing those that are common between methods):
->```
->1KGPhase3.w_hm3.synth01.AFR.scale
->1KGPhase3.w_hm3.synth01.AMR.scale
->1KGPhase3.w_hm3.synth01.EAS.scale
->1KGPhase3.w_hm3.synth01.EUR.scale
->1KGPhase3.w_hm3.synth01.SAS.scale
->1KGPhase3.w_hm3.synth01.log
->1KGPhase3.w_hm3.synth01.score.gz
->ok
->```
->While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the scale-files contain the mean and standard deviation of the scores for the different ancestries, which are used for normalization later. 
-
-To predict all *available* scores for all ancestries and target data, run:
-
-```
-# dryrun
-# this should only trigger scoring for the scores we just created above
-
-bash run.sh -n -q all_target_prs_available
-```
-
-```
-# run the scoring
-bash run.sh all_target_prs_available
-```
-
-## Evaluate polygenic score performance for the synthetic dataset
-
-We now want to evaluate the performance of the polygenic scores we just created. Because we only have scores for pruning & thresholding + clump (`pt_clump`) available, we edit `config/config.yaml` to only consider that method:
-
-```
-# this will swap the default
-#     prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
-# with
-#     prs_methods: ['pt_clump']
-
-sed -i -e "s/^prs_methods: .\+/prs_methods: ['pt_clump']/g" config/config.yaml
-```
-The synthetic phenotype data for phenotype "synthetic01" and target data "synth" are located at `custom_input/synth/phenotypes/synthetic01.tsv.gz`. In general, the pipeline will look for phenotype data in the directories matching the pattern `custom_input/{target-name}/phenotypes/{phenotype-name}.tsv.gz` (more about that later).
-
-We can then run polygenic score evaluation and model selection by running the rule `all_model_eval_ext`
-
-```
-bash run.sh all_model_eval_ext
-```
-
-Finally, we revert our changes to the `config/config.yaml`:
-
-```
-sed -i "s/prs_methods: \['pt_clump'\]/prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']/g" config/config.yaml
-```
-> :warning:Note: if the above sed-commands don't work for you, you can of course just manually edit config/config.yaml. To revert all changes, do `git checkout -- config/config.yaml`.
-
 
 # Ancestry and polygenic scoring for new target genotype/phenotye data
 The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup` and `bash run.sh cleanup_after_setup` before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
@@ -378,6 +251,146 @@ This will run ancestry scoring, identify individuals with EUR ancestry, and perf
 
 Other information related to running the pipeline and setting it up for new summary statistics.
 
+## running snakemake rules
+
+The user can request specific output files on the command-line, and snakemake will figure out how to produce them, for example
+
+```
+snakemake --cores 1 --snakefile workflow/Snakefile resources/HapMap3_snplist/w_hm3.snplist
+```
+
+will request `resources/HapMap3_snplist/w_hm3.snplist`.
+
+If the output files do not contain any [*wildcards*](https://snakemake.readthedocs.io/en/stable/snakefiles/rules.html#wildcards), the user can also request to run *rules* using the rule name directly. Rules are the different steps defining the snakemake workflow and are located in `workflow/Snakefile` and `workflow/rules/...smk`.
+
+For example, the file above could also be requested by the rule name:
+
+```
+# "download_hapmap3_snplist" is the rule name
+snakemake --cores 1 --snakefile workflow/Snakefile download_hapmap3_snplist
+```
+
+the corresponding rule looks like this (located in [`workflow/rules/setup.smk`](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/setup.smk):
+
+```
+rule download_hapmap3_snplist:
+    input:
+        'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
+    output:
+        "resources/HapMap3_snplist/w_hm3.snplist"
+    log:
+        "logs/download_hapmap3_snplist.log"
+    shell:
+        "("
+        "zcat {input} | cut -f2-4 | "
+        ' awk \'BEGIN{{OFS="\t"; print "SNP", "A1", "A2"}}{{if(NR > 1){{print $0}}}}\' > {output} '
+        ") &> {log}"
+```
+
+The `shell:`-directive defines what will be executed. As you can see, this rule also defines a log-file. The log files often contain useful diagnostic messages. If a rule fails, make sure to check both the snakemake output and the log file!
+
+In order to avoid writing a long command every time you run snakemake, the shell script [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) in the main directory can be used to wrap default parameters, i.e.
+
+```
+bash run.sh download_hapmap3_snplist
+```
+is equivalent to the two commands in the examples above.
+
+# Testing PRS methods with synthetic data
+In the sections below, we will cover how to run the pipeline on synthetic data. This will help you verify your setup is working, and will show the basics of how the pipeline can be used.
+
+## Test your setup by running pruning & thresholding
+
+The pipeline ships with synthetic data (genotypes, phenotypes and summary statistics) generated by Sophie Wharrie, Vishnu Raj and Zhiyu Yang. By default, the pipeline is configured to work with this synthetic data. Run the following rule, to extract the synthetic data:
+
+```
+bash run.sh initialize_synthetic
+```
+
+You can now create polygenic scores using plink and summary statistics from a GWAS run on synthetic data:
+
+```
+# first, check what will be executed:
+bash run.sh -n -q prs/pt_clump/synth01/ok
+
+# second, run the rule
+bash run.sh prs/pt_clump/synth01/ok
+```
+
+`config/studies.tsv` by default is the sample-sheet that contains the information on available summary statistics:
+
+| study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
+| --- | --- | --- | --- | --- | --- | --- | --- |
+| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name (descriptive name, like "T2D", can be repeated) |
+
+[`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) is configured to work with summary statistics generated from synthetic data. In order to create scores with a specific PRS method "`{method}`" and GWAS stummary statistics `"{study}"`, the user can request output files which follow the pattern: `prs/{method}/{study}/ok`. Available methods are `dbslmm`,`lassosum`,`ldpred2`,`megaprs`,`prscs`,`pt_clump`.
+
+>:warning:Note: This is just an example. Collaborators don't have to run these methods. **Their outputs will be distributed.** See steps below.
+
+## Predict polygenic scores for synthetic dataset 
+
+Check out the polygenic scoring files created by the rule above:
+
+```
+ls -1 prs/pt_clump/synth01/
+```
+
+>Output (only showing those that are common between methods):
+>```
+>1KGPhase3.w_hm3.synth01.AFR.scale
+>1KGPhase3.w_hm3.synth01.AMR.scale
+>1KGPhase3.w_hm3.synth01.EAS.scale
+>1KGPhase3.w_hm3.synth01.EUR.scale
+>1KGPhase3.w_hm3.synth01.SAS.scale
+>1KGPhase3.w_hm3.synth01.log
+>1KGPhase3.w_hm3.synth01.score.gz
+>ok
+>```
+>While `1KGPhase3.w_hm3.synth01.score.gz` contains the weights for the different SNPs, the scale-files contain the mean and standard deviation of the scores for the different ancestries, which are used for normalization later. 
+
+To predict all *available* scores for all ancestries and target data, run:
+
+```
+# dryrun
+# this should only trigger scoring for the scores we just created above
+
+bash run.sh -n -q all_target_prs_available
+```
+
+```
+# run the scoring
+bash run.sh all_target_prs_available
+```
+
+## Evaluate polygenic score performance for the synthetic dataset
+
+We now want to evaluate the performance of the polygenic scores we just created. Because we only have scores for pruning & thresholding + clump (`pt_clump`) available, we edit `config/config.yaml` to only consider that method:
+
+```
+# this will swap the default
+#     prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']
+# with
+#     prs_methods: ['pt_clump']
+
+sed -i -e "s/^prs_methods: .\+/prs_methods: ['pt_clump']/g" config/config.yaml
+```
+The synthetic phenotype data for phenotype "synthetic01" and target data "synth" are located at `custom_input/synth/phenotypes/synthetic01.tsv.gz`. In general, the pipeline will look for phenotype data in the directories matching the pattern `custom_input/{target-name}/phenotypes/{phenotype-name}.tsv.gz` (more about that later).
+
+We can then run polygenic score evaluation and model selection by running the rule `all_model_eval_ext`
+
+```
+bash run.sh all_model_eval_ext
+```
+
+Finally, we revert our changes to the `config/config.yaml`:
+
+```
+sed -i "s/prs_methods: \['pt_clump'\]/prs_methods: ['dbslmm','lassosum','ldpred2','megaprs','prscs','pt_clump']/g" config/config.yaml
+```
+> :warning:Note: if the above sed-commands don't work for you, you can of course just manually edit config/config.yaml. To revert all changes, do `git checkout -- config/config.yaml`.
+
+
+
 ## Installing Snakemake with conda
 
 To install snakemake with [conda](https://conda.io/projects/conda/en/latest/user-guide/install/index.html):
@@ -389,6 +402,7 @@ conda create -c bioconda -c conda-forge -n snakemake snakemake
 > Note: make sure to update conda, or use mamba to get the latest version of snakemake i.e. `6.2.1`
 
 For installation details, see the [instructions in the Snakemake documentation](https://snakemake.readthedocs.io/en/stable/getting_started/installation.html).
+
 
 ## Manual installation of R packages
 
