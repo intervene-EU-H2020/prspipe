@@ -157,7 +157,7 @@ bash run.sh cleanup_after_setup
 ```
 
 # Ancestry and polygenic scoring for new target genotype/phenotye data
-The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup` and `bash run.sh cleanup_after_setup` before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
+The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup`, `bash run.sh cleanup_after_setup` and downloading of the pre-computed scores before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
 
 ## :rotating_light: Setting up target genetic data
 Target genetic data are defined using a tab-separated-values file (tsv), by default this is [`config/target_list.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv). This file has three columns:
