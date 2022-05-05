@@ -15,7 +15,6 @@ eval "$(conda shell.bash hook)"
 conda activate ${SNAKEMAKE_ENV}
 
 snakemake --snakefile workflow/Snakefile \
-          --configfile config/config.yaml \
           --profile ./slurm \
           --directory "${PWD}" \
           "${@}"

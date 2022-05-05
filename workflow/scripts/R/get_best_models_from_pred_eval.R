@@ -8,8 +8,9 @@ option_list = list(
 make_option("--pred_eval", action="store", default=NA, type='character',
         help="path to pred_eval.txt file"),
 make_option("--drop", action="store", default=T, type='logical', 
-        help="If FALSE, will report MultiPRS even if identical to Inf or Pseudoval models for DBSLMM, SBayesR")
-)
+        help="If FALSE, will report MultiPRS even if identical to Inf or Pseudoval models for DBSLMM, SBayesR"),
+make_option("--out_prefix", action="store", default='best_models', type="character",
+        help='output prefix (default: "%default")'))
 
 predictors <- 'pt.clump|lassosum|prscs|sblup|sbayesr|dbslmm|ldpred2|megaprs|All'
 
@@ -88,8 +89,8 @@ if (!is.na(pheno)){
         pat <- paste0(lassosum_s,'.',lassosum_lambda)
         row <- res_pred_eval[grepl(pattern = pat, Model) & grepl(pattern = 'lassosum.*PredFile', Model)]
 
-        print(pat)
-        print(res_pred_eval[grepl(pattern = 'lassosum.*PredFile', Model)])
+        # print(pat)
+        # print(res_pred_eval[grepl(pattern = 'lassosum.*PredFile', Model)])
 
         if (nrow(row) == 1){    
             row[,c('label','method_type'):=list('lassosum.PseudoVal','PseudoVal')]
@@ -217,10 +218,11 @@ res_eval$tag <- res_eval$Model
 res_eval$Model<-factor(res_eval$method_type, level=c('MultiPRS','CV','PseudoVal','Inf','All'))
 res_eval$Test <- res_eval$label
 
+outfile <- paste0(outpath,'/',opt$out_prefix,'.tsv')
 
-cat('writing output to', paste0(outpath, '/best_models.tsv'), '\n')
+cat('writing output to',outfile, '\n')
 
 res_eval[,select:=NULL]
 res_eval[,Test:=NULL]
 
-fwrite(res_eval,  paste0(outpath, '/best_models.tsv'), sep='\t', row.names = F, quote=F)
+fwrite(res_eval,  outfile, sep='\t', row.names = F, quote=F)

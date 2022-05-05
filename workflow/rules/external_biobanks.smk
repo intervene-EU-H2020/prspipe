@@ -1,6 +1,8 @@
 
 # https://opain.github.io/GenoPred/Genotype-based_scoring_in_target_samples.html
  
+import itertools
+
 bbids = target_list['name'].values
 
 ############################
@@ -155,6 +157,20 @@ wildcard_constraints:
     score_id="[A-Za-z\\.0-9_\\-]+"
 
 
+def get_mem_mb_scaled_polygenic_scorer(wildcards, input, attempt):
+    # this thing actually doesn't appear to need much memory at all (?)
+    # does more memory make it faster (?) ... I doubt it.
+    # requests roughly 16G for 500,000 people
+    i = 0
+    with open(input['target_keep'], 'r') as infile:
+        for j, _ in enumerate(infile):
+            i += 1
+    if i == 0:
+        print('Warning, empty keep file: ' + input['keep_file'])
+    return max(4000, int(i * 0.03 * 1.5**(attempt-1)))
+    
+    
+
 rule run_scaled_polygenic_scorer:
     # general purpose rule to run scaled_polygenic_scorer
     input:
@@ -171,9 +187,10 @@ rule run_scaled_polygenic_scorer:
         freq_prefix=lambda wc, input: input['ref_freq_chr'][0][:-7],
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
-        mem_mb=32000,
+        mem_mb=get_mem_mb_scaled_polygenic_scorer,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
-        time="03:00:00"
+        time="03:00:00",
+        partition='vcpu,hpcpu'
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
     shell:
@@ -266,7 +283,6 @@ localrules: all_target_prs_available
     
 rule model_eval_ext_prep:
     # preparation for model evaluation, requests for all studies and all methods specified in the config.yaml
-    # TODO: other super-populations
     input:
         expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles', method=config['prs_methods'], allow_missing=True)
     output:
@@ -282,8 +298,8 @@ rule model_eval_ext_prep:
 localrules: model_eval_ext_prep
 
 def check_gz_pheno_tsv(wc):
-    
-    pheno = studies.loc[wc.study, 'name']
+    # checks for phenotype files and prints a warning if they are missing
+    pheno = wc['pheno']
     infile = 'custom_input/{bbid}/phenotypes/{pheno}.tsv.gz'.format(bbid = wc.bbid, pheno = pheno)
     
     if os.path.isfile(infile):
@@ -296,36 +312,38 @@ def check_gz_pheno_tsv(wc):
 
 
 def get_mem_mb_model_eval_ext(wildcards, input, attempt):
+    # calculate peak memory allocated to job 
     i = 0
     with open(input['keep_file'], 'r') as infile:
         for j, _ in enumerate(infile):
             i += 1
     if i == 0:
         print('Warning, empty keep file: ' + input['keep_file'])
-    return max(8000, int(i * 0.25 * 1.5**(attempt-1)))
+    return max(8000, int(i * 0.23 * 1.5**(attempt-1)))
     
 
 rule model_eval_ext:
+    # evaluate score performance using target phenotype data
     input:
         predictors = rules.model_eval_ext_prep.output.predictors,
         pheno_file = check_gz_pheno_tsv,
         keep_file = keep_file_pattern,
         profiles = rules.model_eval_ext_prep.input
     output:
-        assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.assoc.txt',
-        pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_eval.txt'
-        # pred_comp='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{superpop}.AllMethodComp.pred_comp.txt.gz'
+        assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.assoc.txt',
+        pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.pred_eval.txt'
     params:
-        prev = lambda wc: prevalence[studies.loc[wc.study, 'name']],
+        prev = lambda wc: prevalence[wc.pheno],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
     threads:
         4
     resources:
         mem_mb=get_mem_mb_model_eval_ext,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
-        time="16:00:00"
+        time="16:00:00",
+        partition='hpcpu,vcpu'
     log:
-        'logs/model_eval_ext/{bbid}/{study}.{superpop}.log'
+        'logs/model_eval_ext/{bbid}/{study}.{pheno}.{superpop}.log'
     singularity:
         config['singularity']['all']
     shell:
@@ -346,18 +364,95 @@ rule model_eval_ext:
         ") &> {log}"
 
 
+def get_available_phenotypes(bbid):
+    # return all available study (i.e., GWAS) to phenotype combinations for a specific biobank (bbid)
+    pheno_path = glob('custom_input/{bbid}/phenotypes/*.tsv.gz'.format(bbid = bbid))
+    pheno_path += glob('custom_input/{bbid}/phenotypes/*.tsv'.format(bbid = bbid))
+
+    if not len(pheno_path):
+        print('Warning, no phenotypes found for target data "{}"'.format(bbid))
+        return [], []
+    
+    phenos = [ p.split('/')[-1] for p in pheno_path ]
+    phenos = [ p[:-4] if p.endswith('tsv') else p[:-7] for p in phenos ]
+
+
+    study_list = []
+    pheno_list = []
+
+    for _, row in studies.iterrows():
+        study_phenos = row['name'].split(',')
+        
+        for p in study_phenos:
+            if p in phenos:
+                study_list += [row['study_id']]
+                pheno_list += [p]
+
+    return study_list, pheno_list
+
+
+def get_possible_eval_outputs_ancestry(wc):
+    # input function for a rule below
+    # gets files for a single superpopulation
+    
+    study_list, pheno_list  = get_available_phenotypes(wc.bbid)
+
+    superpop = [wc.superpop] * len(study_list)
+    bbid = [bbid] * len(study_list)
+
+    return expand(rules.model_eval_ext.output, zip, bbid=bbid, superpop=superpop, pheno=pheno_list, study = study_list)
+
+
+def get_possible_eval_outputs(wc):
+    # input function for a rule below
+    # gets files for all superpopulations
+    
+    study_list, pheno_list  = get_available_phenotypes(wc.bbid)
+    n_eval = len(study_list)
+
+    study_list = study_list * len(config['1kg_superpop'])
+    pheno_list = pheno_list * len(config['1kg_superpop'])
+
+    superpop = []
+    for s in config['1kg_superpop']:
+        superpop += [s] * n_eval
+
+    bbid = [wc.bbid] * len(study_list)
+
+    return expand(rules.model_eval_ext.output, zip, bbid=bbid, superpop=superpop, pheno=pheno_list, study = study_list)
+
+
+def get_possible_eval_ouputs_pred_eval(wc):
+    outputs = get_possible_eval_outputs(wc)
+    return list((o for o in outputs if '.pred_eval.' in o))
+
+
 rule all_ancestry_model_eval_ext:
+    # run score evaluation for all methods and all phenotypes for a specific superpopulation and target data
     input:
-        expand(rules.model_eval_ext.output, study=studies.study_id.values, allow_missing=True) 
+        get_possible_eval_outputs_ancestry
     output:
         touch('results/{bbid}/PRS_evaluation/{superpop}.ok')
 
-rule all_model_eval_ext:
+
+rule all_target_model_eval_ext:
+    # hack to make the input function work part 1
     input:
-        expand(rules.model_eval_ext.output, bbid=target_list.name.values, study=studies.study_id.values, superpop=config['1kg_superpop'])
+        get_possible_eval_outputs
+    output:
+        temp('results/{bbid}/PRS_evaluation/all_ancestry.ok')
+    shell:
+        'touch {output}'
+
+rule all_model_eval_ext:
+    # hack to make the input function work part 2
+    # run score evaluation for all phenotypes, superpopulations and target data
+    input:
+        expand(rules.all_target_model_eval_ext.output, bbid=bbids)
 
 localrules:
     all_ancestry_model_eval_ext,
+    all_target_model_eval_ext,
     all_model_eval_ext
         
         
@@ -367,9 +462,9 @@ rule get_best_models_ext:
     input:
         pred_eval=rules.model_eval_ext.output['pred_eval']
     output:
-        best_models_tsv='results/{bbid}/PRS_evaluation/{study}/{superpop}/best_models.tsv'
+        best_models_tsv='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.best_models.tsv'
     log:
-        'logs/get_best_models_ext/{bbid}/{study}_{superpop}.log'
+        'logs/get_best_models_ext/{bbid}/{study}.{pheno}_{superpop}.log'
     singularity:
         config['singularity']['all']
     resources:
@@ -381,6 +476,7 @@ rule get_best_models_ext:
         "{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R "
         "--pred_eval {input[pred_eval]} "
         "--drop TRUE "
+        "--out_prefix '{wildcards[study]}.{wildcards[pheno]}.{wildcards[superpop]}.AllMethodComp.best_models' "
         ") &> {log}"
         
 
@@ -388,7 +484,7 @@ rule biobank_get_best_models_ext:
     # extract the best performing models and their performance for all phenotypes for a single biobank
     # makes more sense to run this way because it doesn't use much compute
     input:
-        expand(rules.model_eval_ext.output['pred_eval'], study=studies.study_id, superpop=config['1kg_superpop'], allow_missing=True)
+        get_possible_eval_ouputs_pred_eval
     output:
         touch('results/{bbid}/PRS_evaluation/all_get_best_models.ok')
     log:
@@ -404,8 +500,11 @@ rule biobank_get_best_models_ext:
     shell:
         '('
         'for infile in {params[infiles]}; do '
+        'BASENAME="$(basename ${{infile}})"; '
+        'PREFIX="${{BASENAME%%.pred_eval.txt}}"; '
         '{config[Rscript]} workflow/scripts/R/get_best_models_from_pred_eval.R '
-        '--pred_eval $infile '
+        '--pred_eval ${{infile}} '
+        '--out_prefix ${{PREFIX}}.best_models '
         '--drop TRUE; '
         'done '
         ') &> {log}'
@@ -428,6 +527,8 @@ localrules:
 
 def get_existing_group_files():
     
+    # finds .predictor_group file (only one needed for all ancestries)
+    
     files = []
     
     for bbid in bbids:
@@ -437,8 +538,6 @@ def get_existing_group_files():
                 if os.path.isfile(path):
                     files += [path]
                     break
-                    
-    # print('all_export_best_scores: Will export best scores for '+str(len(files))+' studies.')
     
     return files
                     
@@ -471,6 +570,7 @@ rule all_export_best_scores:
         '--metric CrossVal_R '
         '--decreasing TRUE '
         '--N_max 20 '
+        '--phenotype all '
         '--ancestries {params[ancestries]}; '
         'done '
         ') &> {log}'

@@ -5,3 +5,6 @@ Prostate_cancer	0.125
 Stroke_excluding_SAH	0.125
 Alzheimers_disease	0.06
 Urate_Gout	0.014
+Chronic_kidney_disease	0.139
+Seropositive_rheumatoid_arthritis	0.01
+Inflammatory_bowel_disease	0.01
