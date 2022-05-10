@@ -241,7 +241,7 @@ sed -i "s/studies.tsv/studies_for_methods_comparison.tsv/g" config/config.yaml
 
 ### :rotating_light: Run polygenic risk scoring and evaluation for target data
 
-Assuming you have downloaded PRS as described above and replaced `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv` inside the `config.yaml`, you can now perform hyper-parameter tuning (model selection), evaluation, and construction of Multi-PRS on your data. First, validate that all required data is there:
+Assuming you have downloaded PRS as described above and replaced `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv` inside the `config.yaml`, you can now perform hyper-parameter tuning (model selection), evaluation, and construction of Multi-PRS on your data. First, validate that all required data are there:
 
 ```
 bash run.sh -n validate_setup_ext
