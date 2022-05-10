@@ -46,8 +46,10 @@ rule initialize_synthetic:
 
 
 rule download_test_data:
-    # rule to download test data from figshare
-    # note: this is incompatible with the rule below. (outputs will be overwritten)
+    # rule to download some small test data from figshare (simple PRS for 3 methods and 10 phenotypes)
+    # touches the output files to fool snakemake's timestamp checks
+    # note: this is incompatible with the rules below ("download_prs_for_methods_coparison_may2022", "unpack_prs_for_methods_coparison_may2022"). (outputs will be overwritten)
+    # meant for use with config/studies_for_methods_comparison.tsv
     shell:
         "( mkdir -p resources/test_prs/ && "
         "wget -O resources/test_prs/PRS.tar.gz https://figshare.com/ndownloader/files/33905531?private_link=8ac0f09450555d6ba6dd && "
@@ -72,13 +74,29 @@ rule download_prs_for_methods_coparison_may2022:
         "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199?private_link=7f738b939e1cba580708"
 
 
+
+with open('config/studies_for_methods_comparison.tsv', 'r') as infile:
+    may2022_study_ids = [x.split('\t')[0] for x in infile][1:]
+
+
 rule unpack_prs_for_methods_coparison_may2022:
     # rule to unpack pre-computed PRS scoring files
-    # note: this is incompatible with the rule above. (outputs will be overwritten)
+    # note: this is incompatible with the "download_test_data" rule above. (outputs will be overwritten)
+    # touches the output files to fool snakemake's timestamp checks
+    # meant for use with config/studies_for_methods_comparison.tsv
     input:
         'prs.tar.gz'
+    params:
+        study_ids = ' '.join(may2022_study_ids),
+        prs_methods = ' '.join(config['prs_methods'])
     shell:
-        'tar -xvcf prs.tar.gz'
+        'tar -xvf prs.tar.gz; '
+        'for study in {params[study_ids]}; do '
+        'for method in {params[prs_methods]}; do '
+        'touch "prs/${{method}}/${{study}}/ok" && '
+        'find "prs/${{method}}/${{study}}" -type f -exec touch {{}} +; '
+        'done; '
+        'done'
 
 
 localrules:

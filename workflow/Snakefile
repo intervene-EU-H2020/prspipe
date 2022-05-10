@@ -72,9 +72,11 @@ include: "rules/prs_megaprs_plink2.smk"
 rule all_setup:
     # this triggers pre-processing of 1000G
     input:
+        expand('resources/1kg/1KGPhase3.w_hm3.chr{chrom}.{suffix}', chrom=range(1,23), suffix=['bed','bim','fam']),
         'resources/1kg/Score_files_for_ancestry/EUR/1KGPhase3.w_hm3.EUR.eigenvec.var',
         'resources/1kg/Score_files_for_ancestry/AllAncestry/1KGPhase3.w_hm3.AllAncestry.eigenvec.var',
         rules.run_allele_freq_all.output,
+        rules.run_allele_freq_all_plink2.output,
         rules.download_liftover.output,
         rules.extract_hm3_gw.output
         

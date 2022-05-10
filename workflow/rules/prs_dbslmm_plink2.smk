@@ -22,13 +22,19 @@ rule download_dbslmm_ld_block:
         "cd resources && "
         "git clone https://bitbucket.org/nygcresearch/ldetect-data.git"
 
+def get_dbslmm_ldref(wc):
+    if wc['study'] not in studies.index:
+        print('Warning trying to determine DBSLMM LD-reference: study {} not found in {}'.format(wc['study'], config['studies']))
+        return expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{ancestry}/{chr}.l2.ldscore.gz", ancestry=['EUR'], chr=range(1,23))
+    else:
+        return expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{ancestry}/{chr}.l2.ldscore.gz", ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0], chr=range(1,23))
 
 rule prs_scoring_dbslmm:
     # Implements the dbslmm method
     # Uses the precomputed LD ref (based on 1000G) by default.
     # TODO: DBSLMM has a "threads" argument, which is not used in polygenic_score_file_creator_DBSLMM.R (?) -> could potentially be used to speed things up
     input:
-        ld_ref=lambda wc: expand("resources/LD_matrix/sblup_dbslmm/1000G/precomputed/{ancestry}/{chr}.l2.ldscore.gz", ancestry=studies.ancestry[studies.study_id == wc.study].iloc[0], chr=range(1,23)),
+        ld_ref=get_dbslmm_ldref,
         ld_block=rules.download_dbslmm_ld_block.output,
         qc_stats=lambda wc: expand(rules.QC_sumstats.output, ancestry = studies.ancestry[studies.study_id == wc.study].iloc[0], allow_missing=True),
         super_pop_keep=rules.create_ancestry.output['super_pop_keep'],

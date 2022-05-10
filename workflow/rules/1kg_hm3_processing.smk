@@ -554,7 +554,6 @@ rule run_allele_freq_allancestry:
 rule run_allele_freq_all:
     # this rule executes all the rules above
     input:
-        rules.run_allele_freq_pop.output,
         rules.run_allele_freq_superpop.output,
         rules.run_allele_freq_allancestry.output
     output:
@@ -636,7 +635,6 @@ rule run_allele_freq_allancestry_plink2:
 rule run_allele_freq_all_plink2:
     # this rule executes all the rules above
     input:
-        rules.run_allele_freq_pop_plink2.output,
         rules.run_allele_freq_superpop_plink2.output,
         rules.run_allele_freq_allancestry_plink2.output
     output:
