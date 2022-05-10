@@ -47,6 +47,7 @@ rule initialize_synthetic:
 
 rule download_test_data:
     # rule to download test data from figshare
+    # note: this is incompatible with the rule below. (outputs will be overwritten)
     shell:
         "( mkdir -p resources/test_prs/ && "
         "wget -O resources/test_prs/PRS.tar.gz https://figshare.com/ndownloader/files/33905531?private_link=8ac0f09450555d6ba6dd && "
@@ -60,7 +61,30 @@ rule download_test_data:
         "for SUBDIR in ../${{DIR}}/*; "
         "do ln -s -r $SUBDIR; done;" # linking the directories to the standard directory for polygenic scores
         "cd ../; done "
-        
+
+
+rule download_prs_for_methods_coparison_may2022:
+    # rule to download pre-computed PRS scoring files
+    # note: this is incompatible with the rule above. (outputs will be overwritten)
+    output:
+        'prs.tar.gz'
+    shell:
+        "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199?private_link=7f738b939e1cba580708"
+
+
+rule unpack_prs_for_methods_coparison_may2022:
+    # rule to unpack pre-computed PRS scoring files
+    # note: this is incompatible with the rule above. (outputs will be overwritten)
+    input:
+        'prs.tar.gz'
+    shell:
+        'tar -xvcf prs.tar.gz'
+
+
+localrules:
+    download_prs_for_methods_coparison_may2022,
+    unpack_prs_for_methods_coparison_may2022
+
 
 rule cleanup_after_setup:
     # removes unnecessary intermediate output files
