@@ -39,14 +39,14 @@ Here is a breakdown of what is covered, including the most important commands
     bash run.sh all_setup
     bash run.sh cleanup_after_setup
     ```
-4.  :globe_with_meridians: Download pre-calculated scores for pruning & thresholding + clump, MegaPRS, PRScs for 10 phenotypes
+4.  :globe_with_meridians: Download pre-calculated PRS for 15 phenotypes
     ```
-    bash run.sh download_test_data
+    bash run.sh unpack_prs_for_methods_coparison_may2022
     ```
-5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`)
-6. 🚨 Predict scores
+5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`), and change the `studies:` entry in `config/config.yaml` to `config/studies_for_methods_comparison.tsv`.
+6. 🚨 Run ancestry scoring, predict and evaluate PRS, and generate Multi-PRS
     ```
-    bash run.sh all_target_prs_available
+    bash run.sh all_get_best_models_ext
     ```
 The tutorial below covers the steps above (and more) in greater detail.
 
@@ -156,11 +156,19 @@ Once you have successfully completed these steps, you can clear up space by runn
 bash run.sh cleanup_after_setup
 ```
 
+## :globe_with_meridians: Download pre-computed PRS
+
+Download the pre-computed PRS for the studies defined in [`config/studies_for_methods_comparison.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies_for_methods_comparison.tsv).
+
+```
+bash run.sh unpack_prs_for_methods_coparison_may2022
+```
+
 # Ancestry and polygenic scoring for new target genotype/phenotye data
-The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup`, `bash run.sh cleanup_after_setup` and downloading of the pre-computed scores before transferring to the protected research environment. You will also have to transfer any conda environments you are using (if any), and the singularity/docker container image.
+The steps below will guide you through the process of setting up the pipeline to work with new target genotype/phenotype data. If your research environment does not have access to the internet and is located at a different location, you will have to make sure to transfer the entire working directory tree into your new environment. Also, you have to successfully run at least `bash run.sh all_setup`, `bash run.sh cleanup_after_setup` and downloading of the pre-computed scores (`unpack_prs_for_methods_coparison_may2022`) before transferring to the protected research environment. You also have to transfer the singularity/docker container image.
 
 ## :rotating_light: Setting up target genetic data
-Target genetic data are defined using a tab-separated-values file (tsv), by default this is [`config/target_list.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv). This file has three columns:
+Target genetic data are defined using a sample-sheet, i.e, a tab-separated-values file (tsv), by default this is [`config/target_list.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv). This file has three columns:
 
 | name | path | type |
 | --- | --- | --- |
@@ -205,9 +213,9 @@ this will create output files at `results/{target-name}/Ancestry_idenitfier/`.
 
 ## :rotating_light: Setting up target phenotype data
 
-> ⚠️ This section is under construction 🚧
+The sample-sheet containing the GWAS studies used in the methods comparison is [`config/studies_for_methods_comparison.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies_for_methods_comparison.tsv). It contains the GWAS catalog identifiers, sample sizes, reference ancestry and other information. Their summary statistics are the input to the different polygenic scoring methods. The `name`-column defines one or more phenotypes we want to evaluate the polygenic scores coming from the different methods on.
 
-Extract the phenotypes of interest. A list of phenotypes for initial testing will be distributed. How to extract phenotypes will be highly specific to the biobank you are working with and may include self-reported endpoints or data from patient records. Phenotypes should be placed in *separate* files with three tab-separated columns (no header): The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
+Phenotypes should be placed in *separate* files with three tab-separated columns (no header): The family ID, the individual ID, and the Phenotype value (see the plink "pheno" format [here](https://www.cog-genomics.org/plink/1.9/input#pheno)), for example
 
 |  |  |  |
 | --- | --- | --- |
@@ -215,35 +223,71 @@ Extract the phenotypes of interest. A list of phenotypes for initial testing wil
 | fid_2 | iid_2 | 1 |
 | ... | ... | ... |
 
-An example is provided at [`resources/synthetic_data/pheno250.tsv.gz`](https://github.com/intervene-EU-H2020/prspipe/blob/main/resources/synthetic_data/). A script to convert the INTERVENE phenotype format to this format will be provided soon (any volunteers?). 
+An example is provided at [`resources/synthetic_data/pheno250.tsv.gz`](https://github.com/intervene-EU-H2020/prspipe/blob/main/resources/synthetic_data/).
 
-The IDs should have matches in the plink `.fam`-files generated above, but it is **not** necessary to have phenotype values for all genotyped individuals. This   way only a sub-set of individuals can be analysed for each phenotype to save computational effort. Also, if you do not want to analyse a specific phenotype, you can delete the row corresponding to that phenotype from [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv).
+The IDs should have matches in the plink `.fam`-files generated [above](#rotating_light-target-genotype-harmonization) (the harmonized target genetic data), but it is **not** necessary to have phenotype values for all genotyped individuals. This way only a sub-set of individuals can be analysed for each phenotype (e.g., only females for breast cancer). If you do not want to analyse a specific phenotype or study, you can delete the corresponding row from the `studies_for_methods_comparison.tsv` configuration file.
 
-Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the "name"-column of [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv), i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. **You can also gzip these files to save space.**
+Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the `name`-column of the study sample-sheet, i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. You may gzip these files to save space.
 
-The pipeline does not need to be configured to look for files in `custom_input/phenotypes/*/`. `config/studies.tsv` can be left unchanged if you wish to analyse all phenotypes. Otherwise delete the rows corresponding to the phenotypes you do not wish to analyse from [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv).
+Finally, in order to configure the pipeline to use the pre-calculated scores downloaded [above](#globe_with_meridians-download-pre-computed-prs), you have to edit `config.yaml` (by default it is configured to [work with synthetic data](#testing-prs-methods-with-synthetic-data
+)).
+
+Replace `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv`, e.g.
+
+```
+sed -i "s/studies.tsv/studies_for_methods_comparison.tsv/g" config/config.yaml
+```
+
 
 ### :rotating_light: Run polygenic risk scoring and evaluation for target data
 
-> ⚠️ This section is under construction 🚧
-
-Assuming you have downloaded pre-adjusted summary statistics as described above (`bash run.sh download_test_data`), you can now perform hyper-parameter tuning (model selection) on your data. First, perform a dryrun to check that the right jobs will be executed:
-    
-```
-bash run.sh --dryrun --keep-going all_get_best_models_ext
-```
-
-the output should look something like this
+Assuming you have downloaded PRS as described above and replaced `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv` inside the `config.yaml`, you can now perform hyper-parameter tuning (model selection), evaluation, and construction of Multi-PRS on your data. First, validate that all required data are there:
 
 ```
-[...]
-Job counts:
-        count   jobs
-        ...
+bash run.sh -n validate_setup_ext
 ```
-    if you see significantly more jobs listed, your pipeline is misconfigured. Please contact me in this case (remo.monti@hpi.de).
 
-This will run ancestry scoring, identify individuals with EUR ancestry, and perform predictions and hyper-parameter tuning for those individuals. You can now run these steps with `bash run.sh --keep-going all_get_best_models_ext`.
+Output:
+
+>```
+>Building DAG of jobs...
+>Nothing to be done.
+>```
+
+Then execute a dryrun to see what will happen
+
+```
+bash run.sh -n --quiet all_get_best_models_ext
+```
+
+Output:
+
+>```
+>Job counts:
+>	count	jobs
+>	1	all_get_best_models_ext
+>	1	ancestry_outlier_ext
+>	1	ancestry_scoring_ext
+>	1	biobank_get_best_models_ext
+>	22	harmonize_target_genotypes
+>	95	model_eval_ext
+>	75	model_eval_ext_prep
+>	525	run_scaled_polygenic_scorer
+>	721
+>```
+
+
+If you see significantly more jobs listed, your pipeline is misconfigured, or it doesn't recognise the pre-computed PRSs. Please contact me in this case (remo.monti@hpi.de). You may have already run the ancestry scoring and genotype harmonization steps (`ancestry_scoring_ext`, `ancestry_outlier_ext`, `harmonize_target_genotypes`), so they might not appear. 
+
+Before you run these jobs, make sure you have sufficient resources available. Especially the `model_eval_ext` steps can take long to complete. It's strongly advised to run on many cores! If you run into memory issues, contact me and I can help you reduce the memory footprint, if necessary.
+
+To run the jobs listed above:
+
+```
+export SNAKEMAKE_CORES=16 # define the number of cores
+bash run.sh -p all_get_best_models_ext
+```
+
 
 --------------------------------------
     
