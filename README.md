@@ -230,7 +230,7 @@ The IDs should have matches in the plink `.fam`-files generated [above](#rotatin
 Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the `name`-column of the study sample-sheet, i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. You may gzip these files to save space.
 
 Finally, in order to configure the pipeline to use the pre-calculated scores downloaded [above](#globe_with_meridians-download-pre-computed-prs), you have to edit `config.yaml` (by default it is configured to [work with synthetic data](#testing-prs-methods-with-synthetic-data
-).
+)).
 
 Replace `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv`, e.g.
 
