@@ -277,7 +277,7 @@ Output:
 >```
 
 
-If you see significantly more jobs listed, your pipeline is misconfigured, or it doesn't recognise the pre-computed PRSs. Please contact me in this case (remo.monti@hpi.de). You may have already run the ancestry scoring steps (`ancestry_scoring_ext`, `ancestry_outlier_ext`), so they might not appear. 
+If you see significantly more jobs listed, your pipeline is misconfigured, or it doesn't recognise the pre-computed PRSs. Please contact me in this case (remo.monti@hpi.de). You may have already run the ancestry scoring and genotype harmonization steps (`ancestry_scoring_ext`, `ancestry_outlier_ext`, `harmonize_target_genotypes`), so they might not appear. 
 
 Before you run these jobs, make sure you have sufficient resources available. Especially the `model_eval_ext` steps can take long to complete. It's strongly advised to run on many cores! If you run into memory issues, contact me and I can help you reduce the memory footprint, if necessary.
 
