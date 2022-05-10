@@ -43,7 +43,7 @@ Here is a breakdown of what is covered, including the most important commands
     ```
     bash run.sh unpack_prs_for_methods_coparison_may2022
     ```
-5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`)
+5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`), and change the `studies:` entry in `config/config.yaml` to `config/studies_for_methods_comparison.tsv`.
 6. 🚨 Run ancestry scoring, predict and evaluate PRS, and generate Multi-PRS
     ```
     bash run.sh all_get_best_models_ext
