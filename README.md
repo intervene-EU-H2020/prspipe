@@ -114,7 +114,7 @@ After that, you can run snakemake interactively by first starting an [interactiv
 
 ```
 # on the host, in the working directory:
-singularity shell -c prspipe.sif
+singularity shell -e --no-home -B $PWD --pwd $PWD prspipe.sif
 
 # inside the container:
 snakemake --help
