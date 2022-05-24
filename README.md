@@ -133,7 +133,7 @@ Beware, if the path displayed after `which R` is *not* /usr/local/bin/R, your en
 
 ## Container mounts :file_folder:
 
-:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
+:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity -e --no-home -B $PWD --pwd $PWD -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
 
 ## :globe_with_meridians: Download and process the 1000 Genomes Reference
 
