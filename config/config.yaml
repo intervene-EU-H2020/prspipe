@@ -8,6 +8,9 @@
 # see https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv for an example
 studies: "config/studies.tsv"
 
+# force intersection of GWAS summary statistics with HapMap3-1KG, and replace existing variant identifiers with rsids
+force_sumstats_remapping: True
+
 # table of target genetic data
 # see https://github.com/intervene-EU-H2020/prspipe/blob/main/config/target_list.tsv for an example
 target_list: "config/target_list.tsv"
@@ -77,7 +80,8 @@ PRScs_dir: "workflow/scripts/PRScs/PRScs.py"
 # if running snakemake with "--use-singularity", this parameter sets main container to run in:
 
 singularity:
-  all: 'docker://rmonti/prspipe:0.0.3'
+  all: 'docker://rmonti/prspipe:0.1.0'
+
 
 #################################
 # 1000 genomes superpopulations #
