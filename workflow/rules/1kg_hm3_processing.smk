@@ -21,6 +21,7 @@ rule download_1kg:
         config['singularity']['all']
     shell:
         "("
+        "export TMPDIR=\"$(readlink -f ./temp)\"; "
         "if [ -f resources/1kg/chr{wildcards[chr]}.vcf ]; then rm resources/1kg/chr{wildcards[chr]}.vcf; fi; "
         "wget {params[ftp_path]} -nv -O resources/1kg/chr{wildcards[chr]}.vcf.gz && "
         "gunzip resources/1kg/chr{wildcards[chr]}.vcf.gz && "
