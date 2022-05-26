@@ -11,9 +11,9 @@ rule download_1kg:
         bed="resources/1kg/1KGPhase3.chr{chr}.bed",
         fam="resources/1kg/1KGPhase3.chr{chr}.fam"
     params:
-        # v5b - no rsIDs!: ftp_path=lambda wc: "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz".format(wc['chr']),
+        # v5b - no rsIDs!: ftp_path=lambda wc: "ftp:://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz".format(wc['chr']),
         # v5 - has rsIDs:
-        ftp_path=lambda wc: "http://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr']),
+        ftp_path=lambda wc: "ftp:://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr']),
         out = lambda wc, output: output['bed'][:-4]
     log:
         "logs/download_1kg/{chr}.log"
