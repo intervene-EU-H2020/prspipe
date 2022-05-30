@@ -3,6 +3,17 @@
 # Download and process the 1000Genomes reference #
 ##################################################
 
+if 'wget_use_https' in config:
+    if config['wget_use_https'] == True :
+        ftp_prefix='https'
+    elif config['wget_use_https'] == False :
+        ftp_prefix='ftp'
+    else:
+        raise ValueError('wget_use_https has to be True or False, if specified. Got "{}"'.format(config['wget_use_https']))
+else:
+    ftp_prefix='ftp'
+
+
 rule download_1kg:
     # generate 1000 Genomes PLINK files
     # Download vcf file, convert to plink
@@ -13,7 +24,7 @@ rule download_1kg:
     params:
         # v5b - no rsIDs!: ftp_path=lambda wc: "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5b.20130502.genotypes.vcf.gz".format(wc['chr']),
         # v5 - has rsIDs:
-        ftp_path=lambda wc: "ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(wc['chr']),
+        ftp_path=lambda wc: "{}://ftp.1000genomes.ebi.ac.uk/vol1/ftp/technical/working/20140708_previous_phase3/v5_vcfs/ALL.chr{}.phase3_shapeit2_mvncall_integrated_v5.20130502.genotypes.vcf.gz".format(ftp_prefix, wc['chr']),
         out = lambda wc, output: output['bed'][:-4]
     log:
         "logs/download_1kg/{chr}.log"
@@ -37,11 +48,13 @@ rule download_integrated_call_samples_v3:
     output:
          'resources/1kg/integrated_call_samples_v3.20130502.ALL.panel',
          'resources/1kg/integrated_call_samples_v3.20130502.ALL.panel_small'
+    params:
+        url = '{}://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel'.format(ftp_prefix)
     shell:
         "("
         "mkdir -p resources/1kg && "
         "cd resources/1kg && "
-        "wget ftp://ftp.1000genomes.ebi.ac.uk/vol1/ftp/release/20130502/integrated_call_samples_v3.20130502.ALL.panel && "
+        "wget {params[url]} && "
         "cut -f 1-3 integrated_call_samples_v3.20130502.ALL.panel > integrated_call_samples_v3.20130502.ALL.panel_small "
         ")"
 
