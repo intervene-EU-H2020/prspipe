@@ -114,7 +114,7 @@ After that, you can run snakemake interactively by first starting an [interactiv
 
 ```
 # on the host, in the working directory:
-singularity shell -c prspipe.sif
+singularity shell -e --no-home -B $PWD --pwd $PWD prspipe.sif
 
 # inside the container:
 snakemake --help
@@ -133,7 +133,7 @@ Beware, if the path displayed after `which R` is *not* /usr/local/bin/R, your en
 
 ## Container mounts :file_folder:
 
-:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity shell -c -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
+:warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity -e --no-home -B $PWD --pwd $PWD -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
 
 ## :globe_with_meridians: Download and process the 1000 Genomes Reference
 
@@ -365,11 +365,9 @@ bash run.sh prs/pt_clump/synth01/ok
 
 | study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name (descriptive name, like "T2D", can be repeated) |
+| The GWAS acccession | The ancestry abbreviation (EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The GWAS catalog ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | the **GWAS** phenotype is binary (yes/no) | one or more evaluation phenotype names (like "T2D", or comma-separated "Urate,Gout", can be repeated) |
 
 [`config/studies.tsv`](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) is configured to work with summary statistics generated from synthetic data. In order to create scores with a specific PRS method "`{method}`" and GWAS stummary statistics `"{study}"`, the user can request output files which follow the pattern: `prs/{method}/{study}/ok`. Available methods are `dbslmm`,`lassosum`,`ldpred2`,`megaprs`,`prscs`,`pt_clump`.
-
->:warning:Note: This is just an example. Collaborators don't have to run these methods. **Their outputs will be distributed.** See steps below.
 
 ## Predict polygenic scores for synthetic dataset 
 
@@ -471,8 +469,8 @@ To configure and run the code for downloading summary statistics:
 
 | study_id | ancestry | n_cases | n_controls | ftp_address | local_path | binary | name |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| The study acccession number given in the GWAS catalog | The ancestry abbreviation (we currently support EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | phenotype is binary (yes/no) | name |
-| e.g. GCST000998 | e.g. EUR | e.g. 22233 | e.g. 64762 | e.g. /pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz | e.g. ./munged_ss.tsv.gz | e.g. yes | e.g. CAD |
+| The study acccession number given in the GWAS catalog | The ancestry abbreviation (we currently support EUR, EAS, AMR, SAS and AFR) | The number of case samples | The number of control samples | The ftp address of the ```.h.tsv.gz``` harmonized summary statistics file, given in the form ```/pub/databases/gwas/summary_statistics.../harmonised/....h.tsv.gz```) | alternatively a local path to a "munged" summary statistics file | **GWAS** phenotype is binary (yes/no) | evaluation phenotype name(s) |
+| e.g. GCST000998 | e.g. EUR | e.g. 22233 | e.g. 64762 | e.g. /pub/databases/gwas/summary_statistics/GCST000001-GCST001000/GCST000998/harmonised/21378990-GCST000998-EFO_0001645.h.tsv.gz | e.g. ./munged_ss.tsv.gz | e.g. yes | e.g. HDL_cholesterol,CAD |
 
 If summary statistics are not available in the harmonized format, consider using [this script](https://github.com/intervene-EU-H2020/prspipe/blob/workflow/scripts/R/munge_sumstats.R) to convert them to munged format.
 
