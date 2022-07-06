@@ -41,6 +41,7 @@ rule map_sumstats:
         "--force TRUE "
         "--output {params[out_prefix]} "
         "--gz TRUE "
+        "--tmpdir ./temp "
         ") &> {log}"
         
         
