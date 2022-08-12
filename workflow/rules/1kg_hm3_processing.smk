@@ -30,6 +30,8 @@ rule download_1kg:
         "logs/download_1kg/{chr}.log"
     singularity:
         config['singularity']['all']
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     shell:
         "("
         "export TMPDIR=\"$(readlink -f ./temp)\"; "
@@ -356,6 +358,8 @@ rule allele_freq_1kg_pop_tmp:
         pop='[A-Z]+'
     log:
         "logs/allele_freq_1kg_pop/{popul}.log"
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -394,6 +398,8 @@ rule run_allele_freq_1kg_allancestry:
         pop='[A-Z]+'
     log:
         "logs/run_allele_freq_1kg_allancestry.log"
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -490,6 +496,8 @@ rule extract_hm3_gw:
         fam='resources/1kg/1KGPhase3.w_hm3.GW.fam'
     log:
         "logs/extract_hm3_gw.log"
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     shell:
         "("
         "ls resources/1kg/1KGPhase3.w_hm3.chr*.bed | sed -e 's/\.bed//g' > resources/1kg/merge_list.txt ;"
@@ -517,6 +525,8 @@ rule allele_freq_pop:
         "logs/allele_freq_pop/{popul}.log"
     singularity:
         config['singularity']['all']
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     shell:
         "("
         "for chrom in $(seq 1 22); do "
@@ -555,6 +565,8 @@ rule run_allele_freq_allancestry:
         "logs/run_allele_freq_allancestry.log"
     singularity:
         config['singularity']['all']
+    resources:
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
     shell:
         "("
         "for chr in $(seq 1 22); do "
