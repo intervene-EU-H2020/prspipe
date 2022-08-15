@@ -19,18 +19,28 @@ option_list = list(
               help="Set to T to gzip summary statistics [optional]"),
   make_option("--output", action="store", default=NA, type='character',
               help="Path for output files [required]"),
-  make_option("--force", action="store", type="logical", default=F)
+  make_option("--force", action="store", type="logical", default=F),
+  make_option("--tmpdir", action="store", default=NA, type="character")
 )
 
 opt = parse_args(OptionParser(option_list=option_list))
 
 library(data.table)
 
+tempdir <- opt$tmpdir
+if( is.na(tempdir) ){
+    tempdir <- tempdir()
+} else {
+    if(!dir.exists(tempdir)){
+    stop(paste0('specified temporary directory "', tempdir,'" does not exist.'))
+    }
+}
+
 # open the summary statistics file
 if(substr(opt$sumstats,(nchar(opt$sumstats)+1)-3,nchar(opt$sumstats)) == '.gz'){
-  GWAS<-data.frame(fread(cmd=paste0('zcat ',opt$sumstats)))
+  GWAS<-data.frame(fread(cmd=paste0('zcat ',opt$sumstats), tmpdir=tempdir))
 } else {
-  GWAS<-data.frame(fread(opt$sumstats))
+  GWAS<-data.frame(fread(opt$sumstats, tmpdir=tempdir))
 }
 
 col_names=names(GWAS)
@@ -61,9 +71,9 @@ if (opt$force){
 if(convert){
    # open the map file
   if(substr(opt$map,(nchar(opt$map)+1)-3,nchar(opt$map)) == '.gz'){
-    map<-data.frame(fread(cmd=paste0('zcat ',opt$map)))
+    map<-data.frame(fread(cmd=paste0('zcat ',opt$map), tmpdir=tempdir))
   } else {
-    map<-data.frame(fread(opt$map))
+    map<-data.frame(fread(opt$map, tmpdir=tempdir))
   }
   
   # add IUPAC column
