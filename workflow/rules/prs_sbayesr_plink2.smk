@@ -22,7 +22,7 @@ rule download_sbasesr_ld_reference:
         'logs/download_sbasesr_ld_reference/{ancestry}.log'
     shell:
         "("
-        "bash workflow/scripts/bash/download_sbayesr_reference.sh {wildcards[ancestry]} resources/LD_matrix/sbayesr/1000G/precomputed/EUR/ "
+        "bash workflow/scripts/bash/download_sbayesr_reference.sh {wildcards[ancestry]} resources/LD_matrix/sbayesr/UKBB/precomputed/EUR/ "
         ") &> {log}"
         
   
