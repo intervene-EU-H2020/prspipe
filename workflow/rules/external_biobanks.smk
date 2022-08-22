@@ -320,7 +320,8 @@ def get_mem_mb_model_eval_ext(wildcards, input, attempt):
     if i == 0:
         print('Warning, empty keep file: ' + input['keep_file'])
     return max(8000, int(i * 0.23 * 1.5**(attempt-1)))
-    
+
+
 
 rule model_eval_ext:
     # evaluate score performance using target phenotype data
@@ -332,6 +333,8 @@ rule model_eval_ext:
     output:
         assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.assoc.txt',
         pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.pred_eval.txt'
+        #train_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.train_ind.txt.gz',
+        #test_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.test_ind.txt.gz'
     params:
         prev = lambda wc: prevalence[wc.pheno],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
@@ -449,6 +452,8 @@ rule all_model_eval_ext:
     # run score evaluation for all phenotypes, superpopulations and target data
     input:
         expand(rules.all_target_model_eval_ext.output, bbid=bbids)
+
+
 
 localrules:
     all_ancestry_model_eval_ext,

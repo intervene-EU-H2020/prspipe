@@ -225,9 +225,9 @@ Phenotypes should be placed in *separate* files with three tab-separated columns
 
 An example is provided at [`resources/synthetic_data/pheno250.tsv.gz`](https://github.com/intervene-EU-H2020/prspipe/blob/main/resources/synthetic_data/).
 
-The IDs should have matches in the plink `.fam`-files generated [above](#rotating_light-target-genotype-harmonization) (the harmonized target genetic data), but it is **not** necessary to have phenotype values for all genotyped individuals. This way only a sub-set of individuals can be analysed for each phenotype (e.g., only females for breast cancer). If you do not want to analyse a specific phenotype or study, you can delete the corresponding row from the `studies_for_methods_comparison.tsv` configuration file.
+The IDs should have matches in the plink `.fam`-files generated [above](#rotating_light-target-genotype-harmonization) (the harmonized target genetic data), but it is **not** necessary to have phenotype values for all genotyped individuals. This way only a sub-set of individuals can be analysed for each phenotype (e.g., only females for breast cancer). If you do not want to analyse a specific phenotype or study, you can delete the corresponding entry/row from the `studies_for_methods_comparison.tsv` configuration file.
 
-Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the `name`-column of the study sample-sheet, i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. You may gzip these files to save space.
+Place the phenotype files in `custom_input/{target-name}/phenotypes/`. Name them `{phenotype}.tsv`, where {phenotype} should match the entries in the `name`-column of the study sample-sheet, i.e `./custom_input/ukbb/phenotypes/T2D.tsv`, `./custom_input/ukbb/phenotypes/BMI.tsv` and so on. You may gzip these files to save space. If more than one phenotype is listed in the `name`-column (separated by a comma), these need to be placed in separate files. 
 
 Finally, in order to configure the pipeline to use the pre-calculated scores downloaded [above](#globe_with_meridians-download-pre-computed-prs), you have to edit `config.yaml` (by default it is configured to [work with synthetic data](#testing-prs-methods-with-synthetic-data
 )).
