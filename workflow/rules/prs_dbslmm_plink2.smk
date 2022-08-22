@@ -20,6 +20,7 @@ rule download_dbslmm_ld_block:
         ld_block=expand("resources/ldetect-data/{ancestry}/fourier_ls-all.bed", ancestry=['AFR','ASN','EUR'])
     shell:
         "cd resources && "
+        "rm -rf ./ldetect-data && "
         "git clone https://bitbucket.org/nygcresearch/ldetect-data.git"
 
 def get_dbslmm_ldref(wc):
