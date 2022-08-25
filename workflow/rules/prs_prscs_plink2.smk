@@ -5,9 +5,12 @@ rule install_prscs:
     params:
         PRSCS_VERSION="f2f2b4201ffe80715d4bc46582a5207f6a31dd57"
     shell:
+        "if [ -d workflow/scripts/PRScs ]; then rm -rf workflow/scripts/PRScs; fi; "
         "mkdir -p workflow/scripts/PRScs && "
         "git clone https://github.com/getian107/PRScs.git workflow/scripts/PRScs && "
+        "cd workflow/scripts/PRScs && "
         "git checkout {params[PRSCS_VERSION]} "
+        
     
 
 rule download_prscs_ld_reference_ukbb:
@@ -44,7 +47,8 @@ rule unpack_prscs_ld_reference_ukbb:
     shell:
         "("
         "cd resources/LD_matrix/prscs/UKBB/precomputed/{wildcards[ancestry]} && tar -xvf \"$(basename {input})\" && "
-        "mv ldblk_ukbb_*/ ./ldblk_ukbb && rm \"$(basename {input})\" "
+        "if [ -d ldblk_ukbb ]; then rm -r ldblk_ukbb; fi; "
+        "mv ldblk_ukbb_*/ ./ldblk_ukbb && rm \"$(basename {input})\" "        
         ") &> {log}"
 
 
@@ -134,7 +138,8 @@ rule all_prs_scoring_prscs:
 #     shell:
 #         "("
 #         "cd resources/LD_matrix/prscs/1000G/precomputed/{wildcards[popul]} && tar -xvf \"$(basename {input})\" && "
-#         "mv ldblk_1kg_*/ ./ldblk_1kg && rm \"$(basename {input})\" "
+#         "if [ -d ldblk_ukbb ]; then rm -r ldblk_ukbb; fi; "
+#         "mv ldblk_ukbb_*/ ./ldblk_ukbb && rm \"$(basename {input})\" "
 #         ") &> {log}"
 
 
