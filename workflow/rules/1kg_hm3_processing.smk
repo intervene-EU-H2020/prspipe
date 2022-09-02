@@ -455,6 +455,20 @@ localrules: merge_1kg_hm3_mapping_with_maf_cached
 
 # These are the rules that define the reference used in subsequent analyses
 
+ruleorder: skip_1kg_hm3_processing > extract_hm3
+
+rule skip_1kg_hm3_processing:
+    output:
+        expand("resources/1kg/1KGPhase3.w_hm3.chr{chrom}.{ext}", chrom=range(1,23), ext=['bed','bim','fam'])
+    log:
+	"logs/skip_1kg_hm3_processing.log"
+    shell:
+        "("
+        "wget 'https://figshare.com/ndownloader/files/37059184?private_link=cea777bb772ed1dc4ca8' -O 1KGPhase3.w_hm3.chr.tar.gz && "
+        "tar -xzvf 1KGPhase3.w_hm3.chr.tar.gz && rm 1KGPhase3.w_hm3.chr.tar.gz && "
+        "find resources/1kg/ -name '1KGPhase3.w_hm3.chr*' -type f -exec touch {{}} + "
+        ") &> {log} "
+
 rule extract_hm3:
     # Outputs the 1000 Genomes filtered to HapMap3 variants
     # Generates per-chromosome files.
