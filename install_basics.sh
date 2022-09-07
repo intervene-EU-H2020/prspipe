@@ -76,7 +76,8 @@ if [ ! -d ./workflow/scripts/GenoPred ]; then
     >&2 echo "Downloading GenoPred"
     (
     cd workflow/scripts
-    git clone git@github.com:intervene-EU-H2020/GenoPred.git && cd GenoPred
+    git clone git@github.com:intervene-EU-H2020/GenoPred.git || git clone https://github.com/intervene-EU-H2020/GenoPred.git
+    cd GenoPred
     if [ "${GENOPRED_VERSION}" = "latest" ]; then
         git pull
     else
