@@ -56,13 +56,12 @@ Genopred, i.e., the repository this pipeline depends on, relies on R and depende
 
 ```
 # get the container with docker
-docker pull rmonti/prspipe:0.1.0
+docker pull rmonti/prspipe:0.1.1
 
 # ... or with singularity
 # this should work without root permissions
-singularity pull docker://rmonti/prspipe:0.1.0
+singularity pull docker://rmonti/prspipe:0.1.1
 ```
-> ⚠️ To run population outlier detection, you need at least version 0.0.3
 
 ## Preface on Snakemake :snake:
  
@@ -107,7 +106,7 @@ Snakemake is installed in the prspipe container. If singularity is available, yo
 
 ```
 # this will create a local image called prspipe.sif
-singularity pull prspipe.sif docker://rmonti/prspipe:0.1.0
+singularity pull prspipe.sif docker://rmonti/prspipe:0.1.1
 ```
 
 After that, you can run snakemake interactively by first starting an [interactive shell inside the container](https://sylabs.io/guides/3.7/user-guide/cli/singularity_shell.html), and then running snakemake:
@@ -174,7 +173,7 @@ Target genetic data are defined using a sample-sheet, i.e, a tab-separated-value
 | --- | --- | --- |
 | the name of the target data (e.g., "ukbiobank") | the path/prefix of the imputed per-chromosome genotype data (e.g.,"some/path/prefix_chr") | the format (see below) |
 
-Genotype data paths are expected to follow the pattern `<prefix>_chr<1-22>.<.bed/.bim/.fam/.bgen/.vcf.gz>` (mind the gap, i.e., the underscore). For bgen-formatted data, the sample-file should be called called `<prefix>.sample`. Both hg19 and hg38 are accepted. Note that the path will have to be accessible inside the container, see the section on [container mounts](#container-mounts-file_folder) above.
+Genotype data paths are expected to follow the pattern `<prefix>_chr<1-22>.<.bed/.bim/.fam/.bgen/.vcf.gz>` (mind the gap, i.e., the underscore). For bgen-formatted data, the sample-file should be called called `<prefix>.sample`, and `.bgen.bgi`-indexes have to be present for each `.bgen`-file. Both hg19 and hg38 are accepted. Note that the path will have to be accessible inside the container, see the section on [container mounts](#container-mounts-file_folder) above.
 
 Supported data types are 
 - **samp_imp_plink1**: plink 1 formated data (.bed/.bim/.fam)
