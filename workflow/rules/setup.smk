@@ -44,6 +44,22 @@ rule initialize_synthetic:
         "zcat Herr0.3_pPoly0.005.PHENO1.glm.linear.gz | awk 'BEGIN{{OFS=\"\t\"; print \"CHR\", \"POS\", \"SNP\", \"A2\", \"A1\", \"N\", \"BETA\", \"SE\", \"P\"}}{{if(NR>1){{print $1, $2, $3, $4, $5, $8, $9, $10, $14}}}}' | gzip > Herr0.3_pPoly0.005.PHENO1.glm.linear.renamed.gz ); "
         "ln -s -r \"$(readlink -f resources/synthetic_data/pheno250.tsv.gz)\" {output[pheno]}"
 
+rule synthetic_to_bgen:
+    input:
+        bed=expand('resources/synthetic_data/synthetic250_chr{chr}.bed', chr=range(1,23)),
+        bim=expand('resources/synthetic_data/synthetic250_chr{chr}.bim', chr=range(1,23)),
+        fam=expand('resources/synthetic_data/synthetic250_chr{chr}.fam', chr=range(1,23))
+    output:
+        expand('resources/synthetic_data/synthetic250_chr{chr}.bgen', chr=range(1,23))
+    shell:
+        "for CHROM in {{1..22}}; do "
+        "awk '{{$1=\"chr\"$1; print $0}}' resources/synthetic_data/synthetic250_chr${{CHROM}}.bim > resources/synthetic_data/synthetic250_chr${{CHROM}}.tmp.bim && " 
+        "cp resources/synthetic_data/synthetic250_chr${{CHROM}}.bim resources/synthetic_data/synthetic250_chr${{CHROM}}.bim_bckp && "
+        "mv resources/synthetic_data/synthetic250_chr${{CHROM}}.tmp.bim resources/synthetic_data/synthetic250_chr${{CHROM}}.bim; "
+        "{config[plink2]} --bfile resources/synthetic_data/synthetic250_chr${{CHROM}} --export bgen-1.2 --out resources/synthetic_data/synthetic250_chr${{CHROM}}; "
+        "mv resources/synthetic_data/synthetic250_chr${{CHROM}}.bim_bckp resources/synthetic_data/synthetic250_chr${{CHROM}}.bim; "
+        "done"
+        
 
 rule download_test_data:
     # rule to download some small test data from figshare (simple PRS for 3 methods and 10 phenotypes)

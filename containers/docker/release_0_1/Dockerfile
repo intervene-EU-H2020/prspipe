@@ -1,8 +1,6 @@
 
 FROM bioconductor/bioconductor_docker:RELEASE_3_14
 
-# Heavy image containing all dependencies of the caret R-package and MungeSumstats
-
 CMD /bin/bash "$@" 
 
 SHELL ["/bin/bash","-c"]
@@ -34,6 +32,7 @@ RUN  wget https://www.well.ox.ac.uk/~gav/resources/qctool_v2.0.6-Ubuntu16.04-x86
 &&   mv qctool_v2.0.6-Ubuntu16.04-x86_64/qctool /usr/local/bin/ && rm -r qctool_v2.0.6-Ubuntu16.04-x86_64
 
 # Installing R packages (1)
+# these are the vasic dependencies we always want to be there
 
 RUN R -e "install.packages(c('data.table','doMC','optparse','foreach','ggplot2','cowplot','MLmetrics','stringr','verification', 'RcppArmadillo', 'Matrix', 'fdrtool', 'psych', 'bigsnpr', 'bigreadr', 'runonce', 'GGally', 'NbClust', 'IRkernel'))"
 
@@ -48,3 +47,17 @@ RUN wget https://github.com/tshmak/lassosum/releases/download/v0.4.5/lassosum_0.
 # caret needs to be installed with dependencies
 
 RUN  R -e "install.packages('caret', dependencies=TRUE)"
+
+USER rstudio
+
+# make the R-kernel available in jupyterlab for user rstudio
+RUN  R -e "library(IRkernel); IRkernel::installspec(name = 'r', displayname = 'R')"
+
+USER root
+
+# Installing R packages (3)
+# install machine learning packages, easily added as additional layers later...
+
+RUN R -e "install.packages(c('glmnet', 'e1071', 'RSQLite'))"
+
+
