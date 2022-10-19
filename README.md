@@ -24,6 +24,8 @@ In the steps below, we will install all the dependencies to run polygenic scorin
 
 **Steps that need internet access are marked with :globe_with_meridians: and steps that require access to sensitive data are marked with :rotating_light:.**
 
+If you will run score evaluation in a trusted research environment (TRE) without access to the internet, consider using `download_prs_may2022.sh` to download all PRS and ancestry reference data. This will avoid having to set up snakemake (singularity/docker) twice, i.e., inside and outside of the TRE.
+
 ## TL;DR
 
 Here is a breakdown of what is covered, including the most important commands
@@ -34,12 +36,12 @@ Here is a breakdown of what is covered, including the most important commands
     ```
     bash install_basics.sh
     ```
-3. :globe_with_meridians: run the snakemake rules to download and pre-process the 1000 Genomes reference
+3. :globe_with_meridians: run the snakemake rules to download and pre-process the 1000 Genomes reference (skipped with `download_prs_may2022.sh`)
     ```
     bash run.sh all_setup
     bash run.sh cleanup_after_setup
     ```
-4.  :globe_with_meridians: Download pre-calculated PRS for 15 phenotypes
+4.  :globe_with_meridians: Download pre-calculated PRS for 15 phenotypes (skipped with `download_prs_may2022.sh`)
     ```
     bash run.sh unpack_prs_for_methods_comparison_may2022
     ```
@@ -48,7 +50,7 @@ Here is a breakdown of what is covered, including the most important commands
     ```
     bash run.sh all_get_best_models_ext
     ```
-The tutorial below covers the steps above (and more) in greater detail.
+The tutorial below covers the steps above (and more) in greater detail. 
 
 ## Preface on Singularity and Docker :takeout_box:
 
@@ -63,13 +65,16 @@ docker pull rmonti/prspipe:0.1.1
 singularity pull docker://rmonti/prspipe:0.1.1
 ```
 
+Both singularity and docker allow exporting containers, e.g., for transferring to a trusted research environment.
+
+
 ## Preface on Snakemake :snake:
  
 Snakemake will handle all the steps to get from a set of input files (typically defined in a [*samplesheet*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/studies.tsv) or [*config-file*](https://github.com/intervene-EU-H2020/prspipe/blob/main/config/config.yaml)) to a set of output files. The user requests specific output files, and snakemake will figure out how to produce them given previously defined [*rules*](https://github.com/intervene-EU-H2020/prspipe/blob/main/workflow/rules/). Snakemake has been build with HPC clusters in mind, which often rely on schedulers such as [slurm](https://en.wikipedia.org/wiki/Slurm_Workload_Manager). Snakemake will work with the scheduler to distribute the computational workload over many different hosts (in parallel, if possible). Running snakemake this way typically requires setting up HPC-cluster-specific configuration files (example shown in `slurm/config.yaml`).
 
 However, snakemake can also be run interactively on a single host (i.e, a single server or virtual machine). This will be easier for most users to set up. To run the polygenic scoring of your target data, this setup will be sufficient. Therefore, **these instructions will handle the interactive case**.
 
-In the tutorial will be running snakemake using the [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) script.
+In the tutorial, we will be running snakemake using the [`run.sh`](https://github.com/intervene-EU-H2020/prspipe/blob/main/run.sh) script.
 
 ```
 # ajust the number of cores / parallel processes
@@ -134,7 +139,7 @@ Beware, if the path displayed after `which R` is *not* /usr/local/bin/R, your en
 
 :warning: When running the container, you have to "mount" any directories that you want access to, unless they are subdirectories of the main working directory. For example, if you want to access genotype data at `/some/random/path/`, you will have to mount this directory (i.e., make it accessible) inside the container. You can do this by specifying mounts on the command-line when running singularity. The command above becomes `singularity -e --no-home -B $PWD --pwd $PWD -B /some/random/ prspipe.sif`. This would make `/some/random` and all its sub-directories available inside the container.
 
-## :globe_with_meridians: Download and process the 1000 Genomes Reference
+## :globe_with_meridians: Download the 1000 Genomes Reference
 
 Assuming you have snakemake running, you can now download and pre-process the 1000 Genomes data. This data will serve as an external reference throughout the analysis and is used for ancestry scoring. First we perform a "quiet" (`-q`) "dry-run" (`-n`).
 
@@ -147,7 +152,6 @@ The command above will display a summary of what will be done. To then actually 
 ```
 bash run.sh all_setup
 ```
-> :warning: Note: depending on your download speed and how many cores you have available this can take several hours. It will also potentially require a lot of disk-space (~90G). To save disk space, you can use a small number of cores (i.e., fewer parallel processes) in snakemake.
 
 Once you have successfully completed these steps, you can clear up space by running
 
