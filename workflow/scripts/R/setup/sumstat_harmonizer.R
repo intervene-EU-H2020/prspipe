@@ -51,8 +51,8 @@ print(paste0("Found ", nrow(GWAS), " SNPs"))
 if(!('SNP' %in% colnames(GWAS))){
   stop("Summary statistics file is missing the SNP column")
 }
-if(!('POS' %in% colnames(GWAS))){
-  stop("Summary statistics file is missing the POS column")
+if(!('BP' %in% colnames(GWAS))){
+  stop("Summary statistics file is missing the BP column")
 }
 
 if(nrow(GWAS[!(GWAS$SNP %like% "rs"), ])>0){
@@ -87,8 +87,8 @@ if(convert){
   GWAS<-GWAS[(GWAS$IUPAC %in% c('R', 'Y', 'K', 'M')),]
   
   # check if there is more overlap for hg38 or hg19
-  overlap_hg38 <- nrow(merge(GWAS,map,by.x=c("POS","IUPAC"),by.y=c("pos_hg38","IUPAC_1kg")))
-  overlap_hg19 <- nrow(merge(GWAS,map,by.x=c("POS","IUPAC"),by.y=c("pos_hg19","IUPAC_1kg")))
+  overlap_hg38 <- nrow(merge(GWAS,map,by.x=c("BP","IUPAC"),by.y=c("pos_hg38","IUPAC_1kg")))
+  overlap_hg19 <- nrow(merge(GWAS,map,by.x=c("BP","IUPAC"),by.y=c("pos_hg19","IUPAC_1kg")))
 
   stopifnot((overlap_hg38 > 0) | (overlap_hg19 > 0))
     
@@ -98,13 +98,13 @@ if(convert){
   is_hg38 <- overlap_hg38 > overlap_hg19
     
   if(is_hg38){
-    GWAS<-merge(GWAS,map[c("pos_hg38","IUPAC_1kg","pos_hg19","rsid","chr")],by.x=c("POS","IUPAC","CHR"),by.y=c("pos_hg38","IUPAC_1kg","chr"))
-    GWAS<-subset(GWAS, select = -c(POS,IUPAC,SNP) )
-    names(GWAS)[names(GWAS) == 'pos_hg19'] <- 'POS' # update POS to use hg19
+    GWAS<-merge(GWAS,map[c("pos_hg38","IUPAC_1kg","pos_hg19","rsid","chr")],by.x=c("BP","IUPAC","CHR"),by.y=c("pos_hg38","IUPAC_1kg","chr"))
+    GWAS<-subset(GWAS, select = -c(BP,IUPAC,SNP) )
+    names(GWAS)[names(GWAS) == 'pos_hg19'] <- 'BP' # update BP to use hg19
     names(GWAS)[names(GWAS) == 'rsid'] <- 'SNP'
   }
   else{
-    GWAS<-merge(GWAS,map[c("IUPAC_1kg","pos_hg19","rsid","chr")],by.x=c("POS","IUPAC","CHR"),by.y=c("pos_hg19","IUPAC_1kg","chr"))
+    GWAS<-merge(GWAS,map[c("IUPAC_1kg","pos_hg19","rsid","chr")],by.x=c("BP","IUPAC","CHR"),by.y=c("pos_hg19","IUPAC_1kg","chr"))
     GWAS<-subset(GWAS, select = -c(IUPAC,SNP) )
     names(GWAS)[names(GWAS) == 'rsid'] <- 'SNP'
   }

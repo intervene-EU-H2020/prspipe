@@ -104,7 +104,7 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
     # this won't do anything if the columns already have the correct names
     rename_cols = {'variant_id':'SNP',
                    'chromosome':'CHR',
-                   'base_pair_location':'POS',
+                   'base_pair_location':'BP',
                    'p_value':'P',
                    'effect_allele':'A1', 
                    'other_allele':'A2', 
@@ -123,11 +123,14 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
             print('Assuming "{}" is the CHR column'.format(chr_cols[0]))
             df.rename(columns={chr_cols[0]:'CHR'}, inplace=True)
     
-    if 'POS' not in df.columns:
+    if 'BP' not in df.columns:
         pos_cols = list(c for c in df.columns if str(c).lower().startswith('pos'))
+        pos_cols += list(c for c in df.columns if str(c).lower() == 'bp')
         if len(pos_cols):
-            print('Assuming "{}" is the POS column'.format(pos_cols[0]))
-            df.rename(columns={pos_cols[0]:'POS'}, inplace=True)
+            print('Assuming "{}" is the BP column'.format(pos_cols[0]))
+            df.rename(columns={pos_cols[0]:'BP'}, inplace=True)
+        else:
+            print('Warning: could not find the BP (position) column.')
     
     if 'SNP' not in df.columns:
         snp_cols = list(c for c in df.columns if str(c).lower().startswith('rsid'))
@@ -140,23 +143,33 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
             df['SNP'] = np.array(['snp_{}'.format(i) for i in range(len(df))])
                 
     if 'A1' not in df.columns:
-        a1_cols = list(c for c in df.columns if str(c).lower().startswith('a1'))
+        a1_cols = []
+        if 'ALLELE1' in df.columns:
+            a1_cols = ['ALLELE1']
+        a1_cols += list(c for c in df.columns if str(c).lower().startswith('a1') and ('freq' not in  str(c).lower()) and ('frq' not in str(c).lower()))
         a1_cols += list(c for c in df.columns if str(c).lower().startswith('allele') and str(c).endswith('1'))
         a1_cols += list(c for c in df.columns if str(c).lower().startswith('effect') and str(c).lower().endswith('allele'))
         a1_cols += list(c for c in df.columns if str(c).lower().startswith('alter') and str(c).lower().endswith('allele'))
         a1_cols += list(c for c in df.columns if str(c).lower().startswith('minor') and str(c).lower().endswith('allele'))
         if len(a1_cols):
+            if len(a1_cols) > 1:
+                print('Warning: found multiple possible columns containing A1 : {}'.format(a1_cols))
             print('Assuming "{}" is the A1 column'.format(a1_cols[0]))
             df.rename(columns={a1_cols[0]:'A1'}, inplace=True)
         else:
-            print('Unable to determine A1 column.')
-            
+            print('Unable to determine A1 column.')            
+
     if 'A2' not in df.columns:
-        a2_cols = list(c for c in df.columns if str(c).lower().startswith('a2'))
+        a2_cols = []
+        if ('ALLELE0' in df.columns):
+            a2_cols = ['ALLELE0']
+        a2_cols += list(c for c in df.columns if str(c).lower().startswith('a2') and ('freq' not in  str(c).lower()) and ('frq' not in str(c).lower()))
         a2_cols += list(c for c in df.columns if str(c).lower().startswith('allele') and str(c).endswith('2'))
         a2_cols += list(c for c in df.columns if str(c).lower().startswith('other') and str(c).lower().endswith('allele'))
         a2_cols += list(c for c in df.columns if str(c).lower().startswith('ref') and str(c).lower().endswith('allele'))
         if len(a2_cols):
+            if len(a2_cols) > 1:
+                print('Warning: found multiple possible columns containing A2 : {}'.format(a1_cols))
             print('Assuming "{}" is the A2 column'.format(a2_cols[0]))
             df.rename(columns={a2_cols[0]:'A2'}, inplace=True)
         else:
@@ -177,9 +190,16 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
             df.rename(columns={frq_cols[0]:'FRQ'}, inplace=True)
             
     if 'P' not in df.columns:
-        pv_cols = list(c for c in df.columns if c == str(c).lower())
-        pv_cols = list(c for c in df.columns if (str(c).lower().startswith('p')) and ('val' in c))
+        pv_cols = []
+        pv_cols += list(c for c in df.columns if str(c).lower() == 'p')
+        pv_cols += list(c for c in df.columns if (str(c).lower().startswith('p')) and ('val' in c))
+        if 'P_BOLT_LMM_INF' in df.columns:
+            pv_cols += ['P_BOLT_LMM_INF']
+        if 'P_LINREG' in df.columns:
+            pv_cols +=  ['P_LINREG']
         if len(pv_cols):
+            if len(pv_cols) > 1:
+                print('Warning: found multiple possible columns containing p-values: {}'.format(pv_cols))
             print('Assuming "{}" is the P column'.format(pv_cols[0]))
             df.rename(columns={pv_cols[0]:'P'}, inplace=True)
     
