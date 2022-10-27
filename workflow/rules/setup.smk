@@ -95,7 +95,7 @@ with open('config/studies_for_methods_comparison.tsv', 'r') as infile:
     may2022_study_ids = [x.split('\t')[0] for x in infile][1:]
 
 
-rule unpack_prs_for_methods_cmoparison_may2022:
+rule unpack_prs_for_methods_comparison_may2022:
     # rule to unpack pre-computed PRS scoring files
     # note: this is incompatible with the "download_test_data" rule above. (outputs will be overwritten)
     # touches the output files to fool snakemake's timestamp checks
