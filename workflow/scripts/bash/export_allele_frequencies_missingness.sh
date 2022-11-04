@@ -2,6 +2,9 @@
 
 shopt -s expand_aliases
 
+# this script is meant to be run in the main analysis folder after harmonization of the target genotypes and ancestry scoring.
+# it will create a .tar.gz file that you can then share
+
 if ! command -v plink2 &> /dev/null; then
     echo "could not find plink2 command, trying bin/plink2"
     alias plink2=bin/plink2
@@ -10,7 +13,7 @@ fi
 set -e
 
 if [[ -z "${BIOBANK}" ]]; then
-    echo "Error: BIOBANK undefined, please set the BIOBANK environment variable, e.g., 'ukbb' or 'GNH'"
+    echo "Error: BIOBANK undefined, please set the BIOBANK environment variable, e.g.: export BIOBANK='ukbb'"
     exit 1
 fi
 
