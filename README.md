@@ -291,6 +291,21 @@ export SNAKEMAKE_CORES=16 # define the number of cores
 bash run.sh -p all_get_best_models_ext
 ```
 
+## :rotating_light: Export Allele Frequencies and Missingness
+
+> 21.11.2022 - added script to calculate allele frequencies and missingness for the HapMap3-1kg variants
+
+Use the script located at [`workflow/scripts/bash/export_allele_frequencies_missingness.sh`](workflow/scripts/bash/export_allele_frequencies_missingness.sh) to calculate allele frequencies and missingness of the HapMap3-1kg variants, as follows:
+
+```
+# replace "ukbb" with your biobank identifier ({target-name}, i.e., the one you used for phenotypes and genotypes at custom_input/{target-name}/...)
+export BIOBANK="ukbb"
+bash workflow/scripts/bash/export_allele_frequencies_missingness.sh
+```
+
+this will create a file `${BIOBANK}_hapmap3_1kg_allele_frequencies.tar.gz`, which you can share with me. 
+
+
 
 --------------------------------------
     
