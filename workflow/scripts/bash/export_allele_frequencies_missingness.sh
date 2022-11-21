@@ -25,7 +25,7 @@ mkdir -p results/${BIOBANK}/afreq
 
 for k in $keepfiles; do
 
-    if [[ $(wc -l <results/ukbb/Ancestry_identifier/outlier_detection/AllAncestry.QC.EUR.keep) -ge 100 ]]; then
+    if [[ $(wc -l <results/ukbb/Ancestry_identifier/outlier_detection/AllAncestry.QC.EUR.keep) -ge 20 ]]; then
 
         outfile=$(basename ${k})
         outfile=results/${BIOBANK}/afreq/${outfile%%.keep}
@@ -40,7 +40,7 @@ for k in $keepfiles; do
             fi
         done
     else
-        echo "fewer than 100 individuals inside {$keepfile}, skipping."
+        echo "fewer than 20 individuals inside {$keepfile}, skipping."
     fi
 done
 
