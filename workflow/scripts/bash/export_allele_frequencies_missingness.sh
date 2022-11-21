@@ -26,7 +26,7 @@ mkdir -p results/${BIOBANK}/afreq
 
 for k in $keepfiles; do
 
-    if [[ $(wc -l <results/ukbb/Ancestry_identifier/outlier_detection/AllAncestry.QC.EUR.keep) -ge 20 ]]; then
+    if [[ $(wc -l <results/${BIOBANK}/Ancestry_identifier/outlier_detection/AllAncestry.QC.EUR.keep) -ge 20 ]]; then
 
         outfile=$(basename ${k})
         outfile=results/${BIOBANK}/afreq/${outfile%%.keep}
@@ -35,7 +35,7 @@ for k in $keepfiles; do
 
         for chrom in {1..22}; do
             if [ ! -f ${outfile}_chr${chrom}.acount ]; then
-                plink2 --bfile custom_input/ukbb/genotypes/chr${chrom} --keep ${k} --missing variant-only --freq counts --out ${outfile}_chr${chrom} --memory 7500
+                plink2 --bfile custom_input/${BIOBANK}/genotypes/chr${chrom} --keep ${k} --missing variant-only --freq counts --out ${outfile}_chr${chrom} --memory 7500
             else
                 echo "output file already exists: ${outfile}_chr${chrom}.acount, skipping."
             fi
