@@ -16,7 +16,8 @@ fi
 
 keepfiles=results/${BIOBANK}/Ancestry_identifier/outlier_detection/*keep
 
-echo "found keep files: ${keepfiles}"
+echo "found keep files: "
+wc -l $keepfiles
 
 mkdir -p results/${BIOBANK}/afreq
 
