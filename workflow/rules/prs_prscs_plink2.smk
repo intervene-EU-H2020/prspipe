@@ -77,7 +77,7 @@ rule prs_scoring_prscs:
     resources:
         mem_mb=32000,
         time="12:00:00",
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "( "
         "export MKL_NUM_THREADS=1; "

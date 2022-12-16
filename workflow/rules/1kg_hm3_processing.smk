@@ -31,7 +31,7 @@ rule download_1kg:
     singularity:
         config['singularity']['all']
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "export TMPDIR=\"$(readlink -f ./temp)\"; "
@@ -77,7 +77,7 @@ rule create_ancestry:
         threads=1,
         time="04:00:00",
         mem_mb=4000,
-        misc='--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home '
+        misc='--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home '
     script:
         "../scripts/R/setup/create_ancestry.R"
 
@@ -239,7 +239,7 @@ rule intersect_1kg_hm3:
         dbsnp_version=dbsnp_v_GRCh37,
         bim_hm3 = lambda wc, input: ','.join(input['bim_hm3'])
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         "logs/intersect_1kg_hm3/{chr}.log"
     shell:
@@ -286,7 +286,7 @@ rule generate_1kg_hm3_hg19_hg38_mapping:
         v_dbsnp_hg38=dbsnp_v_GRCh38,
         v_dbsnp_hg37=dbsnp_v_GRCh37
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         "logs/generate_1kg_hm3_hg19_hg38_mapping/{chr}.log"
     shell:
@@ -328,7 +328,7 @@ rule filter_1kg_firstpass:
     params:
         out_prefix=lambda wc, output: output['bed'][:-4]
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         'logs/filter_1kg_firstpass/{chr}.log'
     shell:
@@ -359,7 +359,7 @@ rule allele_freq_1kg_pop_tmp:
     log:
         "logs/allele_freq_1kg_pop/{popul}.log"
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -399,7 +399,7 @@ rule run_allele_freq_1kg_allancestry:
     log:
         "logs/run_allele_freq_1kg_allancestry.log"
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -426,7 +426,7 @@ rule merge_1kg_hm3_mapping_with_maf:
     output:
         'resources/1kg/1KGPhase3_hm3_hg19_hg38_mapping.tsv.gz'
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         'logs/merge_1kg_hm3_mapping_with_maf.log'
     shell:
@@ -486,7 +486,7 @@ rule extract_hm3:
     resources:
         time="03:00:00",
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         'logs/extract_hm3/{chr}.log'
     shell:
@@ -511,7 +511,7 @@ rule extract_hm3_gw:
     log:
         "logs/extract_hm3_gw.log"
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "ls resources/1kg/1KGPhase3.w_hm3.chr*.bed | sed -e 's/\.bed//g' > resources/1kg/merge_list.txt ;"
@@ -540,7 +540,7 @@ rule allele_freq_pop:
     singularity:
         config['singularity']['all']
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "for chrom in $(seq 1 22); do "
@@ -580,7 +580,7 @@ rule run_allele_freq_allancestry:
     singularity:
         config['singularity']['all']
     resources:
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "for chr in $(seq 1 22); do "
@@ -620,7 +620,7 @@ rule allele_freq_pop_plink2:
     resources:
         time="01:00:00",
         mem_mb=4000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -659,7 +659,7 @@ rule run_allele_freq_allancestry_plink2:
     resources:
         time="01:00:00",
         mem_mb=4000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -706,7 +706,7 @@ rule ancestry_scoring:
     resources:
         time="08:00:00",
         mem_mb=16000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
@@ -738,7 +738,7 @@ rule ancestry_scoring_allancestry:
     resources:
         time="08:00:00",
         mem_mb=32000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     singularity:
         config['singularity']['all']
     shell:
