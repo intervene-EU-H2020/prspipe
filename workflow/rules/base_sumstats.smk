@@ -9,7 +9,7 @@ rule download_sumstats:
     log:
         "logs/download_sumstats/{study}_{ancestry}.log"
     resources:
-        mem_mb=20000
+        mem_mb=64000
     shell:
         "("
         "python workflow/scripts/Python/gwas_catalog_sumstats.py "
@@ -31,8 +31,8 @@ rule map_sumstats:
     params:
         out_prefix = lambda wc, output: output['sumstats'][0:-3]
     resources:
-        mem_mb=20000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        mem_mb=64000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "Rscript workflow/scripts/R/setup/sumstat_harmonizer.R "
@@ -65,8 +65,8 @@ rule QC_sumstats:
     singularity:
         config['singularity']['all']
     resources:
-        mem_mb=20000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        mem_mb=64000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     shell:
         "("
         "{config[Rscript]} {config[GenoPred_dir]}/Scripts/sumstat_cleaner/sumstat_cleaner.R "

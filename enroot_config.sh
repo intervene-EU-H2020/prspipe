@@ -8,5 +8,5 @@ hooks() {
 }
 
 rc(){
-    cd $wd  && exec bash
+    cd $wd && bash
 }

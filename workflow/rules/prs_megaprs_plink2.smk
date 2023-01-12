@@ -63,7 +63,7 @@ rule prs_scoring_megaprs:
     resources: 
         mem_mb=20000,
         time="14:00:00",
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home"
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home"
     log:
         "logs/prs_scoring_megaprs/{study}.log"
     threads:

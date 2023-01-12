@@ -41,7 +41,7 @@ rule ancestry_scoring_ext:
         config['singularity']['all']
     resources:
         mem_mb=64000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="12:00:00"
     shell:
         "( "
@@ -69,7 +69,7 @@ rule ancestry_outlier_ext:
         keep_files = expand("results/{{bbid}}/Ancestry_identifier/outlier_detection/AllAncestry.QC.{superpop}.keep", superpop=config['1kg_superpop'])
     resources:
         mem_mb=20000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="12:00:00"
     params:
         keep_files = lambda wc, input: ','.join(input['keep_files'])
@@ -167,7 +167,7 @@ def get_mem_mb_scaled_polygenic_scorer(wildcards, input, attempt):
             i += 1
     if i == 0:
         print('Warning, empty keep file: ' + input['keep_file'])
-    return max(4000, int(i * 0.03 * 1.5**(attempt-1)))
+    return max(5200, int(i * 0.03 * 1.5**(attempt-1)))
     
     
 
@@ -188,7 +188,7 @@ rule run_scaled_polygenic_scorer:
         out_prefix=lambda wc, output: output['ok'].replace('.done','')
     resources:
         mem_mb=get_mem_mb_scaled_polygenic_scorer,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="03:00:00",
         partition='vcpu,hpcpu'
     log:
@@ -342,7 +342,7 @@ rule model_eval_ext:
         4
     resources:
         mem_mb=get_mem_mb_model_eval_ext,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="16:00:00",
         partition='hpcpu,vcpu'
     log:
@@ -474,7 +474,7 @@ rule get_best_models_ext:
         config['singularity']['all']
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="00:10:00"
     shell:
         "("
@@ -500,7 +500,7 @@ rule biobank_get_best_models_ext:
         infiles=lambda wc, input: ' '.join(input)
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="00:30:00"
     shell:
         '('
@@ -565,7 +565,7 @@ rule all_export_best_scores:
         'logs/all_export_best_scores.log'
     resources:
         mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="1:00:00"
     shell:
         '('
@@ -579,6 +579,7 @@ rule all_export_best_scores:
         '--ancestries {params[ancestries]}; '
         'done '
         ') &> {log}'
+
 
 
 

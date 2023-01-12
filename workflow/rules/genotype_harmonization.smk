@@ -24,7 +24,7 @@ def type_to_arg_geno_to_plink(type):
             'samp_imp_bgen':('samp_imp_bgen','ref-unknown')}[type]
     except KeyError:
         return (type, 'ref-last')
-        
+
 
 rule harmonize_target_genotypes:
     # target sample harmonization using Ollie's script
@@ -32,7 +32,9 @@ rule harmonize_target_genotypes:
         bim=rules.extract_hm3.output['bim'],
         fam=rules.extract_hm3.output['fam'],
         bed=rules.extract_hm3.output['bed'],
-        geno = lambda wc: get_input_file_from_type(target_list.loc[wc['bbid'], 'path'],wc['chr'],target_list.loc[wc['bbid'], 'type']),
+        geno = lambda wc: get_input_file_from_type(target_list.loc[wc['bbid'], 'path'] if wc['bbid'] in target_list.index else '',
+                                                   wc['chr'],
+                                                   target_list.loc[wc['bbid'], 'type'] if wc['bbid'] in target_list.index else 'samp_imp_plink1'),
         liftover=rules.download_liftover.output['liftover'],
         chain=rules.download_liftover.output['hg19_to_hg38_chain']
     output:
@@ -47,8 +49,8 @@ rule harmonize_target_genotypes:
     threads:
         4
     resources:
-        mem_mb=8000,
-        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_0.sqsh --no-container-mount-home",
+        mem_mb=10000,
+        misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time='12:00:00'
     log:
         'logs/harmonize_target_genotypes/{bbid}/{chr}.log'
