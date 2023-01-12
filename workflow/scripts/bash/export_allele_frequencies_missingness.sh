@@ -26,7 +26,7 @@ mkdir -p results/${BIOBANK}/afreq
 
 for k in $keepfiles; do
 
-    if [[ $(wc -l <results/${BIOBANK}/Ancestry_identifier/outlier_detection/AllAncestry.QC.EUR.keep) -ge 20 ]]; then
+    if [[ $(wc -l < $k) -ge 20 ]]; then
 
         outfile=$(basename ${k})
         outfile=results/${BIOBANK}/afreq/${outfile%%.keep}
