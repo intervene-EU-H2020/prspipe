@@ -68,6 +68,7 @@ include: "rules/prs_sbayesr_plink2.smk"
 include: "rules/prs_prscs_plink2.smk"
 include: "rules/prs_ldpred2_plink2.smk"
 include: "rules/prs_megaprs_plink2.smk"
+include: "rules/prs_scoring_1kg.smk"
 
 rule all_setup:
     # this triggers pre-processing of 1000G
