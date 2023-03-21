@@ -34,7 +34,7 @@ rule prs_scoring_ptclump_sparse:
         "--sumstats {input[qc_stats]} "
         "--plink1 {config[plink1_9]} "
         "--plink2 {config[plink2]} "
-        "--nested F "
+        "--nested T "
         "--memory 3000 "
         "--output prs/pt_clump/{wildcards[study]}/1KGPhase3.w_hm3.{wildcards[study]} "
         "--ref_pop_scale {input[super_pop_keep]} "

@@ -2,6 +2,8 @@
 
 # script that allows exporting the MultiPRS to plink scoring files
 
+# first argument: ancestry
+
 #SBATCH --job-name=export_multiprs_%j
 #SBATCH --output=export_multiprs_%j.log
 #SBATCH --partition=vcpu,hpcpu
@@ -13,12 +15,11 @@
 #SBATCH --no-container-mount-home
 #SBATCH --container-mounts=/dhc/:/dhc/,/home/scratch/:/home/scratch/,/etc/slurm/:/etc/slurm/
 
-MODELS=$(find results/ukbb/PRS_evaluation/ -name "*EUR*model.rds")
+MODELS=$(find results/ukbb/PRS_evaluation/ -name "*${1}*model.rds")
 
 for m in $MODELS; do
     echo "processing $m"
     Rscript workflow/scripts/R/export_multiPRS.R --model_rds $m
     echo ""
 done
-
 

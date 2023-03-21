@@ -104,13 +104,9 @@ scores_by_group <- lapply(seq_along(score_files), function(i){
     new_names <- gsub('^SCORE',study_id,score_columns)
     new_names <- gsub("[-+]", ".", new_names)
     new_names <- paste0('Group_', group, '.', predfilenum, '.', new_names)
-    
+
     if (!all(selected %in% new_names)){
-        # unable to match the names of the scores
-        # print(selected)
-        # print(new_names)
-        print(selected[!(selected %in% new_names)])
-        stop(paste0('Missing scores for group ', group))    
+        stop(paste0('Missing scores for group ', group))
     }
             
     matched_idx <- match(selected, new_names)
@@ -129,6 +125,13 @@ scores_by_group <- lapply(seq_along(score_files), function(i){
 
     # rescale the effect-sizes by the 1KG standard deviation (as was done for the polygenic scores before fitting the elastic net model)
     SDs <- scales[[i]]$SD[match(original_col_names, scales[[i]]$Param)]
+    
+    # scaled_polygenic_scorer substitutes 0.000 SD values with 1e-6, we also reverse this substitution here
+    if (any(SDs < 1e-6)){
+        cat('Warning: some of the selected scores have very small reference standard deviations.\n')
+        SDs <- ifelse(SDs < 1e-6, 1e-6, SDs)
+    }
+    
     for (c in seq_along(SDs)){
         col <- colnames(score)[c+2]
         score[,(col):=get(col)/SDs[c]]

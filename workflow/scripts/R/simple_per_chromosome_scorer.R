@@ -39,7 +39,7 @@ if (endsWith(opt$score, 'gz')){
 } else {
     header_cols <- strsplit(system(paste0('head -n 1 ', opt$score), intern = T), split = '\t')[[1]]
 }
-if (length(header_cols == 1)){
+if (length(header_cols) == 1){
     header_cols <- strsplit(header_cols, split=' ')[[1]]
     if (length(header_cols) == 1){
         stop('scoring files must be space or tab separated.')
