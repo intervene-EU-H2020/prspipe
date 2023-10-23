@@ -46,7 +46,7 @@ Here is a breakdown of what is covered, including the most important commands
     bash run.sh unpack_prs_for_methods_comparison_may2022
     ```
 5.  Edit the sample-sheet for your target genetic data (`config/target_list.tsv`), and change the `studies:` entry in `config/config.yaml` to `config/studies_for_methods_comparison.tsv`.
-6. 🚨 Run ancestry scoring, predict and evaluate PRS, and generate Multi-PRS
+6. 🚨 Run ancestry scoring, predict and evaluate PRS, and generate ensemble PRS models
     ```
     bash run.sh all_get_best_models_ext
     ```
@@ -244,7 +244,7 @@ sed -i "s/studies.tsv/studies_for_methods_comparison.tsv/g" config/config.yaml
 
 ### :rotating_light: Run polygenic risk scoring and evaluation for target data
 
-Assuming you have downloaded PRS as described above and replaced `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv` inside the `config.yaml`, you can now perform hyper-parameter tuning (model selection), evaluation, and construction of Multi-PRS on your data. First, validate that all required data are there:
+Assuming you have downloaded PRS as described above and replaced `studies: config/studies.tsv` with `studies: config/studies_for_methods_comparison.tsv` inside the `config.yaml`, you can now perform hyper-parameter tuning (model selection), evaluation, and construction of ensemble PRS on your data. First, validate that all required data are there:
 
 ```
 bash run.sh -n validate_setup_ext
