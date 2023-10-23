@@ -3,7 +3,7 @@
 [![Snakemake](https://img.shields.io/badge/snakemake-≥5.7.0-brightgreen.svg)](https://snakemake.bitbucket.io)
 [![Build Status](https://travis-ci.org/snakemake-workflows/prspipe.svg?branch=master)](https://travis-ci.org/snakemake-workflows/prspipe)
 
-Snakemake pipeline to run Polygenic Risk Score (PRS) prediction and evaluation for biobank-scale data. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) pipeline, i.e. a reference standardized framework for the prediction of PRS using different state of the art methods using summary statistics.
+Snakemake pipeline to run Polygenic Risk Score (PRS) prediction and evaluation for biobank-scale data. Implements and extends the [GenoPred](https://github.com/opain/GenoPred) suite of scripts, i.e., a reference standardized framework for the prediction of PRS using different state of the art methods using summary statistics.
 
 ## Authors
 
