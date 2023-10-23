@@ -27,7 +27,7 @@ fi
 echo "downloading pre-computed PRS"
 
 if [ ! -f prs.tar.gz ]; then
-    download prs.tar.gz 'https://figshare.com/ndownloader/files/35016199?private_link=7f738b939e1cba580708'
+    download prs.tar.gz 'https://figshare.com/ndownloader/files/35016199'
 else
    echo "skipped: prs.tar.gz already exists."
 fi
@@ -87,7 +87,7 @@ fi
 echo "downloading pre-processed 1000 genomes reference"
 
 if [ ! -f 1KGPhase3.w_hm3.chr.tar.gz ]; then
-    download 1KGPhase3.w_hm3.chr.tar.gz 'https://figshare.com/ndownloader/files/37059184?private_link=cea777bb772ed1dc4ca8'
+    download 1KGPhase3.w_hm3.chr.tar.gz 'https://figshare.com/ndownloader/files/37059184'
 else
     echo "skipped: 1KGPhase3.w_hm3.chr.tar.gz already exists."
 fi

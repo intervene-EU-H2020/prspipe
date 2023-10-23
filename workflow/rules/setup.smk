@@ -66,7 +66,7 @@ rule download_prs_for_methods_comparison_may2022:
     output:
         'prs.tar.gz'
     shell:
-        "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199?private_link=7f738b939e1cba580708"
+        "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199"
 
 
 
