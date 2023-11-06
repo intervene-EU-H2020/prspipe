@@ -11,7 +11,7 @@ cluster:
     --output=logs/slurm/{rule}/{rule}-{wildcards}-%j.out
     {resources.misc}
 default-resources:
-  - partition=vcpu,hpcpu
+  - partition=cpu
   - mem_mb=4000
   - time="01:00:00"
   - misc=""
@@ -20,9 +20,10 @@ max-jobs-per-second: 10
 max-status-checks-per-second: 1
 local-cores: 1
 latency-wait: 30
-jobs: 30
+jobs: 50
 keep-going: True
 rerun-incomplete: True
 printshellcmds: True
 scheduler: greedy
 use-conda: True
+rerun-triggers: 'mtime'

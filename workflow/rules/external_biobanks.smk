@@ -190,7 +190,7 @@ rule run_scaled_polygenic_scorer:
         mem_mb=get_mem_mb_scaled_polygenic_scorer,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="03:00:00",
-        partition='vcpu,hpcpu'
+        partition='cpu'
     log:
         "logs/run_scaled_polygenic_scorer/{bbid}/{study}/{method}_{score_id}.{superpop}.log"
     shell:
