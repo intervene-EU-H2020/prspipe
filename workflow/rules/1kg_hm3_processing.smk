@@ -464,7 +464,7 @@ rule skip_1kg_hm3_processing:
         "logs/skip_1kg_hm3_processing.log"
     shell:
         "("
-        "wget 'https://figshare.com/ndownloader/files/37059184?private_link=cea777bb772ed1dc4ca8' -O 1KGPhase3.w_hm3.chr.tar.gz && "
+        "wget 'https://figshare.com/ndownloader/files/37059184' -O 1KGPhase3.w_hm3.chr.tar.gz && "
         "tar -xzvf 1KGPhase3.w_hm3.chr.tar.gz && rm 1KGPhase3.w_hm3.chr.tar.gz && "
         "find resources/1kg/ -name '1KGPhase3.w_hm3.chr*' -type f -exec touch {{}} + "
         ") &> {log} "

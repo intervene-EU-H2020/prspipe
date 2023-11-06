@@ -20,7 +20,7 @@ if [ ! -f ./bin/plink2 ]; then
     >&2 echo "Downloading Plink 2.0 binaries"
     (
     cd bin
-    wget -O plink2.zip 'https://figshare.com/ndownloader/files/33895304?private_link=3641ef6df51eddbeea60'
+    wget -O plink2.zip 'https://figshare.com/ndownloader/files/33895304'
     unzip plink2.zip && rm plink2.zip
     avx_support="$(grep avx /proc/cpuinfo | wc -l)"
     # if this fails, check https://www.cog-genomics.org/plink/2.0/ for the latest download links

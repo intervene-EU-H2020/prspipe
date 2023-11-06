@@ -59,35 +59,14 @@ rule synthetic_to_bgen:
         "{config[plink2]} --bfile resources/synthetic_data/synthetic250_chr${{CHROM}} --export bgen-1.2 --out resources/synthetic_data/synthetic250_chr${{CHROM}}; "
         "mv resources/synthetic_data/synthetic250_chr${{CHROM}}.bim_bckp resources/synthetic_data/synthetic250_chr${{CHROM}}.bim; "
         "done"
-        
-
-rule download_test_data:
-    # rule to download some small test data from figshare (simple PRS for 3 methods and 10 phenotypes)
-    # touches the output files to fool snakemake's timestamp checks
-    # note: this is incompatible with the rules below ("download_prs_for_methods_coparison_may2022", "unpack_prs_for_methods_coparison_may2022"). (outputs will be overwritten)
-    # meant for use with config/studies_for_methods_comparison.tsv
-    shell:
-        "( mkdir -p resources/test_prs/ && "
-        "wget -O resources/test_prs/PRS.tar.gz https://figshare.com/ndownloader/files/33905531?private_link=8ac0f09450555d6ba6dd && "
-        "cd resources/test_prs/ && "
-        "tar -xvf PRS.tar.gz && "
-        "find . -type f -exec touch {{}} + ); " # touching the extracted files so the snakemake timestamp checks work
-        "mkdir -p prs && cd prs; "
-        "for DIR in ../resources/test_prs/*/; do "
-        "METHOD=${{DIR##../resources/test_prs/}}; "
-        "mkdir -p $METHOD; cd $METHOD; "
-        "for SUBDIR in ../${{DIR}}/*; "
-        "do ln -s -r $SUBDIR; done;" # linking the directories to the standard directory for polygenic scores
-        "cd ../; done "
 
 
 rule download_prs_for_methods_comparison_may2022:
     # rule to download pre-computed PRS scoring files
-    # note: this is incompatible with the rule above. (outputs will be overwritten)
     output:
         'prs.tar.gz'
     shell:
-        "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199?private_link=7f738b939e1cba580708"
+        "wget -O prs.tar.gz https://figshare.com/ndownloader/files/35016199"
 
 
 
@@ -97,7 +76,6 @@ with open('config/studies_for_methods_comparison.tsv', 'r') as infile:
 
 rule unpack_prs_for_methods_comparison_may2022:
     # rule to unpack pre-computed PRS scoring files
-    # note: this is incompatible with the "download_test_data" rule above. (outputs will be overwritten)
     # touches the output files to fool snakemake's timestamp checks
     # meant for use with config/studies_for_methods_comparison.tsv
     input:
