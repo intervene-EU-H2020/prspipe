@@ -344,7 +344,7 @@ rule model_eval_ext:
         mem_mb=get_mem_mb_model_eval_ext,
         misc="--container-image=/dhc/groups/intervene/prspipe_0_1_1.sqsh --no-container-mount-home",
         time="16:00:00",
-        partition='hpcpu,vcpu'
+        partition='cpu'
     log:
         'logs/model_eval_ext/{bbid}/{study}.{pheno}.{superpop}.log'
     singularity:
