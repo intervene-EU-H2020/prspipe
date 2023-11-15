@@ -110,7 +110,9 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
                    'other_allele':'A2', 
                    'odds_ratio':'OR', 
                    'beta':'BETA', 
-                   'effect_allele_frequency':'FRQ'}
+                   'effect_allele_frequency':'FRQ',
+                   'n': 'N'
+                  }
     
     df = df.rename(columns=rename_cols)
     
@@ -202,6 +204,13 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
                 print('Warning: found multiple possible columns containing p-values: {}'.format(pv_cols))
             print('Assuming "{}" is the P column'.format(pv_cols[0]))
             df.rename(columns={pv_cols[0]:'P'}, inplace=True)
+
+    if 'N' not in df.columns:
+        # number of samples (added 15.11.2023)
+        if 'n_samples' in df.columns:
+            df.rename(columns={'n_samples':'N'})
+        else:
+            print('Unable to determine sample size column (N)')
     
     df['STUDY'] = study_id
 
@@ -213,15 +222,15 @@ def cleanup_summary_statistics(df, study_id, n_gwas):
     # also drop anything with all NaNs (otherwise the QC script will remove all rows)
     
     found_cols = list(col for col in df.columns if col in rename_cols.values())
-    
-    if 'N' in df.columns:
-        # "N" is not a standard column in the GWAS catalog, but may be included in munged sumstats
-        df = df[ found_cols + ['N']]
-    else:
+
+    if 'N' not in df.columns:
+        print(f'Adding GWAS sample size from study definition: {n_gwas}')
         df = df[ found_cols ]
         df['N'] = n_gwas
         
     df = df.dropna(axis=1,how='all')
+
+    assert ('OR' in df.columns) or ('BETA' in df.columns), 'Unable to determine the signed effect size column! (OR and BETA are both missing)'
 
     return df
 
