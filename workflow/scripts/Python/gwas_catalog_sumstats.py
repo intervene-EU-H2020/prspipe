@@ -13,6 +13,7 @@ The summary statistics are formatted as .csv with the following columns:
     OR: odds_ratio
     BETA: beta
     FRQ: effect_allele_frequency
+    N: sample size
 
 Note that it is assumed that the user has checked that the summary statistics for the 
 given study id supports API access (you can check this at the GWAS catalog website)
