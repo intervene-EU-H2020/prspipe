@@ -95,7 +95,7 @@ rule predict_multiprs:
         config['singularity']['all']
     shell:
         "("
-        "Rscript {workflow_path}/scripts/predict_multiprs.R "
+        "Rscript workflow/scripts/R/predict_multiprs.R "
         "--model_rds {input[model_rds]} "
         ") &> {log} "
 
