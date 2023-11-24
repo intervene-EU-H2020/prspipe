@@ -18,13 +18,14 @@ import itertools
 
 def get_gz_pheno(wildcards):
     # handle gzipped input files
-    infile = f'custom_input/{wildcards.bbid}/phenotypes/{wildcards.phenotype}.tsv.gz'
+    bbid, phenotype = wildcards.bbid.strip(), wildcards.phenotype.strip()
+    infile = f'custom_input/{bbid}/phenotypes/{phenotype}.tsv.gz'
     if os.path.isfile(infile):
         return infile
     elif os.path.isfile(infile[:-3]):
         return infile[:-3]
     else:
-        raise ValueError(f"Can't find phenotype file for phenotype '{wildcards.phenotype}'")
+        raise ValueError(f"Can't find phenotype file for phenotype '{phenotype}': should be at custom_input/{bbid}/phenotypes/{phenotype}.tsv.gz ")
 
 
 def file_not_empty(x):
@@ -50,7 +51,9 @@ def request_all(file_pattern, *args, **kwargs):
     pe_files = []
     for i, row in study_to_phenotype_config.iterrows():
         for bbid in target_list.name.values:
-            possible_pe_files = f'results/{bbid}/PRS_evaluation/{row.study_id}/{{superpop}}/{row.study_id}.{row.phenotype}.{{superpop}}.AllMethodComp.pred_eval.txt'
+            # possible_pe_files = f'results/{bbid}/PRS_evaluation/{row.study_id}/{{superpop}}/{row.study_id}.{row.phenotype}.{{superpop}}.AllMethodComp.pred_eval.txt'
+            # for some reason the version above does not work in all environments
+            possible_pe_files = expand('results/{bbid}/PRS_evaluation/{study_id}/{{superpop}}/{study_id}.{phenotype}.{{superpop}}.AllMethodComp.pred_eval.txt', bbid=[bbid], study_id=[row.study_id], phenotype=[row.phenotype])
             possible_pe_files = expand(possible_pe_files, superpop=config['1kg_superpop'])
             for f in possible_pe_files:
                 if not os.path.isfile(f):
@@ -166,7 +169,7 @@ rule metrics_and_scor_train_test:
     shell:
         "("
         "Rscript workflow/scripts/R/metrics_and_score_correl.R "
-        "--profiles {params[profiles]} "
+        "--profiles {params[profiles]},{input[biobank_multiprs]} "
         "--train_test {params[train_test]} "
         "--pheno {input[pheno]} "
         "--out {params[out_prefix]} "
@@ -189,6 +192,7 @@ rule metrics_and_scor_full:
     input:
         profiles = ancient(expand('results/{bbid}/prs/{method}/{study}/{superpop}/1KGPhase3.w_hm3.{study}.{superpop}.profiles',
                            method = config['prs_methods'], allow_missing=True)),
+        biobank_multiprs = 'results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{phenotype}.{superpop}.MultiPRS_profiles.merged.txt.gz',
         pheno = ancient(get_gz_pheno)
     output:
         mean_sd = 'results/{bbid}/metrics_and_scor_full/{study}/{study}.{phenotype}.{superpop}.mean_sd.tsv',
@@ -210,7 +214,7 @@ rule metrics_and_scor_full:
     shell:
         "("
         "Rscript workflow/scripts/R/metrics_and_score_correl.R "
-        "--profiles {params[profiles]} "
+        "--profiles {params[profiles]},{input[biobank_multiprs]} "
         "--pheno {input[pheno]} "
         "--out {params[out_prefix]} "
         "--boot 1000 "
@@ -222,3 +226,9 @@ rule metrics_and_scor_full:
 rule all_metrics_and_scor_full:
     input:
         request_all(rules.metrics_and_scor_full.output)
+
+
+rule all_downstream_evaluation:
+    input:
+        rules.all_metrics_and_scor_full.input,
+        rules.all_metrics_and_scor_train_test.input
