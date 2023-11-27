@@ -129,7 +129,7 @@ rule merge_multiprs:
     singularity:
         config['singularity']['all']
     script:
-        'workflow/scripts/R/merge_multiprs.R'
+        '../../workflow/scripts/R/merge_multiprs.R'
 
 
 
@@ -175,7 +175,6 @@ rule metrics_and_scor_train_test:
         "--out {params[out_prefix]} "
         "--boot 1000 "
         "--sample_cor 50000 "
-        "--debug "
         ") &> {log} "
 
 
@@ -219,7 +218,6 @@ rule metrics_and_scor_full:
         "--out {params[out_prefix]} "
         "--boot 1000 "
         "--calc_cor F "
-        "--debug "
         ") &> {log} "
 
 
