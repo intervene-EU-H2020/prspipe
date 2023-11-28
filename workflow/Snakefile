@@ -70,6 +70,7 @@ include: "rules/prs_ldpred2_plink2.smk"
 include: "rules/prs_megaprs_plink2.smk"
 include: "rules/prs_scoring_1kg.smk"
 
+
 rule all_setup:
     # this triggers pre-processing of 1000G
     input:
@@ -85,7 +86,8 @@ rule all_setup:
 # external biobanks
 include: "rules/genotype_harmonization.smk"
 include: "rules/external_biobanks.smk"
-
+# scripts beyond GenoPred
+include: "rules/downstream_evaluation.smk"
 
 rule prs_1kg_precompld:
     # run PRS methods and predict for 1000G using pre-computed reference panels

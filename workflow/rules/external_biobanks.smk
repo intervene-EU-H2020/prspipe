@@ -133,13 +133,6 @@ rule all_calculate_maf_ancestry_ext:
     input:
         expand(rules.calculate_maf_ancestry_ext.output, chr=range(1,23), superpop=config['1kg_superpop'], bbid=bbids)
         
-
-#################
-# 10K reference #
-#################
-
-# we skip the generation of a 10K reference as done in the original GenoPred paper, see (deprecated) ukbb.smk if we wished to implement this for external biobanks as well.
-
         
 #############################>>
 # START: Polygenic scoring  #>>
@@ -332,9 +325,9 @@ rule model_eval_ext:
         profiles = rules.model_eval_ext_prep.input
     output:
         assoc='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.assoc.txt',
-        pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.pred_eval.txt'
-        #train_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.train_ind.txt.gz',
-        #test_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.test_ind.txt.gz'
+        pred_eval='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.pred_eval.txt',
+        train_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.train_ind.txt.gz',
+        test_ind='results/{bbid}/PRS_evaluation/{study}/{superpop}/{study}.{pheno}.{superpop}.AllMethodComp.test_ind.txt.gz'
     params:
         prev = lambda wc: prevalence[wc.pheno],
         out_prefix = lambda wc, output: output['assoc'].replace('.assoc.txt','')
@@ -454,7 +447,6 @@ rule all_model_eval_ext:
         expand(rules.all_target_model_eval_ext.output, bbid=bbids)
 
 
-
 localrules:
     all_ancestry_model_eval_ext,
     all_target_model_eval_ext,
@@ -523,7 +515,7 @@ rule all_get_best_models_ext:
 
 localrules:
     all_get_best_models_ext
-    
+        
     
 ##################################
 # Export best scores for sharing #
